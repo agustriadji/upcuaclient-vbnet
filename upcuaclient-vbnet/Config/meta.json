@@ -1,0 +1,27 @@
+{
+  "endpoint":  "opc.tcp://localhost:4840",
+  "defaultTimeout": 30, // in seconds
+  "intervalTime": 120000, // in milliseconds
+  "statusLabels": {
+    "recording": "Recording",
+    "idle": "Idle",
+    "error": "Error",
+    "offline": "Offline",
+    "maintenance": "Maintenance"
+  },
+  "units": {
+    "pressure": "PSI",
+    "temperature": "Celsius",
+    "flowRate": "L/min"
+  },
+  "alerts": {
+    "highPressure": 45, // in PSI
+    "lowPressure": 10, // in PSI
+    "temperatureThreshold": 75, // in Celsius
+    "typeLabels": {
+      "info": "Information",
+      "warning": "Warning",
+      "critical": "Critical"
+    }
+  }
+}
