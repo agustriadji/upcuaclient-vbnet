@@ -1,7 +1,10 @@
 {
-  "endpoint":  "opc.tcp://localhost:4840",
-  "defaultTimeout": 30, // in seconds
-  "intervalTime": 120000, // in milliseconds
+  "hostOpc": "opc.tcp://localhost:4840",
+  "namespaceOpc": "ns=2;i=2",
+  "nodeOpc": [ "ns=2;i=4", "ns=2;i=6", "ns=2;i=8", "ns=2;i=10", "ns=2;i=12" ],
+  "defaultTimeout": 30,
+  "intervalTime": 120000,
+  "intervalRefreshTimer": 60000,
   "statusLabels": {
     "recording": "Recording",
     "idle": "Idle",
@@ -15,9 +18,9 @@
     "flowRate": "L/min"
   },
   "alerts": {
-    "highPressure": 45, // in PSI
-    "lowPressure": 10, // in PSI
-    "temperatureThreshold": 75, // in Celsius
+    "highPressure": 45,
+    "lowPressure": 10,
+    "temperatureThreshold": 75,
     "typeLabels": {
       "info": "Information",
       "warning": "Warning",

@@ -1,7 +1,7 @@
 ﻿Imports Opc.Ua.Client
-Imports upcuaclient.Modules.Core
 
-Public Module OpcReader
+Namespace upcuaclient_vbnet
+    Public Module OpcReader
     ''' <summary>
     ''' Baca nilai dari node OPC UA dan konversi ke byte array
     ''' </summary>
@@ -33,4 +33,5 @@ Public Module OpcReader
             Return Nothing
         End Try
     End Function
-End Module
+    End Module
+End Namespace

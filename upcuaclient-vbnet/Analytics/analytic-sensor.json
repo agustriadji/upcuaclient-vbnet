@@ -1,0 +1,98 @@
+{
+  "sensor1": {
+    "BatchId": "BATCH-1",
+    "SensorId": "sensor1",
+    "RunningDay": 5,
+    "OperatorName": "Operator1",
+    "Size": "Medium",
+    "StartPressure": 2.35,
+    "CurrentPressure": 158.0176839223214,
+    "CreatedAt": "2025-11-08T20:48:15Z",
+    "UpdatedAt": "2025-11-13T20:09:44Z",
+    "State": "Recording"
+  },
+  "sensor2": {
+    "BatchId": "BATCH-1",
+    "SensorId": "sensor2",
+    "RunningDay": 5,
+    "OperatorName": "Operator1",
+    "Size": "Medium",
+    "StartPressure": 2.38,
+    "CurrentPressure": 150.70134421144675,
+    "CreatedAt": "2025-11-08T20:48:15Z",
+    "UpdatedAt": "2025-11-13T20:09:44Z",
+    "State": "Recording"
+  },
+  "sensor3": {
+    "BatchId": "BATCH-1",
+    "SensorId": "sensor3",
+    "RunningDay": 5,
+    "OperatorName": "Operator1",
+    "Size": "Medium",
+    "StartPressure": 2.04,
+    "CurrentPressure": 159.91556733144242,
+    "CreatedAt": "2025-11-08T20:48:15Z",
+    "UpdatedAt": "2025-11-13T20:09:44Z",
+    "State": "Recording"
+  },
+  "sensor4": {
+    "BatchId": "BATCH-1",
+    "SensorId": "sensor4",
+    "RunningDay": 1,
+    "OperatorName": "Operator1",
+    "Size": "Medium",
+    "StartPressure": 2.0,
+    "CurrentPressure": 2.0,
+    "CreatedAt": "2025-11-08T20:48:15Z",
+    "UpdatedAt": "2025-11-09T21:59:08Z",
+    "State": "Recording"
+  },
+  "sensor5": {
+    "BatchId": "BATCH-1",
+    "SensorId": "sensor5",
+    "RunningDay": 1,
+    "OperatorName": "Operator1",
+    "Size": "Medium",
+    "StartPressure": 2.01,
+    "CurrentPressure": 2.01,
+    "CreatedAt": "2025-11-08T20:48:15Z",
+    "UpdatedAt": "2025-11-09T21:59:08Z",
+    "State": "Recording"
+  },
+  "sensor6": {
+    "BatchId": "BATCH-1",
+    "SensorId": "sensor6",
+    "RunningDay": 1,
+    "OperatorName": "Operator1",
+    "Size": "Medium",
+    "StartPressure": 2.21,
+    "CurrentPressure": 2.21,
+    "CreatedAt": "2025-11-08T20:48:15Z",
+    "UpdatedAt": "2025-11-09T21:59:08Z",
+    "State": "Recording"
+  },
+  "sensor7": {
+    "BatchId": "BATCH-1",
+    "SensorId": "sensor7",
+    "RunningDay": 1,
+    "OperatorName": "Operator1",
+    "Size": "Medium",
+    "StartPressure": 2.21,
+    "CurrentPressure": 2.21,
+    "CreatedAt": "2025-11-08T20:48:15Z",
+    "UpdatedAt": "2025-11-09T21:59:08Z",
+    "State": "Recording"
+  },
+  "sensor8": {
+    "BatchId": "BATCH-1",
+    "SensorId": "sensor8",
+    "RunningDay": 1,
+    "OperatorName": "Operator1",
+    "Size": "Medium",
+    "StartPressure": 2.17,
+    "CurrentPressure": 2.17,
+    "CreatedAt": "2025-11-08T20:48:15Z",
+    "UpdatedAt": "2025-11-09T21:59:08Z",
+    "State": "Recording"
+  }
+}
