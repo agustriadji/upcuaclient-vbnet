@@ -22,7 +22,7 @@ Partial Class DetailRecord
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.TextBoxStartPressure = New System.Windows.Forms.TextBox()
         Me.Label6 = New System.Windows.Forms.Label()
@@ -49,13 +49,14 @@ Partial Class DetailRecord
         Me.DGVWatch = New System.Windows.Forms.DataGridView()
         Me.StartPressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.Pressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.LeakPressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.Timestamp = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.TabPageGraph = New System.Windows.Forms.TabPage()
         Me.CartesianChartDetailRecord = New LiveCharts.WinForms.CartesianChart()
         Me.PanelBottom = New System.Windows.Forms.Panel()
         Me.BTNExport = New System.Windows.Forms.Button()
         Me.BTNClose = New System.Windows.Forms.Button()
-        Me.BTNEndRecord = New System.Windows.Forms.Button()
+        Me.BTNEndRecording = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.SplitContainerDetailRecord, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainerDetailRecord.Panel1.SuspendLayout()
@@ -329,20 +330,20 @@ Partial Class DetailRecord
         Me.DGVWatch.BackgroundColor = System.Drawing.SystemColors.ButtonFace
         Me.DGVWatch.BorderStyle = System.Windows.Forms.BorderStyle.None
         Me.DGVWatch.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DGVWatch.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.StartPressure, Me.Pressure, Me.Timestamp})
+        Me.DGVWatch.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.StartPressure, Me.Pressure, Me.LeakPressure, Me.Timestamp})
         Me.DGVWatch.Dock = System.Windows.Forms.DockStyle.Fill
         Me.DGVWatch.Location = New System.Drawing.Point(3, 3)
         Me.DGVWatch.MultiSelect = False
         Me.DGVWatch.Name = "DGVWatch"
         Me.DGVWatch.ReadOnly = True
-        DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle1.Font = New System.Drawing.Font("Segoe UI", 12.0!)
-        DataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
-        DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle1
+        DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle2.Font = New System.Drawing.Font("Segoe UI", 12.0!)
+        DataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
+        DataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
         Me.DGVWatch.RowHeadersVisible = False
         Me.DGVWatch.RowHeadersWidth = 51
         Me.DGVWatch.RowTemplate.Height = 24
@@ -367,6 +368,13 @@ Partial Class DetailRecord
         Me.Pressure.Name = "Pressure"
         Me.Pressure.ReadOnly = True
         '
+        'LeakPressure
+        '
+        Me.LeakPressure.HeaderText = "Leak Pressure"
+        Me.LeakPressure.MinimumWidth = 6
+        Me.LeakPressure.Name = "LeakPressure"
+        Me.LeakPressure.ReadOnly = True
+        '
         'Timestamp
         '
         Me.Timestamp.HeaderText = "Timestamp"
@@ -387,20 +395,18 @@ Partial Class DetailRecord
         '
         'CartesianChartDetailRecord
         '
-        Me.CartesianChartDetailRecord.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.CartesianChartDetailRecord.Location = New System.Drawing.Point(3, 3)
+        Me.CartesianChartDetailRecord.Location = New System.Drawing.Point(6, 6)
         Me.CartesianChartDetailRecord.Name = "CartesianChartDetailRecord"
-        Me.CartesianChartDetailRecord.Padding = New System.Windows.Forms.Padding(6)
-        Me.CartesianChartDetailRecord.Size = New System.Drawing.Size(908, 322)
+        Me.CartesianChartDetailRecord.Size = New System.Drawing.Size(902, 316)
         Me.CartesianChartDetailRecord.TabIndex = 0
-        Me.CartesianChartDetailRecord.Text = "Graph"
+        Me.CartesianChartDetailRecord.Text = "CartesianChartDetailRecord"
         '
         'PanelBottom
         '
         Me.PanelBottom.AutoSize = True
         Me.PanelBottom.Controls.Add(Me.BTNExport)
         Me.PanelBottom.Controls.Add(Me.BTNClose)
-        Me.PanelBottom.Controls.Add(Me.BTNEndRecord)
+        Me.PanelBottom.Controls.Add(Me.BTNEndRecording)
         Me.PanelBottom.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.PanelBottom.Location = New System.Drawing.Point(0, 389)
         Me.PanelBottom.Name = "PanelBottom"
@@ -426,14 +432,14 @@ Partial Class DetailRecord
         Me.BTNClose.Text = "Close"
         Me.BTNClose.UseVisualStyleBackColor = True
         '
-        'BTNEndRecord
+        'BTNEndRecording
         '
-        Me.BTNEndRecord.Location = New System.Drawing.Point(644, 13)
-        Me.BTNEndRecord.Name = "BTNEndRecord"
-        Me.BTNEndRecord.Size = New System.Drawing.Size(124, 40)
-        Me.BTNEndRecord.TabIndex = 3
-        Me.BTNEndRecord.Text = "End Record"
-        Me.BTNEndRecord.UseVisualStyleBackColor = True
+        Me.BTNEndRecording.Location = New System.Drawing.Point(644, 13)
+        Me.BTNEndRecording.Name = "BTNEndRecording"
+        Me.BTNEndRecording.Size = New System.Drawing.Size(124, 40)
+        Me.BTNEndRecording.TabIndex = 3
+        Me.BTNEndRecording.Text = "End Record"
+        Me.BTNEndRecording.UseVisualStyleBackColor = True
         '
         'DetailRecord
         '
@@ -483,7 +489,7 @@ Partial Class DetailRecord
     Friend WithEvents TextBoxState As TextBox
     Friend WithEvents SplitContainerDetailRecord As SplitContainer
     Friend WithEvents BTNClose As Button
-    Friend WithEvents BTNEndRecord As Button
+    Friend WithEvents BTNEndRecording As Button
     Friend WithEvents BTNExport As Button
     Friend WithEvents TextBoxStartPressure As TextBox
     Friend WithEvents Label6 As Label
@@ -495,6 +501,7 @@ Partial Class DetailRecord
     Friend WithEvents DGVWatch As DataGridView
     Friend WithEvents StartPressure As DataGridViewTextBoxColumn
     Friend WithEvents Pressure As DataGridViewTextBoxColumn
+    Friend WithEvents LeakPressure As DataGridViewTextBoxColumn
     Friend WithEvents Timestamp As DataGridViewTextBoxColumn
     Friend WithEvents TabPageGraph As TabPage
     Friend WithEvents PanelBottom As Panel

@@ -48,7 +48,7 @@ Public Class MainFormNew
         DGVRecording.Columns.Add("State", "Status")
         DGVRecording.Columns.Add("UpdatedAt", "Last Updated")
 
-        TabControlMain.SelectedTab = TabPageRecording
+        TabControlMain.SelectedTab = TabPageSensorState
         InitializeTimers()
         TimeManager.StartTimerWithInitialFetch(refreshTimerTabPageSensor, AddressOf RefreshDataTabPageRecording)
 
@@ -62,9 +62,10 @@ Public Class MainFormNew
         connectionIndicatorTimer.Start()
         UpdateConnectionIndicators()
 
-        ' Initialize logger
+        ' Initialize logger and alert system
         AddHandler LoggerDebug.LogMessage, AddressOf OnLogMessage
         InitializeDebugPanel()
+        InitializeAlertSystem()
     End Sub
 
     Private Sub RefreshDataTabPageSensor(sender As Object, e As EventArgs)
@@ -148,7 +149,7 @@ Public Class MainFormNew
 
             For Each record In records
                 Dim runningDays = Math.Ceiling((DateTime.Now - record.StartDate).TotalDays)
-                Dim lastUpdated = record.StartDate.ToString("yyyy-MM-dd HH:mm")
+                Dim lastUpdated = record.EndDate.ToString("yyyy-MM-dd HH:mm")
 
                 Dim idx = DGVRecording.Rows.Add(
                     count.ToString(),
@@ -270,11 +271,17 @@ Public Class MainFormNew
         TextBoxOutputDebug.Visible = True
         TextBoxOutputAlert.Visible = False
 
-        ' Setup TextBox properties
+        ' Setup Debug TextBox properties
         TextBoxOutputDebug.Font = New Font("Consolas", 8)
         TextBoxOutputDebug.BackColor = Color.Black
         TextBoxOutputDebug.ForeColor = Color.LimeGreen
         TextBoxOutputDebug.ReadOnly = True
+
+        ' Setup Alert TextBox properties
+        TextBoxOutputAlert.Font = New Font("Consolas", 8)
+        TextBoxOutputAlert.BackColor = Color.DarkRed
+        TextBoxOutputAlert.ForeColor = Color.White
+        TextBoxOutputAlert.ReadOnly = True
     End Sub
 
     Private Sub OnLogMessage(message As String, level As LoggerDebug.LogLevel, source As String)
@@ -330,6 +337,9 @@ Public Class MainFormNew
 
         TextBoxOutputDebug.Visible = False
         TextBoxOutputAlert.Visible = True
+
+        ' Clear alert notification (orange color)
+        ToolStripButtonAlert.BackColor = Color.LightCoral
     End Sub
 
     Private Sub UpdateConnectionIndicators(Optional sender As Object = Nothing, Optional e As EventArgs = Nothing)
@@ -379,5 +389,143 @@ Public Class MainFormNew
         formNewRecord.ShowDialog()
     End Sub
 
+    Private Sub InitializeAlertSystem()
+        ' Start alert monitoring - check every 30 seconds
+        Dim alertTimer As New Timer() With {.Interval = 30000}
+        AddHandler alertTimer.Tick, AddressOf CheckForAlerts
+        alertTimer.Start()
 
+        ' Load initial alerts
+        LoadAlertsFromDatabase()
+    End Sub
+
+    Private Sub CheckForAlerts(Optional sender As Object = Nothing, Optional e As EventArgs = Nothing)
+        Try
+            ' Load alerts from SQLite database
+            LoadAlertsFromDatabase()
+
+        Catch ex As Exception
+            Console.WriteLine($"Alert check error: {ex.Message}")
+        End Try
+    End Sub
+
+    Private lastAlertId As Integer = 0
+
+    Private Sub LoadAlertsFromDatabase()
+        Try
+            Dim sqlite As New SQLiteManager()
+            Using conn As New Data.SQLite.SQLiteConnection($"Data Source={IO.Path.Combine(Application.StartupPath, "../../data/sensor.db")};Version=3;")
+                conn.Open()
+
+                ' Optimized query - only get new alerts since last check
+                Dim query As String = "
+                    SELECT sa.id, sa.timestamp, COALESCE(mt.batch_id, 'N/A') as batch_id, 
+                           sa.node_id, sa.message, sa.current_value, sa.severity
+                    FROM sensor_alerts sa 
+                    LEFT JOIN record_metadata mt ON (mt.pressure_gauge_id = sa.node_id OR mt.pressure_tire_id = sa.node_id)
+                    WHERE sa.id > @lastId AND sa.timestamp >= datetime('now', '-1 day')
+                    ORDER BY sa.id DESC
+                    LIMIT 20
+                "
+
+                Using cmd As New Data.SQLite.SQLiteCommand(query, conn)
+                    cmd.Parameters.AddWithValue("@lastId", lastAlertId)
+
+                    Using reader = cmd.ExecuteReader()
+                        Dim newAlerts As New List(Of String)
+                        While reader.Read()
+                            Dim alertId = Convert.ToInt32(reader("id"))
+                            If alertId > lastAlertId Then lastAlertId = alertId
+
+                            Dim timestamp = DateTime.Parse(reader("timestamp").ToString()).ToString("HH:mm:ss")
+                            Dim severityIcon = GetSeverityIcon(reader("severity").ToString())
+                            Dim alertEntry = $"[{timestamp}] {severityIcon} [{reader("batch_id")}] {reader("node_id")} - {reader("message")} (Value: {reader("current_value")})"
+
+                            newAlerts.Add(alertEntry)
+                        End While
+
+                        ' Update UI only if there are new alerts
+                        If newAlerts.Count > 0 Then
+                            UpdateAlertDisplay(newAlerts)
+                        End If
+                    End Using
+                End Using
+            End Using
+        Catch ex As Exception
+            Console.WriteLine($"LoadAlertsFromDatabase error: {ex.Message}")
+        End Try
+    End Sub
+
+    Private Sub UpdateAlertDisplay(alerts As List(Of String))
+        Try
+            If Me.InvokeRequired Then
+                Me.Invoke(Sub() UpdateAlertDisplay(alerts))
+                Return
+            End If
+
+            For Each alert In alerts
+                TextBoxOutputAlert.AppendText(alert & Environment.NewLine)
+            Next
+
+            TextBoxOutputAlert.SelectionStart = TextBoxOutputAlert.Text.Length
+            TextBoxOutputAlert.ScrollToCaret()
+
+            ' Show alert notification
+            If Not TextBoxOutputAlert.Visible Then
+                ToolStripButtonAlert.BackColor = Color.Orange
+            End If
+        Catch ex As Exception
+            Console.WriteLine($"UpdateAlertDisplay error: {ex.Message}")
+        End Try
+    End Sub
+
+
+
+    Private Function GetSeverityIcon(severity As String) As String
+        Select Case severity.ToLower()
+            Case "critical"
+                Return "🔴"
+            Case "warning"
+                Return "🟡"
+            Case "info"
+                Return "🔵"
+            Case Else
+                Return "⚠️"
+        End Select
+    End Function
+
+    Private Sub AddAlert(message As String, category As String)
+        Try
+            If Me.InvokeRequired Then
+                Me.Invoke(Sub() AddAlert(message, category))
+                Return
+            End If
+
+            Dim timestamp = DateTime.Now.ToString("HH:mm:ss")
+            Dim alertEntry = $"[{timestamp}] ⚠️ [{category}] {message}{Environment.NewLine}"
+
+            TextBoxOutputAlert.AppendText(alertEntry)
+            TextBoxOutputAlert.SelectionStart = TextBoxOutputAlert.Text.Length
+            TextBoxOutputAlert.ScrollToCaret()
+
+            ' Update alert button to show there are new alerts
+            If Not TextBoxOutputAlert.Visible Then
+                ToolStripButtonAlert.BackColor = Color.Orange
+            End If
+        Catch ex As Exception
+            Console.WriteLine($"Alert: {message}")
+        End Try
+    End Sub
+
+    Private Sub DGVRecording_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVRecording.CellClick
+        If e.RowIndex >= 0 Then
+            Dim batchId = DGVRecording.Rows(e.RowIndex).Cells("BatchId").Value.ToString()
+            Dim detailForm As New DetailRecord(batchId)
+            detailForm.ShowDialog()
+        End If
+    End Sub
+
+    Private Sub MenuStrip1_ItemClicked(sender As Object, e As ToolStripItemClickedEventArgs) Handles MenuStrip1.ItemClicked
+
+    End Sub
 End Class

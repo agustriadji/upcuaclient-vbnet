@@ -88,7 +88,7 @@ Partial Class MainFormNew
         'SplitContainer1
         '
         Me.SplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.SplitContainer1.Location = New System.Drawing.Point(4, 34)
+        Me.SplitContainer1.Location = New System.Drawing.Point(4, 32)
         Me.SplitContainer1.Name = "SplitContainer1"
         Me.SplitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal
         '
@@ -102,8 +102,8 @@ Partial Class MainFormNew
         '
         Me.SplitContainer1.Panel2.Controls.Add(Me.SplitContainer2)
         Me.SplitContainer1.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No
-        Me.SplitContainer1.Size = New System.Drawing.Size(1283, 489)
-        Me.SplitContainer1.SplitterDistance = 362
+        Me.SplitContainer1.Size = New System.Drawing.Size(1283, 491)
+        Me.SplitContainer1.SplitterDistance = 363
         Me.SplitContainer1.TabIndex = 2
         '
         'TabControlMain
@@ -116,7 +116,7 @@ Partial Class MainFormNew
         Me.TabControlMain.Margin = New System.Windows.Forms.Padding(0)
         Me.TabControlMain.Name = "TabControlMain"
         Me.TabControlMain.SelectedIndex = 0
-        Me.TabControlMain.Size = New System.Drawing.Size(1283, 352)
+        Me.TabControlMain.Size = New System.Drawing.Size(1283, 353)
         Me.TabControlMain.TabIndex = 1
         '
         'TabPageSensorState
@@ -175,7 +175,7 @@ Partial Class MainFormNew
         Me.TabPageRecording.Location = New System.Drawing.Point(4, 29)
         Me.TabPageRecording.Name = "TabPageRecording"
         Me.TabPageRecording.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageRecording.Size = New System.Drawing.Size(1275, 319)
+        Me.TabPageRecording.Size = New System.Drawing.Size(1275, 320)
         Me.TabPageRecording.TabIndex = 1
         Me.TabPageRecording.Text = "Recording"
         Me.TabPageRecording.UseVisualStyleBackColor = True
@@ -196,7 +196,7 @@ Partial Class MainFormNew
         Me.DGVRecording.RowHeadersVisible = False
         Me.DGVRecording.RowHeadersWidth = 51
         Me.DGVRecording.RowTemplate.Height = 24
-        Me.DGVRecording.Size = New System.Drawing.Size(1269, 313)
+        Me.DGVRecording.Size = New System.Drawing.Size(1269, 314)
         Me.DGVRecording.TabIndex = 0
         '
         'BatchId
@@ -259,7 +259,7 @@ Partial Class MainFormNew
         Me.SplitContainer2.Panel2.Controls.Add(Me.TextBoxOutputDebug)
         Me.SplitContainer2.Panel2.Controls.Add(Me.TextBoxOutputAlert)
         Me.SplitContainer2.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No
-        Me.SplitContainer2.Size = New System.Drawing.Size(1283, 123)
+        Me.SplitContainer2.Size = New System.Drawing.Size(1283, 124)
         Me.SplitContainer2.SplitterDistance = 38
         Me.SplitContainer2.TabIndex = 0
         '
@@ -328,7 +328,7 @@ Partial Class MainFormNew
         Me.TextBoxOutputDebug.Multiline = True
         Me.TextBoxOutputDebug.Name = "TextBoxOutputDebug"
         Me.TextBoxOutputDebug.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.TextBoxOutputDebug.Size = New System.Drawing.Size(1283, 81)
+        Me.TextBoxOutputDebug.Size = New System.Drawing.Size(1283, 82)
         Me.TextBoxOutputDebug.TabIndex = 0
         '
         'TextBoxOutputAlert
@@ -339,7 +339,7 @@ Partial Class MainFormNew
         Me.TextBoxOutputAlert.Multiline = True
         Me.TextBoxOutputAlert.Name = "TextBoxOutputAlert"
         Me.TextBoxOutputAlert.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.TextBoxOutputAlert.Size = New System.Drawing.Size(1283, 81)
+        Me.TextBoxOutputAlert.Size = New System.Drawing.Size(1283, 82)
         Me.TextBoxOutputAlert.TabIndex = 2
         '
         'MenuStrip1
@@ -348,7 +348,7 @@ Partial Class MainFormNew
         Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.ViewToolStripMenuItem, Me.ToolsToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(4, 4)
         Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(1283, 30)
+        Me.MenuStrip1.Size = New System.Drawing.Size(1283, 28)
         Me.MenuStrip1.TabIndex = 0
         Me.MenuStrip1.Text = "MenuStrip1"
         '
@@ -356,7 +356,7 @@ Partial Class MainFormNew
         '
         Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ConfigManagerToolStripMenuItem, Me.ExitToolStripMenuItem})
         Me.FileToolStripMenuItem.Name = "FileToolStripMenuItem"
-        Me.FileToolStripMenuItem.Size = New System.Drawing.Size(46, 26)
+        Me.FileToolStripMenuItem.Size = New System.Drawing.Size(46, 24)
         Me.FileToolStripMenuItem.Text = "File"
         '
         'ConfigManagerToolStripMenuItem
@@ -375,7 +375,7 @@ Partial Class MainFormNew
         '
         Me.ViewToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RefreshToolStripMenuItem, Me.LogToolStripMenuItem})
         Me.ViewToolStripMenuItem.Name = "ViewToolStripMenuItem"
-        Me.ViewToolStripMenuItem.Size = New System.Drawing.Size(55, 26)
+        Me.ViewToolStripMenuItem.Size = New System.Drawing.Size(55, 24)
         Me.ViewToolStripMenuItem.Text = "View"
         '
         'RefreshToolStripMenuItem
@@ -394,7 +394,7 @@ Partial Class MainFormNew
         '
         Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AddNewSensorToolStripMenuItem, Me.AddNewRecordingToolStripMenuItem, Me.ExportToolStripMenuItem})
         Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
-        Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(58, 26)
+        Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(58, 24)
         Me.ToolsToolStripMenuItem.Text = "Tools"
         '
         'AddNewSensorToolStripMenuItem
@@ -432,7 +432,7 @@ Partial Class MainFormNew
         '
         Me.HelpToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CheckServiceStatusToolStripMenuItem, Me.TechnicalSupportToolStripMenuItem, Me.SendFeedbackToolStripMenuItem})
         Me.HelpToolStripMenuItem.Name = "HelpToolStripMenuItem"
-        Me.HelpToolStripMenuItem.Size = New System.Drawing.Size(55, 26)
+        Me.HelpToolStripMenuItem.Size = New System.Drawing.Size(55, 24)
         Me.HelpToolStripMenuItem.Text = "Help"
         '
         'CheckServiceStatusToolStripMenuItem

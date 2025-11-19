@@ -232,6 +232,7 @@
     <Compile Include="Modules\Core\LoggerDebug.vb" />
     <Compile Include="Modules\Core\SettingsManager.vb" />
     <Compile Include="Modules\Core\SQLiteManager.vb" />
+    <Compile Include="Modules\Core\SQLServerManager.vb" />
     <Compile Include="Modules\Core\TempManager.vb" />
     <Compile Include="Modules\Core\RecordManager.vb" />
     <Compile Include="Modules\Core\AlertResult.vb" />
@@ -305,6 +306,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="data\sensor.db" />
+    <None Include="end_of_record.md" />
     <None Include="logs.log" />
     <None Include="My Project\app.manifest" />
     <None Include="My Project\Application.myapp">

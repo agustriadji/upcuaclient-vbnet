@@ -365,8 +365,8 @@ Public Class SQLiteManager
                        END as actual_end_date
                 FROM record_metadata rm
                 LEFT JOIN sensor_data sd ON 
-                    (sd.node_id = rm.pressure_tire_id AND sd.sensor_type = 'pressureTire') OR
-                    (sd.node_id = rm.pressure_gauge_id AND sd.sensor_type = 'pressureGuage')
+                    (sd.node_id = rm.pressure_tire_id AND sd.sensor_type IN ('pressureTire', 'PressureTire')) OR
+                    (sd.node_id = rm.pressure_gauge_id AND sd.sensor_type IN ('pressureGuage', 'PressureGuage', 'pressureGauge', 'PressureGauge'))
                 GROUP BY rm.batch_id
                 ORDER BY rm.start_date DESC
             "
@@ -378,6 +378,16 @@ Public Class SQLiteManager
 
                 Using cmd As New SQLiteCommand(query, conn)
                     Console.WriteLine($"🔍 QueryBatchRange: Getting all records")
+
+                    ' Debug: Check what sensor_data exists
+                    Using debugCmd As New SQLiteCommand("SELECT DISTINCT node_id, sensor_type FROM sensor_data ORDER BY node_id", conn)
+                        Using debugReader = debugCmd.ExecuteReader()
+                            Console.WriteLine("🔍 Available sensor_data:")
+                            While debugReader.Read()
+                                Console.WriteLine($"  - NodeId: {debugReader("node_id")} | SensorType: '{debugReader("sensor_type")}'")
+                            End While
+                        End Using
+                    End Using
 
                     Using reader = cmd.ExecuteReader()
                         Dim recordCount = 0
@@ -397,7 +407,11 @@ Public Class SQLiteManager
                                     .EndDate = If(reader("actual_end_date") IsNot DBNull.Value, DateTime.Parse(reader("actual_end_date").ToString()), DateTime.MinValue)
                                 }
 
-                                Console.WriteLine($"  ✅ Added record: {entry.BatchId} | Status: {entry.Status} | Last Update: {entry.EndDate:yyyy-MM-dd HH:mm}")
+                                Console.WriteLine($"  ✅ Added record: {entry.BatchId} | Status: {entry.Status}")
+                                Console.WriteLine($"      Start: {entry.StartDate:yyyy-MM-dd HH:mm:ss}")
+                                Console.WriteLine($"      End: {entry.EndDate:yyyy-MM-dd HH:mm:ss}")
+                                Console.WriteLine($"      Raw actual_end_date: {reader("actual_end_date")}")
+                                Console.WriteLine($"      Raw end_date: {reader("end_date")}")
                                 results.Add(entry)
                             Catch readerEx As Exception
                                 Console.WriteLine($"Error reading record row: {readerEx.Message}")
@@ -454,5 +468,80 @@ Public Class SQLiteManager
             Console.WriteLine($"GetRecentSensorData Error: {ex.Message}")
         End Try
         Return results
+    End Function
+
+    Public Function GetSensorDataByNodeId(nodeId As String) As List(Of InterfaceSensorData)
+        Dim results As New List(Of InterfaceSensorData)
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+                Dim query As String = "
+                    SELECT node_id, sensor_type, value, data_type, status, sync_status, timestamp 
+                    FROM sensor_data 
+                    WHERE node_id = @node_id
+                    ORDER BY timestamp ASC
+                "
+
+                Using cmd As New SQLiteCommand(query, conn)
+                    cmd.Parameters.AddWithValue("@node_id", nodeId)
+
+                    Using reader As SQLiteDataReader = cmd.ExecuteReader()
+                        While reader.Read()
+                            Dim data As New InterfaceSensorData With {
+                                .NodeId = reader("node_id").ToString(),
+                                .SensorType = reader("sensor_type").ToString(),
+                                .Value = Convert.ToDouble(reader("value")),
+                                .DataType = reader("data_type").ToString(),
+                                .Status = reader("status").ToString(),
+                                .SyncStatus = reader("sync_status").ToString(),
+                                .Timestamp = DateTime.Parse(reader("timestamp").ToString())
+                            }
+                            results.Add(data)
+                        End While
+                    End Using
+                End Using
+            End Using
+        Catch ex As Exception
+            Console.WriteLine("GetSensorDataByNodeId Error: " & ex.Message)
+        End Try
+        Return results
+    End Function
+
+    Public Function GetLatestSensorData(nodeId As String, sensorType As String) As InterfaceSensorData
+        Dim result As InterfaceSensorData = Nothing
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+                Dim query As String = "
+                    SELECT node_id, sensor_type, value, data_type, status, sync_status, timestamp 
+                    FROM sensor_data 
+                    WHERE node_id = @node_id AND sensor_type = @sensor_type
+                    ORDER BY timestamp DESC
+                    LIMIT 1
+                "
+
+                Using cmd As New SQLiteCommand(query, conn)
+                    cmd.Parameters.AddWithValue("@node_id", nodeId)
+                    cmd.Parameters.AddWithValue("@sensor_type", sensorType)
+
+                    Using reader As SQLiteDataReader = cmd.ExecuteReader()
+                        If reader.Read() Then
+                            result = New InterfaceSensorData With {
+                                .NodeId = reader("node_id").ToString(),
+                                .SensorType = reader("sensor_type").ToString(),
+                                .Value = Convert.ToDouble(reader("value")),
+                                .DataType = reader("data_type").ToString(),
+                                .Status = reader("status").ToString(),
+                                .SyncStatus = reader("sync_status").ToString(),
+                                .Timestamp = DateTime.Parse(reader("timestamp").ToString())
+                            }
+                        End If
+                    End Using
+                End Using
+            End Using
+        Catch ex As Exception
+            Console.WriteLine("GetLatestSensorData Error: " & ex.Message)
+        End Try
+        Return result
     End Function
 End Class
