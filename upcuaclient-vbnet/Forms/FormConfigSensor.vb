@@ -9,7 +9,7 @@ Public Class FormConfigSensor
         ' Load initial data from settings to temporary storage
         Try
             Dim settingsData = SettingsManager.GetSelectedNodeSensor()
-            LoggerDebug.LogInfo($"FormConfigSensor_Load: Loading {settingsData.Count} objects from settings")
+            ' LoggerDebug.LogInfo($"FormConfigSensor_Load: Loading {settingsData.Count} objects from settings")
 
             tempSensorConfig = New Dictionary(Of String, List(Of Dictionary(Of String, String)))
 
@@ -17,13 +17,13 @@ Public Class FormConfigSensor
                 Dim objectName = kvp.Key
                 Dim sensorList = kvp.Value
 
-                LoggerDebug.LogInfo($"  Processing object: {objectName}, Found {sensorList.Count} sensors")
+                ' LoggerDebug.LogInfo($"  Processing object: {objectName}, Found {sensorList.Count} sensors")
                 tempSensorConfig(objectName) = sensorList
             Next
 
-            LoggerDebug.LogInfo($"FormConfigSensor_Load: Total loaded {tempSensorConfig.Count} objects to temp storage")
+            ' LoggerDebug.LogInfo($"FormConfigSensor_Load: Total loaded {tempSensorConfig.Count} objects to temp storage")
         Catch ex As Exception
-            LoggerDebug.LogError($"Failed to load sensor config: {ex.Message}")
+            ' LoggerDebug.LogError($"Failed to load sensor config: {ex.Message}")
             tempSensorConfig = New Dictionary(Of String, List(Of Dictionary(Of String, String)))
         End Try
         ' Setup NodeActive ComboBox items
@@ -45,25 +45,17 @@ Public Class FormConfigSensor
 
         ' Get selected objects from settings
         Dim selectedObjects = SettingsManager.GetSelectedNodeIdOpc()
-        LoggerDebug.LogInfo($"FormConfigSensor: Found {selectedObjects.Count} selected objects")
+        ' LoggerDebug.LogInfo($"FormConfigSensor: Found {selectedObjects.Count} selected objects")
 
         For i = 0 To selectedObjects.Count - 1
             Dim obj = selectedObjects(i)
-            LoggerDebug.LogInfo($"Object {i}: {obj.Keys.Count} keys")
 
-            ' Debug all keys
-            For Each key In obj.Keys
-                LoggerDebug.LogInfo($"  Key: {key} = {obj(key)}")
-            Next
 
             If obj.ContainsKey("NodeText") AndAlso obj.ContainsKey("ChildNodeId") Then
                 Dim nodeText = obj("NodeText").ToString()
 
                 ' Debug ChildNodeId type and content
                 Dim childNodeIdValue = obj("ChildNodeId")
-                LoggerDebug.LogInfo($"  ChildNodeId type: {childNodeIdValue.GetType().Name}")
-                LoggerDebug.LogInfo($"  ChildNodeId length: {childNodeIdValue.ToString().Length}")
-                LoggerDebug.LogInfo($"  ChildNodeId first 100 chars: {childNodeIdValue.ToString().Substring(0, Math.Min(100, childNodeIdValue.ToString().Length))}...")
 
                 Dim childNodes As List(Of Dictionary(Of String, String)) = Nothing
 
@@ -74,21 +66,17 @@ Public Class FormConfigSensor
                     ' Handle JSON string - deserialize it
                     Try
                         Dim jsonString = childNodeIdValue.ToString()
-                        LoggerDebug.LogInfo($"  Attempting to deserialize JSON string...")
                         childNodes = JsonConvert.DeserializeObject(Of List(Of Dictionary(Of String, String)))(jsonString)
-                        LoggerDebug.LogInfo($"  Successfully deserialized JSON string to {childNodes.Count} child nodes")
                     Catch jsonEx As Exception
-                        LoggerDebug.LogError($"  Failed to deserialize ChildNodeId JSON: {jsonEx.Message}")
-                        LoggerDebug.LogError($"  JSON content: {childNodeIdValue.ToString().Substring(0, Math.Min(200, childNodeIdValue.ToString().Length))}")
+                        ' LoggerDebug.LogError($"  Failed to deserialize ChildNodeId JSON: {jsonEx.Message}")
                     End Try
                 ElseIf TypeOf childNodeIdValue Is Newtonsoft.Json.Linq.JArray Then
                     ' Handle JArray from JSON deserialization
                     Try
                         Dim jArray = DirectCast(childNodeIdValue, Newtonsoft.Json.Linq.JArray)
                         childNodes = jArray.ToObject(Of List(Of Dictionary(Of String, String)))()
-                        LoggerDebug.LogInfo($"  Converted JArray to {childNodes.Count} child nodes")
                     Catch jEx As Exception
-                        LoggerDebug.LogError($"  Failed to convert JArray: {jEx.Message}")
+                        ' LoggerDebug.LogError($"  Failed to convert JArray: {jEx.Message}")
                     End Try
                 ElseIf TypeOf childNodeIdValue Is List(Of Object) Then
                     ' Convert from List(Of Object) to List(Of Dictionary(Of String, String))
@@ -110,13 +98,11 @@ Public Class FormConfigSensor
                 End If
 
                 Dim childCount = If(childNodes IsNot Nothing, childNodes.Count, 0)
-                LoggerDebug.LogInfo($"  → Child count: {childCount}")
-                LoggerDebug.LogInfo($"  → Adding TreeView node: {nodeText}({childCount})")
 
                 Dim objectNode = rootNode.Nodes.Add($"{nodeText}({childCount})")
                 objectNode.Tag = obj
             Else
-                LoggerDebug.LogWarning($"  → Object missing NodeText or ChildNodeId keys")
+                ' LoggerDebug.LogWarning($"  → Object missing NodeText or ChildNodeId keys")
             End If
         Next
 
@@ -163,10 +149,9 @@ Public Class FormConfigSensor
                 ' Save to temporary storage
                 tempSensorConfig(objectName) = sensors
 
-                LoggerDebug.LogInfo($"Saved {sensors.Count} active sensors to temp for {objectName}")
             End If
         Catch ex As Exception
-            LoggerDebug.LogError($"Failed to save current object changes: {ex.Message}")
+            Console.WriteLine("Error")
         End Try
     End Sub
 
@@ -185,7 +170,7 @@ Public Class FormConfigSensor
                 Try
                     childNodes = JsonConvert.DeserializeObject(Of List(Of Dictionary(Of String, String)))(childNodeIdValue.ToString())
                 Catch jsonEx As Exception
-                    LoggerDebug.LogError($"PopulateDGV: Failed to deserialize ChildNodeId JSON: {jsonEx.Message}")
+                    'LoggerDebug.LogError($"PopulateDGV: Failed to deserialize ChildNodeId JSON: {jsonEx.Message}")
                 End Try
             ElseIf TypeOf childNodeIdValue Is Newtonsoft.Json.Linq.JArray Then
                 ' Handle JArray from JSON deserialization
@@ -193,7 +178,7 @@ Public Class FormConfigSensor
                     Dim jArray = DirectCast(childNodeIdValue, Newtonsoft.Json.Linq.JArray)
                     childNodes = jArray.ToObject(Of List(Of Dictionary(Of String, String)))()
                 Catch jEx As Exception
-                    LoggerDebug.LogError($"PopulateDGV: Failed to convert JArray: {jEx.Message}")
+                    ' LoggerDebug.LogError($"PopulateDGV: Failed to convert JArray: {jEx.Message}")
                 End Try
             ElseIf TypeOf childNodeIdValue Is List(Of Object) Then
                 ' Convert from List(Of Object) to List(Of Dictionary(Of String, String))
@@ -243,7 +228,7 @@ Public Class FormConfigSensor
                     DGVNodeSensor.Rows(rowIndex).Cells("NodeStatus").Value = status
                     DGVNodeSensor.Rows(rowIndex).Cells("NodeActive").Value = isActive
 
-                    LoggerDebug.LogInfo($"  Set {childNode("NodeText")}: NodeActive = {isActive}, NodeStatus = {status}")
+                    ' LoggerDebug.LogInfo($"  Set {childNode("NodeText")}: NodeActive = {isActive}, NodeStatus = {status}")
                 Next
             End If
         End If
@@ -269,24 +254,19 @@ Public Class FormConfigSensor
             ' Save current object changes to temp first
             SaveCurrentObjectChanges()
 
-            ' Log what we're about to save
-            LoggerDebug.LogInfo($"Saving sensor config with {tempSensorConfig.Count} objects")
-            For Each kvp In tempSensorConfig
-                LoggerDebug.LogInfo($"  Object: {kvp.Key} has {kvp.Value.Count} sensors")
-            Next
 
             ' Save all temporary data to settings
             SettingsManager.SetSelectedNodeSensor(tempSensorConfig)
 
             ' Verify save by reading back
             Dim savedData = SettingsManager.GetSelectedNodeSensor()
-            LoggerDebug.LogInfo($"Verification: Saved data has {savedData.Count} objects")
+            'LoggerDebug.LogInfo($"Verification: Saved data has {savedData.Count} objects")
 
             MessageBox.Show("Sensor configuration saved!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Me.DialogResult = DialogResult.OK
             Me.Close()
         Catch ex As Exception
-            LoggerDebug.LogError($"SaveSensorConfiguration error: {ex.Message}")
+            ' LoggerDebug.LogError($"SaveSensorConfiguration error: {ex.Message}")
             MessageBox.Show($"Error saving sensor config: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
@@ -370,11 +350,11 @@ Public Class FormConfigSensor
                     Dim isActive = CBool(cellValue)
                     ' Keep status as Idle - sensor is only activated, not running
                     DGVNodeSensor.Rows(e.RowIndex).Cells("NodeStatus").Value = "Idle"
-                    LoggerDebug.LogInfo($"Sensor activated: {isActive}, Status remains: Idle")
+                    ' LoggerDebug.LogInfo($"Sensor activated: {isActive}, Status remains: Idle")
                 End If
             End If
         Catch ex As Exception
-            LoggerDebug.LogError($"CellValueChanged error: {ex.Message}")
+            'LoggerDebug.LogError($"CellValueChanged error: {ex.Message}")
         End Try
     End Sub
 End Class

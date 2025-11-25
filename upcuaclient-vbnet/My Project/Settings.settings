@@ -6,7 +6,7 @@
       <Value Profile="(Default)">opc.tcp://localhost:4840</Value>
     </Setting>
     <Setting Name="namespaceOpc" Type="System.String" Scope="User">
-      <Value Profile="(Default)">ns=2;i=2</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="nodeIdOpc" Type="System.String" Scope="User">
       <Value Profile="(Default)">[]</Value>
@@ -40,6 +40,15 @@
     </Setting>
     <Setting Name="selectedNodeSensor" Type="System.String" Scope="User">
       <Value Profile="(Default)">{}</Value>
+    </Setting>
+    <Setting Name="intervalRefreshMain" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1000</Value>
+    </Setting>
+    <Setting Name="thresholdPressureGauge" Type="System.String" Scope="User">
+      <Value Profile="(Default)">0.2</Value>
+    </Setting>
+    <Setting Name="endRecording" Type="System.String" Scope="User">
+      <Value Profile="(Default)">[]</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -1,4 +1,4 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
 Partial Class DetailRecord
     Inherits System.Windows.Forms.Form
 
@@ -22,8 +22,9 @@ Partial Class DetailRecord
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.Label1 = New System.Windows.Forms.Label()
         Me.TextBoxStartPressure = New System.Windows.Forms.TextBox()
         Me.Label6 = New System.Windows.Forms.Label()
         Me.TextBoxStartDate = New System.Windows.Forms.TextBox()
@@ -39,7 +40,6 @@ Partial Class DetailRecord
         Me.Label4 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
-        Me.Label1 = New System.Windows.Forms.Label()
         Me.SplitContainerDetailRecord = New System.Windows.Forms.SplitContainer()
         Me.Panel2 = New System.Windows.Forms.Panel()
         Me.Panel1 = New System.Windows.Forms.Panel()
@@ -52,7 +52,7 @@ Partial Class DetailRecord
         Me.LeakPressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.Timestamp = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.TabPageGraph = New System.Windows.Forms.TabPage()
-        Me.CartesianChartDetailRecord = New LiveCharts.WinForms.CartesianChart()
+        Me.CartesianChart2 = New LiveCharts.WinForms.CartesianChart()
         Me.PanelBottom = New System.Windows.Forms.Panel()
         Me.BTNExport = New System.Windows.Forms.Button()
         Me.BTNClose = New System.Windows.Forms.Button()
@@ -73,7 +73,9 @@ Partial Class DetailRecord
         '
         'GroupBox1
         '
-        Me.GroupBox1.AutoSize = True
+        Me.GroupBox1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink
+        Me.GroupBox1.BackColor = System.Drawing.Color.Transparent
+        Me.GroupBox1.Controls.Add(Me.Label1)
         Me.GroupBox1.Controls.Add(Me.TextBoxStartPressure)
         Me.GroupBox1.Controls.Add(Me.Label6)
         Me.GroupBox1.Controls.Add(Me.TextBoxStartDate)
@@ -89,164 +91,165 @@ Partial Class DetailRecord
         Me.GroupBox1.Controls.Add(Me.Label4)
         Me.GroupBox1.Controls.Add(Me.Label3)
         Me.GroupBox1.Controls.Add(Me.Label2)
-        Me.GroupBox1.Controls.Add(Me.Label1)
         Me.GroupBox1.Dock = System.Windows.Forms.DockStyle.Top
-        Me.GroupBox1.Font = New System.Drawing.Font("Segoe UI", 10.0!)
+        Me.GroupBox1.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.GroupBox1.Location = New System.Drawing.Point(0, 0)
         Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Padding = New System.Windows.Forms.Padding(4)
-        Me.GroupBox1.Size = New System.Drawing.Size(942, 275)
+        Me.GroupBox1.Padding = New System.Windows.Forms.Padding(4, 6, 4, 6)
+        Me.GroupBox1.Size = New System.Drawing.Size(1099, 250)
         Me.GroupBox1.TabIndex = 0
         Me.GroupBox1.TabStop = False
         '
+        'Label1
+        '
+        Me.Label1.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label1.Location = New System.Drawing.Point(32, 55)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(65, 20)
+        Me.Label1.TabIndex = 18
+        Me.Label1.Text = "Batch ID"
+        '
         'TextBoxStartPressure
         '
-        Me.TextBoxStartPressure.Font = New System.Drawing.Font("Segoe UI", 11.0!)
-        Me.TextBoxStartPressure.Location = New System.Drawing.Point(529, 150)
+        Me.TextBoxStartPressure.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TextBoxStartPressure.Location = New System.Drawing.Point(669, 131)
         Me.TextBoxStartPressure.Name = "TextBoxStartPressure"
         Me.TextBoxStartPressure.ReadOnly = True
-        Me.TextBoxStartPressure.Size = New System.Drawing.Size(157, 32)
+        Me.TextBoxStartPressure.Size = New System.Drawing.Size(198, 27)
         Me.TextBoxStartPressure.TabIndex = 17
         '
         'Label6
         '
-        Me.Label6.AutoSize = True
-        Me.Label6.Location = New System.Drawing.Point(386, 154)
+        Me.Label6.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label6.Location = New System.Drawing.Point(488, 137)
         Me.Label6.Name = "Label6"
-        Me.Label6.Size = New System.Drawing.Size(114, 23)
+        Me.Label6.Size = New System.Drawing.Size(98, 20)
         Me.Label6.TabIndex = 16
         Me.Label6.Text = "Start Pressure"
         '
         'TextBoxStartDate
         '
-        Me.TextBoxStartDate.Font = New System.Drawing.Font("Segoe UI", 11.0!)
-        Me.TextBoxStartDate.Location = New System.Drawing.Point(528, 38)
+        Me.TextBoxStartDate.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TextBoxStartDate.Location = New System.Drawing.Point(668, 51)
         Me.TextBoxStartDate.Name = "TextBoxStartDate"
         Me.TextBoxStartDate.ReadOnly = True
-        Me.TextBoxStartDate.Size = New System.Drawing.Size(157, 32)
+        Me.TextBoxStartDate.Size = New System.Drawing.Size(198, 27)
         Me.TextBoxStartDate.TabIndex = 15
         '
         'Label5
         '
-        Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(386, 42)
+        Me.Label5.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label5.Location = New System.Drawing.Point(488, 55)
         Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(86, 23)
+        Me.Label5.Size = New System.Drawing.Size(76, 20)
         Me.Label5.TabIndex = 14
         Me.Label5.Text = "Start Date"
         '
         'TextBoxOperator
         '
-        Me.TextBoxOperator.Font = New System.Drawing.Font("Segoe UI", 11.0!)
-        Me.TextBoxOperator.Location = New System.Drawing.Point(166, 213)
+        Me.TextBoxOperator.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TextBoxOperator.Location = New System.Drawing.Point(210, 174)
         Me.TextBoxOperator.Name = "TextBoxOperator"
         Me.TextBoxOperator.ReadOnly = True
-        Me.TextBoxOperator.Size = New System.Drawing.Size(157, 32)
+        Me.TextBoxOperator.Size = New System.Drawing.Size(198, 27)
         Me.TextBoxOperator.TabIndex = 13
         '
         'TextBoxSize
         '
-        Me.TextBoxSize.Font = New System.Drawing.Font("Segoe UI", 11.0!)
-        Me.TextBoxSize.Location = New System.Drawing.Point(166, 150)
+        Me.TextBoxSize.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TextBoxSize.Location = New System.Drawing.Point(210, 131)
         Me.TextBoxSize.Name = "TextBoxSize"
         Me.TextBoxSize.ReadOnly = True
-        Me.TextBoxSize.Size = New System.Drawing.Size(157, 32)
+        Me.TextBoxSize.Size = New System.Drawing.Size(198, 27)
         Me.TextBoxSize.TabIndex = 12
         '
         'TextBoxState
         '
-        Me.TextBoxState.Font = New System.Drawing.Font("Segoe UI Semibold", 11.0!, System.Drawing.FontStyle.Bold)
-        Me.TextBoxState.Location = New System.Drawing.Point(529, 209)
+        Me.TextBoxState.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TextBoxState.Location = New System.Drawing.Point(669, 174)
         Me.TextBoxState.Name = "TextBoxState"
         Me.TextBoxState.ReadOnly = True
-        Me.TextBoxState.Size = New System.Drawing.Size(157, 32)
+        Me.TextBoxState.Size = New System.Drawing.Size(198, 27)
         Me.TextBoxState.TabIndex = 11
         '
         'TextBoxRunningDay
         '
-        Me.TextBoxRunningDay.Font = New System.Drawing.Font("Segoe UI", 11.0!)
-        Me.TextBoxRunningDay.Location = New System.Drawing.Point(529, 94)
+        Me.TextBoxRunningDay.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TextBoxRunningDay.Location = New System.Drawing.Point(669, 89)
         Me.TextBoxRunningDay.Name = "TextBoxRunningDay"
         Me.TextBoxRunningDay.ReadOnly = True
-        Me.TextBoxRunningDay.Size = New System.Drawing.Size(157, 32)
+        Me.TextBoxRunningDay.Size = New System.Drawing.Size(198, 27)
         Me.TextBoxRunningDay.TabIndex = 10
         '
         'TextBoxSensorId
         '
-        Me.TextBoxSensorId.Font = New System.Drawing.Font("Segoe UI", 11.0!)
-        Me.TextBoxSensorId.Location = New System.Drawing.Point(168, 92)
+        Me.TextBoxSensorId.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TextBoxSensorId.Location = New System.Drawing.Point(213, 87)
         Me.TextBoxSensorId.Name = "TextBoxSensorId"
         Me.TextBoxSensorId.ReadOnly = True
-        Me.TextBoxSensorId.Size = New System.Drawing.Size(157, 32)
+        Me.TextBoxSensorId.Size = New System.Drawing.Size(198, 27)
         Me.TextBoxSensorId.TabIndex = 9
         '
         'TextBoxBatchId
         '
-        Me.TextBoxBatchId.Font = New System.Drawing.Font("Segoe UI", 11.0!)
-        Me.TextBoxBatchId.Location = New System.Drawing.Point(168, 33)
+        Me.TextBoxBatchId.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.TextBoxBatchId.Location = New System.Drawing.Point(213, 44)
         Me.TextBoxBatchId.Name = "TextBoxBatchId"
         Me.TextBoxBatchId.ReadOnly = True
-        Me.TextBoxBatchId.Size = New System.Drawing.Size(157, 32)
+        Me.TextBoxBatchId.Size = New System.Drawing.Size(198, 27)
         Me.TextBoxBatchId.TabIndex = 8
         '
         'Label8
         '
-        Me.Label8.AutoSize = True
-        Me.Label8.Location = New System.Drawing.Point(386, 99)
+        Me.Label8.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label8.Location = New System.Drawing.Point(488, 96)
         Me.Label8.Name = "Label8"
-        Me.Label8.Size = New System.Drawing.Size(115, 23)
+        Me.Label8.Size = New System.Drawing.Size(99, 20)
         Me.Label8.TabIndex = 7
         Me.Label8.Text = "Running Days"
         '
         'Label7
         '
-        Me.Label7.AutoSize = True
-        Me.Label7.Location = New System.Drawing.Point(386, 214)
+        Me.Label7.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label7.Location = New System.Drawing.Point(488, 177)
         Me.Label7.Name = "Label7"
-        Me.Label7.Size = New System.Drawing.Size(130, 23)
+        Me.Label7.Size = New System.Drawing.Size(114, 20)
         Me.Label7.TabIndex = 6
         Me.Label7.Text = "State Operation"
         '
         'Label4
         '
-        Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(25, 214)
+        Me.Label4.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label4.Location = New System.Drawing.Point(32, 177)
         Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(79, 23)
+        Me.Label4.Size = New System.Drawing.Size(69, 20)
         Me.Label4.TabIndex = 3
         Me.Label4.Text = "Operator"
         '
         'Label3
         '
-        Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(25, 154)
+        Me.Label3.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label3.Location = New System.Drawing.Point(32, 137)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(40, 23)
+        Me.Label3.Size = New System.Drawing.Size(36, 20)
         Me.Label3.TabIndex = 2
         Me.Label3.Text = "Size"
         '
         'Label2
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(25, 98)
+        Me.Label2.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label2.Location = New System.Drawing.Point(32, 95)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(83, 23)
+        Me.Label2.Size = New System.Drawing.Size(72, 20)
         Me.Label2.TabIndex = 1
         Me.Label2.Text = "Sensor ID"
         '
-        'Label1
-        '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(25, 42)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(75, 23)
-        Me.Label1.TabIndex = 0
-        Me.Label1.Text = "Batch ID"
-        '
         'SplitContainerDetailRecord
         '
+        Me.SplitContainerDetailRecord.BackColor = System.Drawing.Color.Transparent
         Me.SplitContainerDetailRecord.Dock = System.Windows.Forms.DockStyle.Fill
         Me.SplitContainerDetailRecord.FixedPanel = System.Windows.Forms.FixedPanel.Panel1
+        Me.SplitContainerDetailRecord.IsSplitterFixed = True
         Me.SplitContainerDetailRecord.Location = New System.Drawing.Point(0, 0)
         Me.SplitContainerDetailRecord.Name = "SplitContainerDetailRecord"
         Me.SplitContainerDetailRecord.Orientation = System.Windows.Forms.Orientation.Horizontal
@@ -259,9 +262,9 @@ Partial Class DetailRecord
         '
         Me.SplitContainerDetailRecord.Panel2.Controls.Add(Me.Panel2)
         Me.SplitContainerDetailRecord.Panel2.Controls.Add(Me.PanelBottom)
-        Me.SplitContainerDetailRecord.Size = New System.Drawing.Size(942, 753)
-        Me.SplitContainerDetailRecord.SplitterDistance = 283
-        Me.SplitContainerDetailRecord.SplitterWidth = 5
+        Me.SplitContainerDetailRecord.Size = New System.Drawing.Size(1099, 753)
+        Me.SplitContainerDetailRecord.SplitterDistance = 252
+        Me.SplitContainerDetailRecord.SplitterWidth = 7
         Me.SplitContainerDetailRecord.TabIndex = 1
         '
         'Panel2
@@ -272,30 +275,30 @@ Partial Class DetailRecord
         Me.Panel2.Dock = System.Windows.Forms.DockStyle.Fill
         Me.Panel2.Location = New System.Drawing.Point(0, 0)
         Me.Panel2.Name = "Panel2"
-        Me.Panel2.Padding = New System.Windows.Forms.Padding(10)
-        Me.Panel2.Size = New System.Drawing.Size(942, 389)
+        Me.Panel2.Padding = New System.Windows.Forms.Padding(12, 14, 12, 14)
+        Me.Panel2.Size = New System.Drawing.Size(1099, 429)
         Me.Panel2.TabIndex = 3
         '
         'Panel1
         '
         Me.Panel1.BackColor = System.Drawing.Color.Transparent
         Me.Panel1.Controls.Add(Me.CMBGroupingGraph)
-        Me.Panel1.Location = New System.Drawing.Point(166, 2)
+        Me.Panel1.Location = New System.Drawing.Point(210, 2)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(125, 35)
+        Me.Panel1.Size = New System.Drawing.Size(159, 38)
         Me.Panel1.TabIndex = 2
         '
         'CMBGroupingGraph
         '
         Me.CMBGroupingGraph.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.CMBGroupingGraph.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.CMBGroupingGraph.Font = New System.Drawing.Font("Segoe UI", 10.2!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.CMBGroupingGraph.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.CMBGroupingGraph.ForeColor = System.Drawing.SystemColors.GrayText
         Me.CMBGroupingGraph.FormattingEnabled = True
         Me.CMBGroupingGraph.Items.AddRange(New Object() {"Default", "2m", "10m", "1h", "1d"})
-        Me.CMBGroupingGraph.Location = New System.Drawing.Point(0, 4)
+        Me.CMBGroupingGraph.Location = New System.Drawing.Point(0, 10)
         Me.CMBGroupingGraph.Name = "CMBGroupingGraph"
-        Me.CMBGroupingGraph.Size = New System.Drawing.Size(125, 31)
+        Me.CMBGroupingGraph.Size = New System.Drawing.Size(159, 28)
         Me.CMBGroupingGraph.TabIndex = 1
         '
         'TabControlDetailRecord
@@ -303,20 +306,20 @@ Partial Class DetailRecord
         Me.TabControlDetailRecord.Controls.Add(Me.TabPageRecord)
         Me.TabControlDetailRecord.Controls.Add(Me.TabPageGraph)
         Me.TabControlDetailRecord.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.TabControlDetailRecord.Font = New System.Drawing.Font("Segoe UI", 12.0!)
-        Me.TabControlDetailRecord.Location = New System.Drawing.Point(10, 10)
+        Me.TabControlDetailRecord.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TabControlDetailRecord.Location = New System.Drawing.Point(12, 14)
         Me.TabControlDetailRecord.Name = "TabControlDetailRecord"
         Me.TabControlDetailRecord.SelectedIndex = 0
-        Me.TabControlDetailRecord.Size = New System.Drawing.Size(922, 369)
+        Me.TabControlDetailRecord.Size = New System.Drawing.Size(1075, 401)
         Me.TabControlDetailRecord.TabIndex = 0
         '
         'TabPageRecord
         '
         Me.TabPageRecord.Controls.Add(Me.DGVWatch)
-        Me.TabPageRecord.Location = New System.Drawing.Point(4, 37)
+        Me.TabPageRecord.Location = New System.Drawing.Point(4, 29)
         Me.TabPageRecord.Name = "TabPageRecord"
         Me.TabPageRecord.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageRecord.Size = New System.Drawing.Size(914, 328)
+        Me.TabPageRecord.Size = New System.Drawing.Size(1067, 368)
         Me.TabPageRecord.TabIndex = 0
         Me.TabPageRecord.Text = "Watch"
         Me.TabPageRecord.UseVisualStyleBackColor = True
@@ -328,7 +331,6 @@ Partial Class DetailRecord
         Me.DGVWatch.AllowUserToResizeRows = False
         Me.DGVWatch.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.DGVWatch.BackgroundColor = System.Drawing.SystemColors.ButtonFace
-        Me.DGVWatch.BorderStyle = System.Windows.Forms.BorderStyle.None
         Me.DGVWatch.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.DGVWatch.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.StartPressure, Me.Pressure, Me.LeakPressure, Me.Timestamp})
         Me.DGVWatch.Dock = System.Windows.Forms.DockStyle.Fill
@@ -336,14 +338,14 @@ Partial Class DetailRecord
         Me.DGVWatch.MultiSelect = False
         Me.DGVWatch.Name = "DGVWatch"
         Me.DGVWatch.ReadOnly = True
-        DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle2.Font = New System.Drawing.Font("Segoe UI", 12.0!)
-        DataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
-        DataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
+        DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle1.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        DataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
+        DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle1
         Me.DGVWatch.RowHeadersVisible = False
         Me.DGVWatch.RowHeadersWidth = 51
         Me.DGVWatch.RowTemplate.Height = 24
@@ -351,7 +353,7 @@ Partial Class DetailRecord
         Me.DGVWatch.ShowCellToolTips = False
         Me.DGVWatch.ShowEditingIcon = False
         Me.DGVWatch.ShowRowErrors = False
-        Me.DGVWatch.Size = New System.Drawing.Size(908, 322)
+        Me.DGVWatch.Size = New System.Drawing.Size(1061, 362)
         Me.DGVWatch.TabIndex = 0
         '
         'StartPressure
@@ -384,83 +386,90 @@ Partial Class DetailRecord
         '
         'TabPageGraph
         '
-        Me.TabPageGraph.Controls.Add(Me.CartesianChartDetailRecord)
-        Me.TabPageGraph.Location = New System.Drawing.Point(4, 37)
+        Me.TabPageGraph.Controls.Add(Me.CartesianChart2)
+        Me.TabPageGraph.Location = New System.Drawing.Point(4, 29)
         Me.TabPageGraph.Name = "TabPageGraph"
         Me.TabPageGraph.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageGraph.Size = New System.Drawing.Size(914, 328)
+        Me.TabPageGraph.Size = New System.Drawing.Size(1067, 337)
         Me.TabPageGraph.TabIndex = 1
         Me.TabPageGraph.Text = "Graph"
         Me.TabPageGraph.UseVisualStyleBackColor = True
         '
-        'CartesianChartDetailRecord
+        'CartesianChart2
         '
-        Me.CartesianChartDetailRecord.Location = New System.Drawing.Point(6, 6)
-        Me.CartesianChartDetailRecord.Name = "CartesianChartDetailRecord"
-        Me.CartesianChartDetailRecord.Size = New System.Drawing.Size(902, 316)
-        Me.CartesianChartDetailRecord.TabIndex = 0
-        Me.CartesianChartDetailRecord.Text = "CartesianChartDetailRecord"
+        Me.CartesianChart2.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.CartesianChart2.Location = New System.Drawing.Point(3, 3)
+        Me.CartesianChart2.Name = "CartesianChart2"
+        Me.CartesianChart2.Size = New System.Drawing.Size(1061, 331)
+        Me.CartesianChart2.TabIndex = 1
+        Me.CartesianChart2.Text = "Graph"
         '
         'PanelBottom
         '
-        Me.PanelBottom.AutoSize = True
+        Me.PanelBottom.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink
         Me.PanelBottom.Controls.Add(Me.BTNExport)
         Me.PanelBottom.Controls.Add(Me.BTNClose)
         Me.PanelBottom.Controls.Add(Me.BTNEndRecording)
         Me.PanelBottom.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.PanelBottom.Location = New System.Drawing.Point(0, 389)
+        Me.PanelBottom.Location = New System.Drawing.Point(0, 429)
         Me.PanelBottom.Name = "PanelBottom"
-        Me.PanelBottom.Padding = New System.Windows.Forms.Padding(20)
-        Me.PanelBottom.Size = New System.Drawing.Size(942, 76)
+        Me.PanelBottom.Padding = New System.Windows.Forms.Padding(25, 26, 25, 26)
+        Me.PanelBottom.Size = New System.Drawing.Size(1099, 65)
         Me.PanelBottom.TabIndex = 0
         '
         'BTNExport
         '
-        Me.BTNExport.Location = New System.Drawing.Point(485, 13)
+        Me.BTNExport.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.BTNExport.Location = New System.Drawing.Point(773, 17)
         Me.BTNExport.Name = "BTNExport"
-        Me.BTNExport.Size = New System.Drawing.Size(124, 40)
+        Me.BTNExport.Size = New System.Drawing.Size(90, 34)
         Me.BTNExport.TabIndex = 4
         Me.BTNExport.Text = "Export"
         Me.BTNExport.UseVisualStyleBackColor = True
         '
         'BTNClose
         '
-        Me.BTNClose.Location = New System.Drawing.Point(800, 13)
+        Me.BTNClose.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.BTNClose.Location = New System.Drawing.Point(994, 17)
         Me.BTNClose.Name = "BTNClose"
-        Me.BTNClose.Size = New System.Drawing.Size(124, 40)
+        Me.BTNClose.Size = New System.Drawing.Size(90, 34)
         Me.BTNClose.TabIndex = 2
         Me.BTNClose.Text = "Close"
         Me.BTNClose.UseVisualStyleBackColor = True
         '
         'BTNEndRecording
         '
-        Me.BTNEndRecording.Location = New System.Drawing.Point(644, 13)
+        Me.BTNEndRecording.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.BTNEndRecording.Location = New System.Drawing.Point(883, 17)
         Me.BTNEndRecording.Name = "BTNEndRecording"
-        Me.BTNEndRecording.Size = New System.Drawing.Size(124, 40)
+        Me.BTNEndRecording.Size = New System.Drawing.Size(90, 34)
         Me.BTNEndRecording.TabIndex = 3
         Me.BTNEndRecording.Text = "End Record"
         Me.BTNEndRecording.UseVisualStyleBackColor = True
         '
         'DetailRecord
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 23.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(942, 753)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None
+        Me.AutoValidate = System.Windows.Forms.AutoValidate.Disable
+        Me.ClientSize = New System.Drawing.Size(1099, 753)
+        Me.ControlBox = False
         Me.Controls.Add(Me.SplitContainerDetailRecord)
-        Me.Font = New System.Drawing.Font("Segoe UI", 10.2!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D
-        Me.Margin = New System.Windows.Forms.Padding(3, 5, 3, 5)
+        Me.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
+        Me.Margin = New System.Windows.Forms.Padding(3, 7, 3, 7)
         Me.MaximizeBox = False
+        Me.MaximumSize = New System.Drawing.Size(1117, 800)
+        Me.MinimizeBox = False
+        Me.MinimumSize = New System.Drawing.Size(1117, 800)
         Me.Name = "DetailRecord"
         Me.ShowIcon = False
+        Me.ShowInTaskbar = False
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Detail Record"
         Me.GroupBox1.ResumeLayout(False)
         Me.GroupBox1.PerformLayout()
         Me.SplitContainerDetailRecord.Panel1.ResumeLayout(False)
-        Me.SplitContainerDetailRecord.Panel1.PerformLayout()
         Me.SplitContainerDetailRecord.Panel2.ResumeLayout(False)
-        Me.SplitContainerDetailRecord.Panel2.PerformLayout()
         CType(Me.SplitContainerDetailRecord, System.ComponentModel.ISupportInitialize).EndInit()
         Me.SplitContainerDetailRecord.ResumeLayout(False)
         Me.Panel2.ResumeLayout(False)
@@ -479,7 +488,6 @@ Partial Class DetailRecord
     Friend WithEvents Label4 As Label
     Friend WithEvents Label3 As Label
     Friend WithEvents Label2 As Label
-    Friend WithEvents Label1 As Label
     Friend WithEvents Label8 As Label
     Friend WithEvents TextBoxRunningDay As TextBox
     Friend WithEvents TextBoxSensorId As TextBox
@@ -508,5 +516,6 @@ Partial Class DetailRecord
     Friend WithEvents Panel1 As Panel
     Friend WithEvents CMBGroupingGraph As ComboBox
     Friend WithEvents Panel2 As Panel
-    Friend WithEvents CartesianChartDetailRecord As LiveCharts.WinForms.CartesianChart
+    Friend WithEvents CartesianChart2 As LiveCharts.WinForms.CartesianChart
+    Friend WithEvents Label1 As Label
 End Class

@@ -75,9 +75,9 @@ Public Class SQLServerManager
 
                 Dim query = "
                     INSERT INTO record_metadata 
-                    (batch_id, pressure_tire_id, pressure_gauge_id, size, created_by, status, sync_status, start_date, end_date)
+                    (batch_id, pressure_tire_id, pressure_gauge_id, size, created_by, status, sync_status, start_date, end_date, end_recording_date)
                     VALUES 
-                    (@batch_id, @pressure_tire_id, @pressure_gauge_id, @size, @created_by, @status, @sync_status, @start_date, @end_date)
+                    (@batch_id, @pressure_tire_id, @pressure_gauge_id, @size, @created_by, @status, @sync_status, @start_date, @end_date, @end_recording_date)
                 "
 
                 Using cmd As New SqlCommand(query, conn)
@@ -90,6 +90,7 @@ Public Class SQLServerManager
                     cmd.Parameters.AddWithValue("@sync_status", record.SyncStatus)
                     cmd.Parameters.AddWithValue("@start_date", record.StartDate)
                     cmd.Parameters.AddWithValue("@end_date", record.EndDate)
+                    cmd.Parameters.AddWithValue("@end_recording_date", If(record.EndRecordingDate.HasValue, record.EndRecordingDate.Value, DBNull.Value))
 
                     cmd.ExecuteNonQuery()
                 End Using

@@ -22,9 +22,13 @@ Public Class InterfaceData
     End Sub
 
     Public Sub ProcessAlert(alert As InterfaceAlertData)
+        Console.WriteLine($"🚨 Processing Alert: {alert.NodeId} - {alert.Message} (Value: {alert.CurrentValue})")
+        
         If sqlite.InsertAlert(alert) Then
+            Console.WriteLine($"✅ Alert saved to database: {alert.NodeId}")
             sqlite.LogEvent("Warning", "InterfaceData", $"Alert saved: {alert.NodeId} - {alert.Message}")
         Else
+            Console.WriteLine($"❌ Failed to save Alert: {alert.NodeId}")
             sqlite.LogEvent("Error", "InterfaceData", $"Failed to save Alert: {alert.NodeId}")
         End If
 

@@ -10,10 +10,13 @@ Public Class AnalyticsManager2
 
     ' Map OPC sensor data to SQLite sensor_data structure
     Public Function MapSensorData(nodeId As String, displayName As String, value As Double, status As String) As InterfaceSensorData
+        ' Convert raw value to PSI
+        Dim psiValue = ConvertToPSI(value)
+        
         Return New InterfaceSensorData With {
             .NodeId = nodeId,
             .SensorType = GetSensorType(nodeId),
-            .Value = value,
+            .Value = psiValue,
             .DataType = "Float",
             .Status = status,
             .SyncStatus = "Pending",
@@ -51,20 +54,28 @@ Public Class AnalyticsManager2
             Return Nothing
         End If
 
-        ' PressureGauge: nilai > 0 = leaking, nilai = 0 = normal
-        If value > 0 Then
+        ' Get threshold from settings
+        Dim threshold As Double = 0.0
+        Try
+            threshold = Convert.ToDouble(My.Settings.thresholdPressureGauge)
+        Catch
+            threshold = 0.2 ' Default fallback
+        End Try
+
+        ' PressureGauge: nilai > threshold = leaking
+        If value > threshold Then
             Return New InterfaceAlertData With {
                 .NodeId = nodeId,
                 .SensorType = sensorType,
-                .Message = $"LEAKING DETECTED: Pressure spike {value:F2} PSI",
-                .Threshold = 0.0,
+                .Message = $"LEAKING DETECTED: Pressure spike {value:F2} PSI (threshold: {threshold:F2})",
+                .Threshold = threshold,
                 .CurrentValue = value,
                 .Severity = "CRITICAL",
                 .Timestamp = DateTime.UtcNow
             }
         End If
 
-        ' Nilai = 0 dianggap normal, tidak perlu alert
+        ' Nilai <= threshold dianggap normal
         Return Nothing
     End Function
 
@@ -111,6 +122,21 @@ Public Class AnalyticsManager2
         End If
         
         Return "unknown"
+    End Function
+    
+    ' Convert raw sensor value to PSI
+    Private Function ConvertToPSI(rawValue As Double) As Double
+        ' Assuming raw value is in some unit that needs conversion
+        ' Example: if raw value 376.875 should be ~25 PSI
+        ' Conversion factor: 376.875 / 25 = ~15.075
+        
+        ' Adjust this conversion factor based on your sensor specs
+        Dim conversionFactor As Double = 15.075
+        
+        Dim psiValue = rawValue / conversionFactor
+        
+        ' Round to 2 decimal places
+        Return Math.Round(psiValue, 2)
     End Function
 
     Public Function ComputeDailyStats(sensorId As String, dates As String) As Dictionary(Of String, Double)

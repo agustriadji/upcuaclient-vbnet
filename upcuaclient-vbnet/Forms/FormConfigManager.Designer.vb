@@ -52,6 +52,9 @@ Partial Class FormConfigManager
         Me.TextBoxHostDB = New System.Windows.Forms.TextBox()
         Me.ButtonSaveForm = New System.Windows.Forms.Button()
         Me.ButtonCancelForm = New System.Windows.Forms.Button()
+        Me.Label2 = New System.Windows.Forms.Label()
+        Me.TextBoxThresholdPressureGauge = New System.Windows.Forms.TextBox()
+        Me.Label1 = New System.Windows.Forms.Label()
         Me.GroupBox1.SuspendLayout()
         CType(Me.NumericUpDownInterval, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.GroupBox2.SuspendLayout()
@@ -61,15 +64,16 @@ Partial Class FormConfigManager
         '
         'GroupBox1
         '
+        Me.GroupBox1.Controls.Add(Me.Label1)
+        Me.GroupBox1.Controls.Add(Me.TextBoxThresholdPressureGauge)
+        Me.GroupBox1.Controls.Add(Me.Label2)
         Me.GroupBox1.Controls.Add(Me.LabelInfoInterval)
         Me.GroupBox1.Controls.Add(Me.NumericUpDownInterval)
         Me.GroupBox1.Controls.Add(Me.LabelInternal)
         Me.GroupBox1.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.GroupBox1.Location = New System.Drawing.Point(14, 24)
-        Me.GroupBox1.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.GroupBox1.Location = New System.Drawing.Point(12, 21)
         Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Padding = New System.Windows.Forms.Padding(3, 4, 3, 4)
-        Me.GroupBox1.Size = New System.Drawing.Size(874, 80)
+        Me.GroupBox1.Size = New System.Drawing.Size(777, 70)
         Me.GroupBox1.TabIndex = 0
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "General"
@@ -80,7 +84,7 @@ Partial Class FormConfigManager
         Me.LabelInfoInterval.BackColor = System.Drawing.Color.Transparent
         Me.LabelInfoInterval.Font = New System.Drawing.Font("Segoe UI", 7.8!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.LabelInfoInterval.ForeColor = System.Drawing.SystemColors.ControlDarkDark
-        Me.LabelInfoInterval.Location = New System.Drawing.Point(129, 42)
+        Me.LabelInfoInterval.Location = New System.Drawing.Point(115, 37)
         Me.LabelInfoInterval.Name = "LabelInfoInterval"
         Me.LabelInfoInterval.Size = New System.Drawing.Size(59, 17)
         Me.LabelInfoInterval.TabIndex = 20
@@ -90,17 +94,16 @@ Partial Class FormConfigManager
         'NumericUpDownInterval
         '
         Me.NumericUpDownInterval.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.NumericUpDownInterval.Location = New System.Drawing.Point(77, 39)
-        Me.NumericUpDownInterval.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.NumericUpDownInterval.Location = New System.Drawing.Point(68, 34)
         Me.NumericUpDownInterval.Name = "NumericUpDownInterval"
-        Me.NumericUpDownInterval.Size = New System.Drawing.Size(44, 27)
+        Me.NumericUpDownInterval.Size = New System.Drawing.Size(39, 27)
         Me.NumericUpDownInterval.TabIndex = 1
         '
         'LabelInternal
         '
         Me.LabelInternal.AutoSize = True
         Me.LabelInternal.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.LabelInternal.Location = New System.Drawing.Point(6, 40)
+        Me.LabelInternal.Location = New System.Drawing.Point(5, 35)
         Me.LabelInternal.Name = "LabelInternal"
         Me.LabelInternal.Size = New System.Drawing.Size(58, 20)
         Me.LabelInternal.TabIndex = 0
@@ -122,11 +125,9 @@ Partial Class FormConfigManager
         Me.GroupBox2.Controls.Add(Me.TextBoxHostOpc)
         Me.GroupBox2.Controls.Add(Me.LabelHostOpc)
         Me.GroupBox2.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.GroupBox2.Location = New System.Drawing.Point(14, 112)
-        Me.GroupBox2.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.GroupBox2.Location = New System.Drawing.Point(12, 97)
         Me.GroupBox2.Name = "GroupBox2"
-        Me.GroupBox2.Padding = New System.Windows.Forms.Padding(3, 4, 3, 4)
-        Me.GroupBox2.Size = New System.Drawing.Size(873, 245)
+        Me.GroupBox2.Size = New System.Drawing.Size(776, 213)
         Me.GroupBox2.TabIndex = 1
         Me.GroupBox2.TabStop = False
         Me.GroupBox2.Text = "OPC Connection"
@@ -134,9 +135,9 @@ Partial Class FormConfigManager
         'ButtonSelectObjectOpc
         '
         Me.ButtonSelectObjectOpc.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ButtonSelectObjectOpc.Location = New System.Drawing.Point(737, 40)
+        Me.ButtonSelectObjectOpc.Location = New System.Drawing.Point(655, 35)
         Me.ButtonSelectObjectOpc.Name = "ButtonSelectObjectOpc"
-        Me.ButtonSelectObjectOpc.Size = New System.Drawing.Size(80, 30)
+        Me.ButtonSelectObjectOpc.Size = New System.Drawing.Size(71, 26)
         Me.ButtonSelectObjectOpc.TabIndex = 22
         Me.ButtonSelectObjectOpc.Text = "Add"
         Me.ButtonSelectObjectOpc.UseVisualStyleBackColor = True
@@ -145,9 +146,9 @@ Partial Class FormConfigManager
         '
         Me.ComboBoxSelectObjectOpc.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.ComboBoxSelectObjectOpc.FormattingEnabled = True
-        Me.ComboBoxSelectObjectOpc.Location = New System.Drawing.Point(536, 42)
+        Me.ComboBoxSelectObjectOpc.Location = New System.Drawing.Point(476, 37)
         Me.ComboBoxSelectObjectOpc.Name = "ComboBoxSelectObjectOpc"
-        Me.ComboBoxSelectObjectOpc.Size = New System.Drawing.Size(180, 28)
+        Me.ComboBoxSelectObjectOpc.Size = New System.Drawing.Size(160, 28)
         Me.ComboBoxSelectObjectOpc.TabIndex = 21
         '
         'DGVSelectedNodeOpc
@@ -157,14 +158,14 @@ Partial Class FormConfigManager
         Me.DGVSelectedNodeOpc.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.DGVSelectedNodeOpc.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.NodeText, Me.NodeId, Me.NodeType})
         Me.DGVSelectedNodeOpc.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.DGVSelectedNodeOpc.Location = New System.Drawing.Point(3, 149)
+        Me.DGVSelectedNodeOpc.Location = New System.Drawing.Point(3, 130)
         Me.DGVSelectedNodeOpc.Name = "DGVSelectedNodeOpc"
         Me.DGVSelectedNodeOpc.ReadOnly = True
         Me.DGVSelectedNodeOpc.RowHeadersVisible = False
         Me.DGVSelectedNodeOpc.RowHeadersWidth = 51
         Me.DGVSelectedNodeOpc.RowTemplate.Height = 24
         Me.DGVSelectedNodeOpc.ShowCellToolTips = False
-        Me.DGVSelectedNodeOpc.Size = New System.Drawing.Size(867, 92)
+        Me.DGVSelectedNodeOpc.Size = New System.Drawing.Size(770, 80)
         Me.DGVSelectedNodeOpc.TabIndex = 20
         '
         'NodeText
@@ -194,7 +195,7 @@ Partial Class FormConfigManager
         Me.LabelExampleHostOpc.BackColor = System.Drawing.Color.Transparent
         Me.LabelExampleHostOpc.Font = New System.Drawing.Font("Segoe UI", 7.8!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.LabelExampleHostOpc.ForeColor = System.Drawing.SystemColors.ControlDarkDark
-        Me.LabelExampleHostOpc.Location = New System.Drawing.Point(63, 75)
+        Me.LabelExampleHostOpc.Location = New System.Drawing.Point(56, 65)
         Me.LabelExampleHostOpc.Name = "LabelExampleHostOpc"
         Me.LabelExampleHostOpc.Size = New System.Drawing.Size(181, 17)
         Me.LabelExampleHostOpc.TabIndex = 18
@@ -206,7 +207,7 @@ Partial Class FormConfigManager
         Me.LabelMessageStateNamespaceOpc.AutoSize = True
         Me.LabelMessageStateNamespaceOpc.BackColor = System.Drawing.SystemColors.ActiveCaption
         Me.LabelMessageStateNamespaceOpc.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.LabelMessageStateNamespaceOpc.Location = New System.Drawing.Point(536, 77)
+        Me.LabelMessageStateNamespaceOpc.Location = New System.Drawing.Point(476, 67)
         Me.LabelMessageStateNamespaceOpc.Name = "LabelMessageStateNamespaceOpc"
         Me.LabelMessageStateNamespaceOpc.Size = New System.Drawing.Size(203, 20)
         Me.LabelMessageStateNamespaceOpc.TabIndex = 9
@@ -216,10 +217,9 @@ Partial Class FormConfigManager
         'ButtonTestNamespaceOpc
         '
         Me.ButtonTestNamespaceOpc.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold)
-        Me.ButtonTestNamespaceOpc.Location = New System.Drawing.Point(763, 37)
-        Me.ButtonTestNamespaceOpc.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.ButtonTestNamespaceOpc.Location = New System.Drawing.Point(678, 32)
         Me.ButtonTestNamespaceOpc.Name = "ButtonTestNamespaceOpc"
-        Me.ButtonTestNamespaceOpc.Size = New System.Drawing.Size(84, 40)
+        Me.ButtonTestNamespaceOpc.Size = New System.Drawing.Size(75, 35)
         Me.ButtonTestNamespaceOpc.TabIndex = 12
         Me.ButtonTestNamespaceOpc.Text = "Test"
         Me.ButtonTestNamespaceOpc.UseVisualStyleBackColor = True
@@ -228,10 +228,9 @@ Partial Class FormConfigManager
         'ButtonBrowseNodes
         '
         Me.ButtonBrowseNodes.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold)
-        Me.ButtonBrowseNodes.Location = New System.Drawing.Point(763, 85)
-        Me.ButtonBrowseNodes.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.ButtonBrowseNodes.Location = New System.Drawing.Point(678, 74)
         Me.ButtonBrowseNodes.Name = "ButtonBrowseNodes"
-        Me.ButtonBrowseNodes.Size = New System.Drawing.Size(84, 40)
+        Me.ButtonBrowseNodes.Size = New System.Drawing.Size(75, 35)
         Me.ButtonBrowseNodes.TabIndex = 13
         Me.ButtonBrowseNodes.Text = "Browse"
         Me.ButtonBrowseNodes.UseVisualStyleBackColor = True
@@ -239,10 +238,9 @@ Partial Class FormConfigManager
         '
         'TextBoxNamespaceOpc
         '
-        Me.TextBoxNamespaceOpc.Location = New System.Drawing.Point(536, 43)
-        Me.TextBoxNamespaceOpc.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.TextBoxNamespaceOpc.Location = New System.Drawing.Point(476, 37)
         Me.TextBoxNamespaceOpc.Name = "TextBoxNamespaceOpc"
-        Me.TextBoxNamespaceOpc.Size = New System.Drawing.Size(208, 27)
+        Me.TextBoxNamespaceOpc.Size = New System.Drawing.Size(185, 27)
         Me.TextBoxNamespaceOpc.TabIndex = 11
         Me.TextBoxNamespaceOpc.Visible = False
         '
@@ -250,7 +248,7 @@ Partial Class FormConfigManager
         '
         Me.LabelNamespaceOpc.AutoSize = True
         Me.LabelNamespaceOpc.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.LabelNamespaceOpc.Location = New System.Drawing.Point(453, 49)
+        Me.LabelNamespaceOpc.Location = New System.Drawing.Point(403, 43)
         Me.LabelNamespaceOpc.Name = "LabelNamespaceOpc"
         Me.LabelNamespaceOpc.Size = New System.Drawing.Size(59, 20)
         Me.LabelNamespaceOpc.TabIndex = 10
@@ -261,7 +259,7 @@ Partial Class FormConfigManager
         Me.LabelMessageStateHostOpc.AutoSize = True
         Me.LabelMessageStateHostOpc.BackColor = System.Drawing.SystemColors.ActiveCaption
         Me.LabelMessageStateHostOpc.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.LabelMessageStateHostOpc.Location = New System.Drawing.Point(63, 101)
+        Me.LabelMessageStateHostOpc.Location = New System.Drawing.Point(56, 88)
         Me.LabelMessageStateHostOpc.Name = "LabelMessageStateHostOpc"
         Me.LabelMessageStateHostOpc.Size = New System.Drawing.Size(203, 20)
         Me.LabelMessageStateHostOpc.TabIndex = 6
@@ -271,10 +269,9 @@ Partial Class FormConfigManager
         'ButtonTestHostOpc
         '
         Me.ButtonTestHostOpc.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold)
-        Me.ButtonTestHostOpc.Location = New System.Drawing.Point(292, 44)
-        Me.ButtonTestHostOpc.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.ButtonTestHostOpc.Location = New System.Drawing.Point(260, 38)
         Me.ButtonTestHostOpc.Name = "ButtonTestHostOpc"
-        Me.ButtonTestHostOpc.Size = New System.Drawing.Size(85, 30)
+        Me.ButtonTestHostOpc.Size = New System.Drawing.Size(76, 26)
         Me.ButtonTestHostOpc.TabIndex = 8
         Me.ButtonTestHostOpc.Text = "Test"
         Me.ButtonTestHostOpc.UseVisualStyleBackColor = True
@@ -282,17 +279,16 @@ Partial Class FormConfigManager
         'TextBoxHostOpc
         '
         Me.TextBoxHostOpc.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.TextBoxHostOpc.Location = New System.Drawing.Point(66, 44)
-        Me.TextBoxHostOpc.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.TextBoxHostOpc.Location = New System.Drawing.Point(59, 38)
         Me.TextBoxHostOpc.Name = "TextBoxHostOpc"
-        Me.TextBoxHostOpc.Size = New System.Drawing.Size(208, 27)
+        Me.TextBoxHostOpc.Size = New System.Drawing.Size(185, 27)
         Me.TextBoxHostOpc.TabIndex = 7
         '
         'LabelHostOpc
         '
         Me.LabelHostOpc.AutoSize = True
         Me.LabelHostOpc.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.LabelHostOpc.Location = New System.Drawing.Point(7, 51)
+        Me.LabelHostOpc.Location = New System.Drawing.Point(6, 44)
         Me.LabelHostOpc.Name = "LabelHostOpc"
         Me.LabelHostOpc.Size = New System.Drawing.Size(40, 20)
         Me.LabelHostOpc.TabIndex = 6
@@ -306,11 +302,9 @@ Partial Class FormConfigManager
         Me.GroupBox3.Controls.Add(Me.ButtonTestHostDB)
         Me.GroupBox3.Controls.Add(Me.TextBoxHostDB)
         Me.GroupBox3.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.GroupBox3.Location = New System.Drawing.Point(17, 365)
-        Me.GroupBox3.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.GroupBox3.Location = New System.Drawing.Point(15, 317)
         Me.GroupBox3.Name = "GroupBox3"
-        Me.GroupBox3.Padding = New System.Windows.Forms.Padding(3, 4, 3, 4)
-        Me.GroupBox3.Size = New System.Drawing.Size(873, 154)
+        Me.GroupBox3.Size = New System.Drawing.Size(776, 134)
         Me.GroupBox3.TabIndex = 2
         Me.GroupBox3.TabStop = False
         Me.GroupBox3.Text = "Database Connection"
@@ -321,7 +315,7 @@ Partial Class FormConfigManager
         Me.LabelExampleHostDB.BackColor = System.Drawing.Color.Transparent
         Me.LabelExampleHostDB.Font = New System.Drawing.Font("Segoe UI", 7.8!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.LabelExampleHostDB.ForeColor = System.Drawing.SystemColors.ControlDarkDark
-        Me.LabelExampleHostDB.Location = New System.Drawing.Point(63, 76)
+        Me.LabelExampleHostDB.Location = New System.Drawing.Point(56, 66)
         Me.LabelExampleHostDB.Name = "LabelExampleHostDB"
         Me.LabelExampleHostDB.Size = New System.Drawing.Size(113, 17)
         Me.LabelExampleHostDB.TabIndex = 21
@@ -333,7 +327,7 @@ Partial Class FormConfigManager
         Me.LabelMessageStateHostDB.AutoSize = True
         Me.LabelMessageStateHostDB.BackColor = System.Drawing.SystemColors.ActiveCaption
         Me.LabelMessageStateHostDB.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.LabelMessageStateHostDB.Location = New System.Drawing.Point(63, 106)
+        Me.LabelMessageStateHostDB.Location = New System.Drawing.Point(56, 92)
         Me.LabelMessageStateHostDB.Name = "LabelMessageStateHostDB"
         Me.LabelMessageStateHostDB.Size = New System.Drawing.Size(196, 20)
         Me.LabelMessageStateHostDB.TabIndex = 9
@@ -344,7 +338,7 @@ Partial Class FormConfigManager
         '
         Me.LabelHostDB.AutoSize = True
         Me.LabelHostDB.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.LabelHostDB.Location = New System.Drawing.Point(7, 52)
+        Me.LabelHostDB.Location = New System.Drawing.Point(6, 45)
         Me.LabelHostDB.Name = "LabelHostDB"
         Me.LabelHostDB.Size = New System.Drawing.Size(40, 20)
         Me.LabelHostDB.TabIndex = 9
@@ -353,10 +347,9 @@ Partial Class FormConfigManager
         'ButtonTestHostDB
         '
         Me.ButtonTestHostDB.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold)
-        Me.ButtonTestHostDB.Location = New System.Drawing.Point(416, 43)
-        Me.ButtonTestHostDB.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.ButtonTestHostDB.Location = New System.Drawing.Point(370, 37)
         Me.ButtonTestHostDB.Name = "ButtonTestHostDB"
-        Me.ButtonTestHostDB.Size = New System.Drawing.Size(80, 30)
+        Me.ButtonTestHostDB.Size = New System.Drawing.Size(71, 26)
         Me.ButtonTestHostDB.TabIndex = 11
         Me.ButtonTestHostDB.Text = "Test"
         Me.ButtonTestHostDB.UseVisualStyleBackColor = True
@@ -364,20 +357,18 @@ Partial Class FormConfigManager
         'TextBoxHostDB
         '
         Me.TextBoxHostDB.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.TextBoxHostDB.Location = New System.Drawing.Point(66, 45)
-        Me.TextBoxHostDB.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.TextBoxHostDB.Location = New System.Drawing.Point(59, 39)
         Me.TextBoxHostDB.Name = "TextBoxHostDB"
-        Me.TextBoxHostDB.Size = New System.Drawing.Size(330, 27)
+        Me.TextBoxHostDB.Size = New System.Drawing.Size(294, 27)
         Me.TextBoxHostDB.TabIndex = 10
         '
         'ButtonSaveForm
         '
         Me.ButtonSaveForm.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.ButtonSaveForm.Location = New System.Drawing.Point(800, 527)
-        Me.ButtonSaveForm.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.ButtonSaveForm.Location = New System.Drawing.Point(711, 458)
         Me.ButtonSaveForm.Name = "ButtonSaveForm"
-        Me.ButtonSaveForm.Padding = New System.Windows.Forms.Padding(4, 6, 4, 6)
-        Me.ButtonSaveForm.Size = New System.Drawing.Size(90, 40)
+        Me.ButtonSaveForm.Padding = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.ButtonSaveForm.Size = New System.Drawing.Size(80, 35)
         Me.ButtonSaveForm.TabIndex = 3
         Me.ButtonSaveForm.Text = "Save"
         Me.ButtonSaveForm.UseVisualStyleBackColor = True
@@ -385,30 +376,59 @@ Partial Class FormConfigManager
         'ButtonCancelForm
         '
         Me.ButtonCancelForm.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.ButtonCancelForm.Location = New System.Drawing.Point(696, 527)
-        Me.ButtonCancelForm.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.ButtonCancelForm.Location = New System.Drawing.Point(619, 458)
         Me.ButtonCancelForm.Name = "ButtonCancelForm"
-        Me.ButtonCancelForm.Padding = New System.Windows.Forms.Padding(4, 6, 4, 6)
-        Me.ButtonCancelForm.Size = New System.Drawing.Size(90, 40)
+        Me.ButtonCancelForm.Padding = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.ButtonCancelForm.Size = New System.Drawing.Size(80, 35)
         Me.ButtonCancelForm.TabIndex = 4
         Me.ButtonCancelForm.Text = "Cancel"
         Me.ButtonCancelForm.UseVisualStyleBackColor = True
         '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label2.Location = New System.Drawing.Point(186, 37)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(166, 20)
+        Me.Label2.TabIndex = 21
+        Me.Label2.Text = "Threshold Leak Pressure"
+        '
+        'TextBoxThresholdPressureGauge
+        '
+        Me.TextBoxThresholdPressureGauge.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.TextBoxThresholdPressureGauge.Location = New System.Drawing.Point(358, 34)
+        Me.TextBoxThresholdPressureGauge.Name = "TextBoxThresholdPressureGauge"
+        Me.TextBoxThresholdPressureGauge.Size = New System.Drawing.Size(67, 27)
+        Me.TextBoxThresholdPressureGauge.TabIndex = 23
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.BackColor = System.Drawing.Color.Transparent
+        Me.Label1.Font = New System.Drawing.Font("Segoe UI", 7.8!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label1.ForeColor = System.Drawing.SystemColors.ControlDarkDark
+        Me.Label1.Location = New System.Drawing.Point(433, 39)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(80, 17)
+        Me.Label1.TabIndex = 24
+        Me.Label1.Text = "(Default: 0.2)"
+        Me.Label1.Visible = False
+        '
         'FormConfigManager
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 23.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(900, 573)
+        Me.ClientSize = New System.Drawing.Size(800, 498)
         Me.Controls.Add(Me.ButtonCancelForm)
         Me.Controls.Add(Me.ButtonSaveForm)
         Me.Controls.Add(Me.GroupBox3)
         Me.Controls.Add(Me.GroupBox2)
         Me.Controls.Add(Me.GroupBox1)
-        Me.Font = New System.Drawing.Font("Segoe UI", 10.2!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Font = New System.Drawing.Font("Segoe UI", 9.0!)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
-        Me.MaximumSize = New System.Drawing.Size(918, 620)
-        Me.MinimumSize = New System.Drawing.Size(918, 620)
+        Me.MaximumSize = New System.Drawing.Size(818, 545)
+        Me.MinimumSize = New System.Drawing.Size(818, 545)
         Me.Name = "FormConfigManager"
         Me.ShowIcon = False
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
@@ -454,4 +474,7 @@ Partial Class FormConfigManager
     Friend WithEvents NodeText As DataGridViewComboBoxColumn
     Friend WithEvents NodeId As DataGridViewTextBoxColumn
     Friend WithEvents NodeType As DataGridViewTextBoxColumn
+    Friend WithEvents Label2 As Label
+    Friend WithEvents Label1 As Label
+    Friend WithEvents TextBoxThresholdPressureGauge As TextBox
 End Class

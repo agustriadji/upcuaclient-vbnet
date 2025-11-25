@@ -112,7 +112,8 @@ Public Class SqlServerConnection
                     status NVARCHAR(20) NOT NULL,
                     sync_status NVARCHAR(20) NOT NULL,
                     start_date DATETIME2 NOT NULL,
-                    end_date DATETIME2 NOT NULL
+                    end_date DATETIME2 NOT NULL,
+                    end_recording_date DATETIME2 NULL
                 )"
 
                 ' Create system_logs table
@@ -146,6 +147,9 @@ Public Class SqlServerConnection
                     End Try
                 Next
 
+                ' Run database migrations for existing tables
+                Await RunDatabaseMigrations(connection)
+                
                 ' Verify table creation
                 Using verifyCmd As New SqlCommand(checkTableSql, connection)
                     Dim tableCreated = CInt(Await verifyCmd.ExecuteScalarAsync()) > 0
@@ -157,6 +161,34 @@ Public Class SqlServerConnection
         Catch ex As Exception
             Console.WriteLine($"❌ ExecuteSchema error: {ex.Message}")
             Return False
+        End Try
+    End Function
+    
+    Private Shared Async Function RunDatabaseMigrations(connection As SqlConnection) As Task
+        Try
+            ' Check if end_recording_date column exists in record_metadata table
+            Dim checkColumnQuery = "
+                SELECT COUNT(*) 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'record_metadata' 
+                AND COLUMN_NAME = 'end_recording_date'
+            "
+            
+            Using checkCmd As New SqlCommand(checkColumnQuery, connection)
+                Dim columnExists = CInt(Await checkCmd.ExecuteScalarAsync()) > 0
+                
+                If Not columnExists Then
+                    ' Add end_recording_date column to existing record_metadata table
+                    Dim alterQuery = "ALTER TABLE record_metadata ADD end_recording_date DATETIME2 NULL"
+                    Using alterCmd As New SqlCommand(alterQuery, connection)
+                        Await alterCmd.ExecuteNonQueryAsync()
+                        Console.WriteLine($"✅ Added end_recording_date column to record_metadata table")
+                    End Using
+                End If
+            End Using
+            
+        Catch ex As Exception
+            Console.WriteLine($"⚠️ SQL Server migration error: {ex.Message}")
         End Try
     End Function
 

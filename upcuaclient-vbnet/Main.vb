@@ -1,6 +1,7 @@
-﻿Imports System.IO
+Imports System.IO
 Imports System.Runtime.InteropServices
 Imports System.Threading
+Imports OfficeOpenXml
 
 Namespace upcuaclient_vbnet
     Module Main
@@ -12,6 +13,12 @@ Namespace upcuaclient_vbnet
 
         <STAThread()>
         Sub Main()
+            ' Soft error handling - suppress all UI errors
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException)
+            AddHandler Application.ThreadException, Sub(s, e)
+                                                        ' Ignore UI errors silently
+                                                    End Sub
+
             Application.EnableVisualStyles()
             Application.SetCompatibleTextRenderingDefault(False)
 
@@ -19,34 +26,27 @@ Namespace upcuaclient_vbnet
             bgWorker = upcuaclient_vbnet.BackgroundWorkerManager.Instance
             bgWorker.Start()
 
-            ' Tray Icon Setup
-
-            trayIcon = New NotifyIcon() With {
-                .Icon = My.Resources._321,
-                .Visible = True,
-                .Text = "Sensor Monitor"
-            }
-            Dim menu As New ContextMenuStrip()
-            menu.Items.Add("Open", Nothing, AddressOf ShowDashboard)
-            menu.Items.Add("Exit", Nothing, AddressOf ExitApp)
-            trayIcon.ContextMenuStrip = menu
-
-
             ' Alokasi console untuk debugging
             AllocConsole()
             Console.WriteLine("🚀 Starting OPC UA Client...")
 
-            ' 🔒 Cegah duplikasi instance
-            Dim isNew As Boolean
-            Dim mutex As New Mutex(True, "SensorTrayApp", isNew)
-            If Not isNew Then
-                MessageBox.Show("Aplikasi sudah berjalan di tray.", "Informasi", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                Return
-            End If
+            Try
+                Dim context As New TrayAppContext()
+                Application.Run(context)
+            Catch ex As Exception
+                Console.WriteLine($"❌ TrayAppContext Error: {ex.Message}")
+                Console.WriteLine($"🔍 Stack: {ex.StackTrace}")
 
-            Dim context As New TrayAppContext()
-            Application.Run(context)
-
+                ' Fallback: Run MainFormNew directly
+                Try
+                    Console.WriteLine("🔄 Fallback: Starting MainFormNew directly...")
+                    Dim mainForm As New MainFormNew()
+                    Application.Run(mainForm)
+                Catch fallbackEx As Exception
+                    Console.WriteLine($"❌ Fallback failed: {fallbackEx.Message}")
+                    MessageBox.Show($"Critical error starting application: {fallbackEx.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                End Try
+            End Try
         End Sub
         Private Async Sub ExitApp(sender As Object, e As EventArgs)
             Try

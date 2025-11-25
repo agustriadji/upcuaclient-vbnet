@@ -4,15 +4,79 @@ Imports System.IO
 Public Class FormConfigManager
 
     Private Sub FormConfigManager_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        FormStyler.ApplyStandardStyle(Me)
         SettingsManager.InitializeDefaults()
         PopulateForm()
+
+        ' Add event handler for hostOpc changes
+        AddHandler TextBoxHostOpc.TextChanged, AddressOf TextBoxHostOpc_TextChanged
     End Sub
+
+    Private Sub TextBoxHostOpc_TextChanged(sender As Object, e As EventArgs)
+        ' Only clear UI when hostOpc changes to prevent ComboBox value errors
+        Try
+            DGVSelectedNodeOpc.Rows.Clear()
+            Dim nodeColumn = CType(DGVSelectedNodeOpc.Columns("NodeText"), DataGridViewComboBoxColumn)
+            nodeColumn.Items.Clear()
+            ComboBoxSelectObjectOpc.Items.Clear()
+            LabelMessageStateHostOpc.Visible = False
+            LabelMessageStateNamespaceOpc.Visible = False
+        Catch ex As Exception
+            ' Ignore errors during cleanup
+        End Try
+    End Sub
+
+    Private Async Function ForceStopAllRecordings() As Task
+        Try
+            Console.WriteLine("🚨 Force stopping all recordings due to hostOpc change...")
+
+            ' 1. Update all "Recording" status to "Force Stop" in SQLite
+            Dim sqlite As New SQLiteManager()
+            Dim activeRecordings = sqlite.QueryBatchRange(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow)
+            Dim recordingBatches = activeRecordings.Where(Function(r) r.Status.ToLower() = "recording").ToList()
+
+            Console.WriteLine($"📊 Found {recordingBatches.Count} active recordings to force stop")
+
+            For Each batch In recordingBatches
+                ' Update status to Force Stop
+                batch.Status = "Force Stop"
+                batch.SyncStatus = "Force Stop"
+                batch.EndDate = DateTime.UtcNow
+                sqlite.InsertOrUpdateRecordMetadata(batch)
+
+                ' Export to SQL Server if connected
+                If My.Settings.stateConnectionDB Then
+                    Try
+                        Dim sqlServerManager As New SQLServerManager()
+                        sqlServerManager.ExportRecordData(batch.BatchId)
+                        Console.WriteLine($"✅ Exported force stopped batch: {batch.BatchId}")
+                    Catch exportEx As Exception
+                        Console.WriteLine($"⚠️ Export failed for {batch.BatchId}: {exportEx.Message}")
+                    End Try
+                End If
+            Next
+
+            ' 2. Reset all OPC-related settings
+            My.Settings.namespaceOpc = ""
+            My.Settings.nodeIdOpc = "[]"
+            My.Settings.selectedNodeIdOpc = "[]"
+            My.Settings.selectedNodeSensor = "{}"
+            My.Settings.endRecording = "[]"
+            My.Settings.Save()
+
+            Console.WriteLine($"✅ Force stopped {recordingBatches.Count} recordings and reset OPC settings")
+
+        Catch ex As Exception
+            Console.WriteLine($"⚠️ ForceStopAllRecordings Error: {ex.Message}")
+        End Try
+    End Function
 
 
 
     Private Sub PopulateForm()
         ' General Settings
         NumericUpDownInterval.Value = My.Settings.intervalTime \ 60000 ' Convert ms to minutes
+        TextBoxThresholdPressureGauge.Text = My.Settings.thresholdPressureGauge
 
         ' OPC Settings
         TextBoxHostOpc.Text = My.Settings.hostOpc
@@ -47,15 +111,15 @@ Public Class FormConfigManager
 
         ' Get selected nodes (user's chosen objects) for DGV
         Dim selectedNodes = SettingsManager.GetSelectedNodeIdOpc()
-        LoggerDebug.LogInfo($"LoadNodesIntoGrid: Found {selectedNodes.Count} selected nodes")
+        ' LoggerDebug.LogInfo($"LoadNodesIntoGrid: Found {selectedNodes.Count} selected nodes")
 
         ' Debug selected nodes
-        For i = 0 To selectedNodes.Count - 1
-            LoggerDebug.LogInfo($"Selected node {i}: {selectedNodes(i).Keys.Count} keys")
-            For Each key In selectedNodes(i).Keys
-                LoggerDebug.LogInfo($"  Key: {key} = {selectedNodes(i)(key)}")
-            Next
-        Next
+        ' For i = 0 To selectedNodes.Count - 1
+        '     LoggerDebug.LogInfo($"Selected node {i}: {selectedNodes(i).Keys.Count} keys")
+        '     For Each key In selectedNodes(i).Keys
+        '         LoggerDebug.LogInfo($"  Key: {key} = {selectedNodes(i)(key)}")
+        '     Next
+        ' Next
 
         ' Get available nodes for ComboBox options
         Dim availableNodes = SettingsManager.GetNodeIdOpc()
@@ -82,8 +146,28 @@ Public Class FormConfigManager
 
     Private Sub SaveConfiguration()
         Try
+            ' Check if hostOpc changed
+            Dim hostOpcChanged = (My.Settings.hostOpc <> TextBoxHostOpc.Text)
+
+            If hostOpcChanged Then
+                ' Warn user about force stopping recordings
+                Dim result = MessageBox.Show(
+                    "Changing OPC host will force stop all active recordings and reset OPC settings. Continue?",
+                    "Confirm OPC Host Change",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning)
+
+                If result = DialogResult.No Then
+                    Return
+                End If
+
+                ' Force stop all recordings and reset OPC settings (synchronous)
+                ForceStopAllRecordingsSync()
+            End If
+
             ' Update settings with form values
             My.Settings.intervalTime = CInt(NumericUpDownInterval.Value) * 60000 ' Convert minutes to ms
+            My.Settings.thresholdPressureGauge = TextBoxThresholdPressureGauge.Text
             My.Settings.hostOpc = TextBoxHostOpc.Text
             My.Settings.namespaceOpc = TextBoxNamespaceOpc.Text
             My.Settings.hostDB = TextBoxHostDB.Text
@@ -92,11 +176,56 @@ Public Class FormConfigManager
             SettingsManager.SaveAll()
 
             MessageBox.Show("Configuration saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            LoggerDebug.LogInfo("Configuration saved successfully!")
+            ' LoggerDebug.LogInfo("Configuration saved successfully!")
             Me.DialogResult = DialogResult.OK
             Me.Close()
         Catch ex As Exception
             MessageBox.Show($"Error saving config:  {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+    
+    Private Sub ForceStopAllRecordingsSync()
+        Try
+            Console.WriteLine("🚨 Force stopping all recordings due to hostOpc change...")
+
+            ' 1. Update all "Recording" status to "Force Stop" in SQLite
+            Dim sqlite As New SQLiteManager()
+            Dim activeRecordings = sqlite.QueryBatchRange(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow)
+            Dim recordingBatches = activeRecordings.Where(Function(r) r.Status.ToLower() = "recording").ToList()
+
+            Console.WriteLine($"📊 Found {recordingBatches.Count} active recordings to force stop")
+
+            For Each batch In recordingBatches
+                ' Update status to Force Stop
+                batch.Status = "Force Stop"
+                batch.SyncStatus = "Force Stop"
+                batch.EndDate = DateTime.UtcNow
+                sqlite.InsertOrUpdateRecordMetadata(batch)
+
+                ' Export to SQL Server if connected (synchronous)
+                If My.Settings.stateConnectionDB Then
+                    Try
+                        Dim sqlServerManager As New SQLServerManager()
+                        sqlServerManager.ExportRecordData(batch.BatchId)
+                        Console.WriteLine($"✅ Exported force stopped batch: {batch.BatchId}")
+                    Catch exportEx As Exception
+                        Console.WriteLine($"⚠️ Export failed for {batch.BatchId}: {exportEx.Message}")
+                    End Try
+                End If
+            Next
+
+            ' 2. Reset all OPC-related settings
+            My.Settings.namespaceOpc = ""
+            My.Settings.nodeIdOpc = "[]"
+            My.Settings.selectedNodeIdOpc = "[]"
+            My.Settings.selectedNodeSensor = "{}"
+            My.Settings.endRecording = "[]"
+            My.Settings.Save()
+
+            Console.WriteLine($"✅ Force stopped {recordingBatches.Count} recordings and reset OPC settings")
+
+        Catch ex As Exception
+            Console.WriteLine($"⚠️ ForceStopAllRecordings Error: {ex.Message}")
         End Try
     End Sub
 
@@ -115,14 +244,14 @@ Public Class FormConfigManager
             LabelMessageStateHostOpc.Text = "Testing connection..."
             LabelMessageStateHostOpc.BackColor = Color.Yellow
 
-            LoggerDebug.LogDebug("Testing OPC connection...")
+            ' LoggerDebug.LogDebug("Testing OPC connection...")
 
             Dim success = Await OpcConnection.TestConnectionWithDetails(TextBoxHostOpc.Text)
 
             If success Then
                 LabelMessageStateHostOpc.Text = "Connection successful!"
                 LabelMessageStateHostOpc.BackColor = Color.LightGreen
-                LoggerDebug.LogSuccess("OPC connection OK")
+                ' LoggerDebug.LogSuccess("OPC connection OK")
 
                 ' Always discover and save objects when testing connection
                 Await DiscoverAndSaveObjects()
@@ -133,31 +262,31 @@ Public Class FormConfigManager
             Else
                 LabelMessageStateHostOpc.Text = "Connection failed"
                 LabelMessageStateHostOpc.BackColor = Color.LightCoral
-                LoggerDebug.LogError("OPC connection failed")
+                ' LoggerDebug.LogError("OPC connection failed")
             End If
         Catch ex As Exception
             LabelMessageStateHostOpc.Text = $"Connection failed: {ex.Message}"
             LabelMessageStateHostOpc.BackColor = Color.LightCoral
-            LoggerDebug.LogError("OPC connection error")
+            ' LoggerDebug.LogError("OPC connection error")
         End Try
     End Function
 
     Private Async Function DiscoverAndSaveObjects() As Task
         Try
-            LoggerDebug.LogInfo("Discovering objects...")
+            ' LoggerDebug.LogInfo("Discovering objects...")
 
             ' Clear old data first
             My.Settings.nodeIdOpc = "[]"
             My.Settings.Save()
-            LoggerDebug.LogInfo("Cleared old object data")
+            ' LoggerDebug.LogInfo("Cleared old object data")
 
             Dim objects = Await OpcConnection.GetAvailableObjects(TextBoxHostOpc.Text)
-            LoggerDebug.LogInfo($"Retrieved {objects.Count} objects from OPC")
+            ' LoggerDebug.LogInfo($"Retrieved {objects.Count} objects from OPC")
 
             ' Debug: show what keys we got
-            If objects.Count > 0 Then
-                LoggerDebug.LogInfo($"First object keys: {String.Join(", ", objects(0).Keys)}")
-            End If
+            ' If objects.Count > 0 Then
+            '     LoggerDebug.LogInfo($"First object keys: {String.Join(", ", objects(0).Keys)}")
+            ' End If
 
             ' Save discovered objects to settings.nodeIdOpc
             For Each obj In objects
@@ -165,9 +294,9 @@ Public Class FormConfigManager
             Next
 
             SettingsManager.SaveAll()
-            LoggerDebug.LogSuccess($"Saved {objects.Count} objects to settings")
+            ' LoggerDebug.LogSuccess($"Saved {objects.Count} objects to settings")
         Catch ex As Exception
-            LoggerDebug.LogError($"Failed to discover objects: {ex.Message}")
+            ' LoggerDebug.LogError($"Failed to discover objects: {ex.Message}")
         End Try
     End Function
 
@@ -176,24 +305,24 @@ Public Class FormConfigManager
             ComboBoxSelectObjectOpc.Items.Clear()
 
             Dim savedNodes = SettingsManager.GetNodeIdOpc()
-            LoggerDebug.LogInfo($"Retrieved {savedNodes.Count} nodes from settings")
+            ' LoggerDebug.LogInfo($"Retrieved {savedNodes.Count} nodes from settings")
 
             For Each nodeItem In savedNodes
-                LoggerDebug.LogInfo($"Processing node: {nodeItem.Keys.Count} keys")
+                ' LoggerDebug.LogInfo($"Processing node: {nodeItem.Keys.Count} keys")
 
                 ' Debug: show all keys in the dictionary
-                For Each key In nodeItem.Keys
-                    LoggerDebug.LogInfo($"Key: {key} = {nodeItem(key)}")
-                Next
+                ' For Each key In nodeItem.Keys
+                '     LoggerDebug.LogInfo($"Key: {key} = {nodeItem(key)}")
+                ' Next
 
                 Dim displayText = $"{nodeItem("NodeText")} [{nodeItem("NodeId")}]"
                 ComboBoxSelectObjectOpc.Items.Add(New With {.Display = displayText, .NodeId = nodeItem("NodeId"), .NodeText = nodeItem("NodeText"), .NodeType = If(nodeItem.ContainsKey("NodeType"), nodeItem("NodeType"), "Object")})
             Next
 
             ComboBoxSelectObjectOpc.DisplayMember = "Display"
-            LoggerDebug.LogSuccess($"Loaded {savedNodes.Count} objects from settings")
+            ' LoggerDebug.LogSuccess($"Loaded {savedNodes.Count} objects from settings")
         Catch ex As Exception
-            LoggerDebug.LogError($"Failed to load saved objects: {ex.Message}")
+            ' LoggerDebug.LogError($"Failed to load saved objects: {ex.Message}")
         End Try
     End Sub
 
@@ -204,7 +333,7 @@ Public Class FormConfigManager
     Private Async Function SelectObject() As Task
         Try
             If ComboBoxSelectObjectOpc.SelectedItem Is Nothing Then
-                LoggerDebug.LogWarning("Please select an object")
+                ' LoggerDebug.LogWarning("Please select an object")
                 Return
             End If
 
@@ -213,16 +342,16 @@ Public Class FormConfigManager
             Dim nodeText = selectedObj.NodeText
             Dim nodeType = selectedObj.NodeType
 
-            LoggerDebug.LogInfo($"Selected: {nodeText}")
-            LoggerDebug.LogInfo("Browsing child nodes...")
+            ' LoggerDebug.LogInfo($"Selected: {nodeText}")
+            ' LoggerDebug.LogInfo("Browsing child nodes...")
 
             ' Browse child nodes for the selected object
             Dim childNodes = Await BrowseChildNodes(nodeId)
-            LoggerDebug.LogInfo($"SelectObject: Found {childNodes.Count} child nodes")
+            ' LoggerDebug.LogInfo($"SelectObject: Found {childNodes.Count} child nodes")
             
             ' Debug what we're about to save
-            LoggerDebug.LogInfo($"SelectObject: Saving object - NodeText: {nodeText}, NodeId: {nodeId}, NodeType: {nodeType}")
-            LoggerDebug.LogInfo($"SelectObject: Child nodes to save: {childNodes.Count}")
+            ' LoggerDebug.LogInfo($"SelectObject: Saving object - NodeText: {nodeText}, NodeId: {nodeId}, NodeType: {nodeType}")
+            ' LoggerDebug.LogInfo($"SelectObject: Child nodes to save: {childNodes.Count}")
 
             ' Add to selectedNodeIdOpc (user's chosen objects)
             SettingsManager.AddSelectedNodeIdOpc(nodeText, nodeId, nodeType, childNodes)
@@ -234,32 +363,32 @@ Public Class FormConfigManager
             ' Refresh grid
             LoadNodesIntoGrid()
 
-            LoggerDebug.LogSuccess("Object saved with child nodes")
+            ' LoggerDebug.LogSuccess("Object saved with child nodes")
 
         Catch ex As Exception
-            LoggerDebug.LogError($"Failed to save object: {ex.Message}")
+            ' LoggerDebug.LogError($"Failed to save object: {ex.Message}")
         End Try
     End Function
 
     Private Async Function BrowseChildNodes(parentNodeId As String) As Task(Of List(Of Dictionary(Of String, String)))
         Try
-            LoggerDebug.LogInfo($"BrowseChildNodes: Starting browse for parent: {parentNodeId}")
+            ' LoggerDebug.LogInfo($"BrowseChildNodes: Starting browse for parent: {parentNodeId}")
             
             Dim childNodes = Await OpcConnection.BrowseChildNodes(TextBoxHostOpc.Text, parentNodeId)
             
-            LoggerDebug.LogInfo($"BrowseChildNodes: Retrieved {childNodes.Count} child nodes")
+            ' LoggerDebug.LogInfo($"BrowseChildNodes: Retrieved {childNodes.Count} child nodes")
             
             ' Debug each child node
-            For i = 0 To childNodes.Count - 1
-                LoggerDebug.LogInfo($"  Child {i}: {childNodes(i).Keys.Count} keys")
-                For Each key In childNodes(i).Keys
-                    LoggerDebug.LogInfo($"    Key: {key} = {childNodes(i)(key)}")
-                Next
-            Next
+            ' For i = 0 To childNodes.Count - 1
+            '     LoggerDebug.LogInfo($"  Child {i}: {childNodes(i).Keys.Count} keys")
+            '     For Each key In childNodes(i).Keys
+            '         LoggerDebug.LogInfo($"    Key: {key} = {childNodes(i)(key)}")
+            '     Next
+            ' Next
             
             Return childNodes
         Catch ex As Exception
-            LoggerDebug.LogError($"Failed to browse child nodes: {ex.Message}")
+            ' LoggerDebug.LogError($"Failed to browse child nodes: {ex.Message}")
             LoggerDebug.LogError($"Stack trace: {ex.StackTrace}")
             Return New List(Of Dictionary(Of String, String))
         End Try
@@ -288,15 +417,15 @@ Public Class FormConfigManager
                 ' Remove from settings
                 For Each NodeIds In nodeIdsToDelete
                     SettingsManager.RemoveSelectedNodeIdOpc(NodeIds)
-                    LoggerDebug.LogInfo($"Deleted object with NodeId: {NodeIds}")
+                    ' LoggerDebug.LogInfo($"Deleted object with NodeId: {NodeIds}")
                 Next
 
                 SettingsManager.SaveAll()
                 LoadNodesIntoGrid() ' Refresh grid
-                LoggerDebug.LogSuccess($"Deleted {nodeIdsToDelete.Count} objects")
+                ' LoggerDebug.LogSuccess($"Deleted {nodeIdsToDelete.Count} objects")
             End If
         Catch ex As Exception
-            LoggerDebug.LogError($"Failed to delete objects: {ex.Message}")
+            ' LoggerDebug.LogError($"Failed to delete objects: {ex.Message}")
         End Try
     End Sub
 
@@ -315,7 +444,7 @@ Public Class FormConfigManager
             LabelMessageStateHostDB.Text = "Testing database connection..."
             LabelMessageStateHostDB.BackColor = Color.Yellow
 
-            LoggerDebug.LogDebug("Testing database connection...")
+            ' LoggerDebug.LogDebug("Testing database connection...")
 
             ' Parse connection string or use default format
             Dim server = "localhost\SQLEXPRESS"
@@ -333,14 +462,14 @@ Public Class FormConfigManager
             End If
 
             ' First try to create database if not exists
-            LoggerDebug.LogInfo("Preparing database...")
+            ' LoggerDebug.LogInfo("Preparing database...")
             Dim dbCreated = Await SqlServerConnection.CreateDatabaseIfNotExists(server, database)
 
-            If dbCreated Then
-                LoggerDebug.LogSuccess("Database ready")
-            Else
-                LoggerDebug.LogWarning("Using existing database")
-            End If
+            ' If dbCreated Then
+            '     LoggerDebug.LogSuccess("Database ready")
+            ' Else
+            '     LoggerDebug.LogWarning("Using existing database")
+            ' End If
 
             SqlServerConnection.SetConnectionString(server, database)
             Dim success = Await SqlServerConnection.TestConnection()
@@ -352,11 +481,11 @@ Public Class FormConfigManager
 
                 ' Try to create schema
                 Dim schemaSuccess = Await SqlServerConnection.ExecuteSchema()
-                If schemaSuccess Then
-                    LoggerDebug.LogSuccess("Database schema OK")
-                Else
-                    LoggerDebug.LogWarning("Schemaa creation failed (tables may already exist)")
-                End If
+                ' If schemaSuccess Then
+                '     LoggerDebug.LogSuccess("Database schema OK")
+                ' Else
+                '     LoggerDebug.LogWarning("Schemaa creation failed (tables may already exist)")
+                ' End If
             Else
                 LabelMessageStateHostDB.Text = "Database connection failed"
                 LabelMessageStateHostDB.BackColor = Color.LightCoral
@@ -379,35 +508,35 @@ Public Class FormConfigManager
 
     Private Async Function BrowseAndPopulateNodes() As Task
         Try
-            LoggerDebug.LogInfo($"Browsing nodes in namespace: {TextBoxNamespaceOpc.Text}")
+            ' LoggerDebug.LogInfo($"Browsing nodes in namespace: {TextBoxNamespaceOpc.Text}")
 
             ' First browse all namespaces for debugging
-            LoggerDebug.LogInfo("Discovering all available namespaces...")
+            ' LoggerDebug.LogInfo("Discovering all available namespaces...")
             Dim namespaces = Await OpcConnection.BrowseAllNamespaces(TextBoxHostOpc.Text)
 
             ' Search for PressureTire specifically
-            LoggerDebug.LogInfo("Searching for PressureTire object...")
+            ' LoggerDebug.LogInfo("Searching for PressureTire object...")
             Dim pressureTirePaths = Await OpcConnection.FindObjectByName(TextBoxHostOpc.Text, "PressureTire")
 
-            If pressureTirePaths.Count > 0 Then
-                LoggerDebug.LogSuccess($"Found {pressureTirePaths.Count} PressureTire objects:")
-                For Each path In pressureTirePaths
-                    LoggerDebug.LogInfo($"  → {path}")
-                Next
-            Else
-                LoggerDebug.LogWarning("No PressureTire objects found")
-            End If
+            ' If pressureTirePaths.Count > 0 Then
+            '     LoggerDebug.LogSuccess($"Found {pressureTirePaths.Count} PressureTire objects:")
+            '     For Each path In pressureTirePaths
+            '         LoggerDebug.LogInfo($"  → {path}")
+            '     Next
+            ' Else
+            '     LoggerDebug.LogWarning("No PressureTire objects found")
+            ' End If
 
             ' Also search for any Pressure related objects
-            LoggerDebug.LogInfo("Searching for any Pressure related objects...")
+            ' LoggerDebug.LogInfo("Searching for any Pressure related objects...")
             Dim pressurePaths = Await OpcConnection.FindObjectByName(TextBoxHostOpc.Text, "Pressure")
 
-            If pressurePaths.Count > 0 Then
-                LoggerDebug.LogSuccess($"Found {pressurePaths.Count} Pressure related objects:")
-                For Each path In pressurePaths
-                    LoggerDebug.LogInfo($"  → {path}")
-                Next
-            End If
+            ' If pressurePaths.Count > 0 Then
+            '     LoggerDebug.LogSuccess($"Found {pressurePaths.Count} Pressure related objects:")
+            '     For Each path In pressurePaths
+            '         LoggerDebug.LogInfo($"  → {path}")
+            '     Next
+            ' End If
 
             ' Then browse specific namespace
             Dim discoveredNodes = Await OpcConnection.BrowseNamespaceNodes(TextBoxHostOpc.Text, TextBoxNamespaceOpc.Text)
@@ -427,13 +556,13 @@ Public Class FormConfigManager
                     DGVSelectedNodeOpc.Rows(rowIndex).Cells(2).Value = ""
                 Next
 
-                LoggerDebug.LogSuccess($"Found and added {discoveredNodes.Count} nodes")
+                ' LoggerDebug.LogSuccess($"Found and added {discoveredNodes.Count} nodes")
             Else
-                LoggerDebug.LogWarning("No nodes found in namespace")
-                LoggerDebug.LogInfo("Check the PressureTire paths found above for correct NodeIds")
+                ' LoggerDebug.LogWarning("No nodes found in namespace")
+                ' LoggerDebug.LogInfo("Check the PressureTire paths found above for correct NodeIds")
             End If
         Catch ex As Exception
-            LoggerDebug.LogError($"Browse error: {ex.Message}")
+            ' LoggerDebug.LogError($"Browse error: {ex.Message}")
         End Try
     End Function
 
@@ -443,22 +572,22 @@ Public Class FormConfigManager
             LabelMessageStateNamespaceOpc.Text = "Testing namespace and nodes..."
             LabelMessageStateNamespaceOpc.BackColor = Color.Yellow
 
-            LoggerDebug.LogDebug($"Testing namespace: {TextBoxNamespaceOpc.Text}")
+            ' LoggerDebug.LogDebug($"Testing namespace: {TextBoxNamespaceOpc.Text}")
 
             ' First try to test the namespace as a direct NodeId
             If TextBoxNamespaceOpc.Text.StartsWith("ns=") Then
-                LoggerDebug.LogDebug($"Testing direct NodeId: {TextBoxNamespaceOpc.Text}")
+                ' LoggerDebug.LogDebug($"Testing direct NodeId: {TextBoxNamespaceOpc.Text}")
                 Try
                     Dim testNodes = {TextBoxNamespaceOpc.Text}
                     Dim directSuccess = Await OpcConnection.TestNamespaceAndNodes(TextBoxHostOpc.Text, "", testNodes)
                     If directSuccess Then
                         LabelMessageStateNamespaceOpc.Text = "Direct NodeId test OK!"
                         LabelMessageStateNamespaceOpc.BackColor = Color.LightGreen
-                        LoggerDebug.LogSuccess("Direct NodeId test successful")
+                        ' LoggerDebug.LogSuccess("Direct NodeId test successful")
                         Return
                     End If
                 Catch directEx As Exception
-                    LoggerDebug.LogWarning($"Direct NodeId test failed: {directEx.Message}")
+                    ' LoggerDebug.LogWarning($"Direct NodeId test failed: {directEx.Message}")
                 End Try
             End If
 
@@ -471,7 +600,7 @@ Public Class FormConfigManager
             Next
 
             If nodes.Count = 0 Then
-                LoggerDebug.LogWarning("No nodes to test")
+                ' LoggerDebug.LogWarning("No nodes to test")
                 LabelMessageStateNamespaceOpc.Text = "No nodes to test"
                 LabelMessageStateNamespaceOpc.BackColor = Color.Orange
                 Return
@@ -482,16 +611,16 @@ Public Class FormConfigManager
             If success Then
                 LabelMessageStateNamespaceOpc.Text = "Namespace and nodes OK!"
                 LabelMessageStateNamespaceOpc.BackColor = Color.LightGreen
-                LoggerDebug.LogSuccess("Namespace and nodes test successful")
+                ' LoggerDebug.LogSuccess("Namespace and nodes test successful")
             Else
                 LabelMessageStateNamespaceOpc.Text = "Namespace/nodes failed"
                 LabelMessageStateNamespaceOpc.BackColor = Color.LightCoral
-                LoggerDebug.LogError("Namespace and nodes test failed")
+                ' LoggerDebug.LogError("Namespace and nodes test failed")
             End If
         Catch ex As Exception
             LabelMessageStateNamespaceOpc.Text = $"Test failed: {ex.Message}"
             LabelMessageStateNamespaceOpc.BackColor = Color.LightCoral
-            LoggerDebug.LogError($"Namespace test error: {ex.Message}")
+            ' LoggerDebug.LogError($"Namespace test error: {ex.Message}")
         End Try
     End Function
 End Class

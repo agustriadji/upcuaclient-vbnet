@@ -68,7 +68,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("ns=2;i=2")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
         Public Property namespaceOpc() As String
             Get
                 Return CType(Me("namespaceOpc"),String)
@@ -207,6 +207,42 @@ Namespace My
             End Get
             Set
                 Me("selectedNodeSensor") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("1000")>  _
+        Public Property intervalRefreshMain() As String
+            Get
+                Return CType(Me("intervalRefreshMain"),String)
+            End Get
+            Set
+                Me("intervalRefreshMain") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("0.2")>  _
+        Public Property thresholdPressureGauge() As String
+            Get
+                Return CType(Me("thresholdPressureGauge"),String)
+            End Get
+            Set
+                Me("thresholdPressureGauge") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("[]")>  _
+        Public Property endRecording() As String
+            Get
+                Return CType(Me("endRecording"),String)
+            End Get
+            Set
+                Me("endRecording") = value
             End Set
         End Property
     End Class

@@ -1,4 +1,5 @@
 Imports System.IO
+Imports System.Windows.Media.Media3D
 Imports Newtonsoft.Json
 Imports Org.BouncyCastle.Math.EC.ECCurve
 Imports upcuaclient_vbnet.upcuaclient_vbnet
@@ -7,17 +8,25 @@ Public Class MainFormNew
     Private configManager As ConfigManager
     Private refreshTimerTabPageRecording As New Timer() With {.Interval = 2000}
     Private refreshTimerTabPageSensor As New Timer() With {.Interval = 2000}
-    Private connectionIndicatorTimer As New Timer() With {.Interval = 5000}
-    Private connectionMonitorTimer As New Timer() With {.Interval = 120000}
+    Private connectionIndicatorTimer As New Timer() With {.Interval = 3000}
+    Private isDialogOpen As Boolean = False
+    Private lastClickTime As DateTime = DateTime.MinValue
 
     Sub InitializeTimers()
         ' Use My.Settings instead of config file
         SettingsManager.InitializeDefaults()
-        refreshTimerTabPageRecording.Interval = My.Settings.intervalTime
-        refreshTimerTabPageSensor.Interval = My.Settings.intervalTime
+        refreshTimerTabPageRecording.Interval = My.Settings.intervalRefreshMain
+        refreshTimerTabPageSensor.Interval = My.Settings.intervalRefreshMain
+
 
         AddHandler refreshTimerTabPageRecording.Tick, AddressOf RefreshDataTabPageRecording
         AddHandler refreshTimerTabPageSensor.Tick, AddressOf RefreshDataTabPageSensor
+    End Sub
+
+    Public Sub New()
+        InitializeComponent()
+        Me.AutoScaleMode = AutoScaleMode.None
+        Me.PerformAutoScale()
     End Sub
 
     Private Sub TabControlMainFormSelectedIndexChanged(sender As Object, e As EventArgs) Handles TabControlMain.SelectedIndexChanged
@@ -32,54 +41,82 @@ Public Class MainFormNew
     End Sub
 
     Private Sub MainFormNew_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ' Setup table sensor state
-        DataGridView1.Columns.Clear()
-        DataGridView1.Columns.Add("No", "No")
-        DataGridView1.Columns.Add("SensorId", "Sensor ID")
-        DataGridView1.Columns.Add("Status", "Status")
+        Try
+            ' Add delay to ensure form is fully initialized
+            Application.DoEvents()
+            Threading.Thread.Sleep(100)
 
-        ' Setup table sensor recording
-        DGVRecording.Columns.Clear()
-        DGVRecording.Columns.Add("No", "No")
-        DGVRecording.Columns.Add("BatchId", "Batch")
-        DGVRecording.Columns.Add("SensorId", "Sensor ID")
-        DGVRecording.Columns.Add("RunningDay", "Running Days")
-        DGVRecording.Columns.Add("Size", "Size")
-        DGVRecording.Columns.Add("State", "Status")
-        DGVRecording.Columns.Add("UpdatedAt", "Last Updated")
+            ' Setup table sensor state
+            If DataGridView1 IsNot Nothing Then
+                DataGridView1.SuspendLayout()
+                DataGridView1.Columns.Clear()
+                DataGridView1.Columns.Add("No", "No")
+                DataGridView1.Columns.Add("SensorId", "Sensor ID")
+                DataGridView1.Columns.Add("Status", "Status")
+                If DataGridView1.Columns.Count > 0 Then
+                    DataGridView1.Columns(0).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
+                End If
+                DataGridView1.ResumeLayout()
+            End If
 
-        TabControlMain.SelectedTab = TabPageSensorState
-        InitializeTimers()
-        TimeManager.StartTimerWithInitialFetch(refreshTimerTabPageSensor, AddressOf RefreshDataTabPageRecording)
+            ' Setup table sensor recording
+            If DGVRecording IsNot Nothing Then
+                DGVRecording.SuspendLayout()
+                DGVRecording.Columns.Clear()
+                DGVRecording.Columns.Add("No", "No")
+                DGVRecording.Columns.Add("BatchId", "Batch")
+                DGVRecording.Columns.Add("SensorId", "Sensor ID")
+                DGVRecording.Columns.Add("RunningDay", "Running Days")
+                DGVRecording.Columns.Add("Size", "Size")
+                DGVRecording.Columns.Add("State", "Status")
+                DGVRecording.Columns.Add("UpdatedAt", "Last Updated")
+                If DGVRecording.Columns.Count > 0 Then
+                    DGVRecording.Columns(0).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
+                End If
+                DGVRecording.ResumeLayout()
+            End If
 
-        ' Start connection monitoring
-        AddHandler connectionMonitorTimer.Tick, AddressOf CheckConnections
-        connectionMonitorTimer.Start()
-        CheckConnections()
+            If TabControlMain IsNot Nothing AndAlso TabPageSensorState IsNot Nothing Then
+                TabControlMain.SelectedTab = TabPageSensorState
+            End If
 
-        ' Start UI indicator timer
-        AddHandler connectionIndicatorTimer.Tick, AddressOf UpdateConnectionIndicators
-        connectionIndicatorTimer.Start()
-        UpdateConnectionIndicators()
+            InitializeTimers()
 
-        ' Initialize logger and alert system
-        AddHandler LoggerDebug.LogMessage, AddressOf OnLogMessage
-        InitializeDebugPanel()
-        InitializeAlertSystem()
+            If refreshTimerTabPageSensor IsNot Nothing Then
+                TimeManager.StartTimerWithInitialFetch(refreshTimerTabPageSensor, AddressOf RefreshDataTabPageSensor)
+            End If
+
+            ' Start UI indicator timer only (BackgroundWorker handles connection checking)
+            If connectionIndicatorTimer IsNot Nothing Then
+                AddHandler connectionIndicatorTimer.Tick, AddressOf UpdateConnectionIndicators
+                connectionIndicatorTimer.Start()
+            End If
+            UpdateConnectionIndicators()
+
+            ' Initialize logger and alert system
+            AddHandler LoggerDebug.LogMessage, AddressOf OnLogMessage
+            InitializeDebugPanel()
+            InitializeAlertSystem()
+        Catch ex As Exception
+            Console.WriteLine($"Stack: {ex.StackTrace}")
+            Try
+                MessageBox.Show($"Error loading form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Catch
+                ' Ignore message box errors
+            End Try
+        End Try
     End Sub
 
     Private Sub RefreshDataTabPageSensor(sender As Object, e As EventArgs)
         Try
+            If DataGridView1 Is Nothing Then Return
             DataGridView1.Rows.Clear()
             Dim count As Integer = 1
 
             ' Read from selectedNodeSensor settings
             Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
-            Console.WriteLine($"🔍 Available keys: {String.Join(", ", selectedNodeSensor.Keys)}")
+            'Console.WriteLine($"🔍 Available keys: {String.Join(", ", selectedNodeSensor.Keys)}")
 
-            For Each key In selectedNodeSensor.Keys
-                Console.WriteLine($"🔍 Key '{key}' has {selectedNodeSensor(key).Count} sensors")
-            Next
 
             ' Display PressureTire sensors
             If selectedNodeSensor.ContainsKey("PressureTire") Then
@@ -87,18 +124,25 @@ Public Class MainFormNew
                 For Each sensor In tireSensors
                     If sensor.ContainsKey("NodeActive") AndAlso sensor("NodeActive").ToLower() = "true" Then
                         Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "idle")
-                        Dim idx = DataGridView1.Rows.Add(count.ToString(), sensor("NodeText"), status)
-                        Dim row = DataGridView1.Rows(idx)
-
-                        Dim statusCell = row.Cells("Status")
-                        Select Case status.ToLower()
-                            Case "running"
-                                statusCell.Style.BackColor = Color.LightGreen
-                            Case "idle"
-                                statusCell.Style.BackColor = Color.LightYellow
-                            Case "offline"
-                                statusCell.Style.BackColor = Color.LightGray
-                        End Select
+                        Try
+                            Dim idx = DataGridView1.Rows.Add(count.ToString(), "PressureTire." + sensor("NodeText"), status)
+                            If idx >= 0 AndAlso idx < DataGridView1.Rows.Count Then
+                                Dim row = DataGridView1.Rows(idx)
+                                If row IsNot Nothing AndAlso row.Cells.Count > 2 AndAlso row.Cells("Status") IsNot Nothing Then
+                                    Dim statusCell = row.Cells("Status")
+                                    Select Case status.ToLower()
+                                        Case "running"
+                                            statusCell.Style.BackColor = Color.LightGreen
+                                        Case "idle"
+                                            statusCell.Style.BackColor = Color.LightYellow
+                                        Case "offline"
+                                            statusCell.Style.BackColor = Color.LightGray
+                                    End Select
+                                End If
+                            End If
+                        Catch
+                            ' Skip problematic rows
+                        End Try
                         count += 1
                     End If
                 Next
@@ -110,24 +154,31 @@ Public Class MainFormNew
                 For Each sensor In gaugeSensors
                     If sensor.ContainsKey("NodeActive") AndAlso sensor("NodeActive").ToLower() = "true" Then
                         Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "idle")
-                        Dim idx = DataGridView1.Rows.Add(count.ToString(), sensor("NodeText"), status)
-                        Dim row = DataGridView1.Rows(idx)
-
-                        Dim statusCell = row.Cells("Status")
-                        Select Case status.ToLower()
-                            Case "running"
-                                statusCell.Style.BackColor = Color.LightGreen
-                            Case "idle"
-                                statusCell.Style.BackColor = Color.LightYellow
-                            Case "offline"
-                                statusCell.Style.BackColor = Color.LightGray
-                        End Select
+                        Try
+                            Dim idx = DataGridView1.Rows.Add(count.ToString(), "PressureGauge." + sensor("NodeText"), status)
+                            If idx >= 0 AndAlso idx < DataGridView1.Rows.Count Then
+                                Dim row = DataGridView1.Rows(idx)
+                                If row IsNot Nothing AndAlso row.Cells.Count > 2 AndAlso row.Cells("Status") IsNot Nothing Then
+                                    Dim statusCell = row.Cells("Status")
+                                    Select Case status.ToLower()
+                                        Case "running"
+                                            statusCell.Style.BackColor = Color.LightGreen
+                                        Case "idle"
+                                            statusCell.Style.BackColor = Color.LightYellow
+                                        Case "offline"
+                                            statusCell.Style.BackColor = Color.LightGray
+                                    End Select
+                                End If
+                            End If
+                        Catch
+                            ' Skip problematic rows
+                        End Try
                         count += 1
                     End If
                 Next
             End If
 
-            Console.WriteLine($"✅ Displayed {count - 1} active sensors")
+            'Console.WriteLine($"✅ Displayed {count - 1} active sensors")
         Catch ex As Exception
             Console.WriteLine($"Gagal refresh data: {ex.Message}")
         End Try
@@ -135,7 +186,15 @@ Public Class MainFormNew
 
     Private Sub RefreshDataTabPageRecording(sender As Object, e As EventArgs)
         Try
-            Console.WriteLine("🔄 RefreshDataTabPageRecording called")
+            If isDialogOpen Then Return
+            If DGVRecording Is Nothing OrElse DGVRecording.IsDisposed Then Return
+            If Not DGVRecording.Enabled Then Return
+            If DGVRecording.InvokeRequired Then
+                DGVRecording.Invoke(Sub() RefreshDataTabPageRecording(sender, e))
+                Return
+            End If
+
+            DGVRecording.SuspendLayout()
             DGVRecording.Rows.Clear()
             Dim count As Integer = 1
 
@@ -145,16 +204,21 @@ Public Class MainFormNew
             Dim startDate = DateTime.Now.AddDays(-30) ' Last 30 days
             Dim records = sqlite.QueryBatchRange(startDate, endDate)
 
-            Console.WriteLine($"✅ Total records found: {records.Count}")
+
+            ' Get selectedNodeSensor for NodeText lookup
+            Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
 
             For Each record In records
                 Dim runningDays = Math.Ceiling((DateTime.Now - record.StartDate).TotalDays)
                 Dim lastUpdated = record.EndDate.ToString("yyyy-MM-dd HH:mm")
 
+                ' Get NodeText for PressureTire
+                Dim tireNodeText = Helper.GetNodeTextFromId(selectedNodeSensor, "PressureTire", record.PressureTireId)
+
                 Dim idx = DGVRecording.Rows.Add(
                     count.ToString(),
                     record.BatchId,
-                    $"{record.PressureTireId},{record.PressureGaugeId}",
+                    tireNodeText,
                     runningDays.ToString(),
                     record.Size.ToString(),
                     record.Status,
@@ -177,6 +241,14 @@ Public Class MainFormNew
             Next
         Catch ex As Exception
             Console.WriteLine($"Gagal refresh data RefreshDataTabPageRecording: {ex.Message}")
+        Finally
+            Try
+                If DGVRecording IsNot Nothing AndAlso Not DGVRecording.IsDisposed Then
+                    DGVRecording.ResumeLayout()
+                End If
+            Catch
+                ' Ignore layout errors
+            End Try
         End Try
     End Sub
 
@@ -185,7 +257,7 @@ Public Class MainFormNew
         fromConfigManager.ShowDialog()
     End Sub
 
-    Private Sub CSVToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CSVToolStripMenuItem.Click
+    Private Sub CSVToolStripMenuItem_Click(sender As Object, e As EventArgs)
 
     End Sub
 
@@ -222,63 +294,25 @@ Public Class MainFormNew
         SplitContainer1.Panel2Collapsed = False
     End Sub
 
-    Private Async Sub CheckConnections(Optional sender As Object = Nothing, Optional e As EventArgs = Nothing)
-        Try
-            Console.WriteLine("Checking connections...")
 
-            ' Check OPC Connection
-            Dim opcConnected = Await OpcConnection.CheckHealthServer()
-            My.Settings.stateConnectionOPC = opcConnected
-            Console.WriteLine($"OPC Status: {opcConnected}")
-
-            ' Setup database connection string first
-            Dim parts = My.Settings.hostDB.Split(";"c)
-            Dim server = "localhost\SQLEXPRESS"
-            Dim database = "OpcUaClient"
-
-            For Each part In parts
-                If part.ToLower().Contains("server") AndAlso part.Contains("=") Then
-                    server = part.Split("="c)(1).Trim()
-                ElseIf part.ToLower().Contains("database") AndAlso part.Contains("=") Then
-                    database = part.Split("="c)(1).Trim()
-                End If
-            Next
-
-            SqlServerConnection.SetConnectionString(server, database)
-
-            ' Check Database Connection
-            Dim dbConnected = Await SqlServerConnection.CheckHealth()
-            My.Settings.stateConnectionDB = dbConnected
-            Console.WriteLine($"DB Status: {dbConnected}")
-
-            ' Save settings
-            My.Settings.Save()
-
-        Catch ex As Exception
-            Console.WriteLine($"Connection check error: {ex.Message}")
-            My.Settings.stateConnectionOPC = False
-            My.Settings.stateConnectionDB = False
-            My.Settings.Save()
-        End Try
-    End Sub
 
     Private Sub InitializeDebugPanel()
         ' Set default state - Debug active, Alert inactive
         ToolStripButtonDebug.BackColor = Color.LightBlue
-        ToolStripButtonAlert.BackColor = Color.Transparent
+        ToolStripButtonAlert.BackColor = Color.LightBlue
 
         ' Show debug, hide alert
         TextBoxOutputDebug.Visible = True
         TextBoxOutputAlert.Visible = False
 
         ' Setup Debug TextBox properties
-        TextBoxOutputDebug.Font = New Font("Consolas", 8)
-        TextBoxOutputDebug.BackColor = Color.Black
-        TextBoxOutputDebug.ForeColor = Color.LimeGreen
+        TextBoxOutputDebug.Font = New Font("Consolas", 9)
+        TextBoxOutputDebug.BackColor = Color.DarkRed
+        TextBoxOutputDebug.ForeColor = Color.White
         TextBoxOutputDebug.ReadOnly = True
 
         ' Setup Alert TextBox properties
-        TextBoxOutputAlert.Font = New Font("Consolas", 8)
+        TextBoxOutputAlert.Font = New Font("Consolas", 9)
         TextBoxOutputAlert.BackColor = Color.DarkRed
         TextBoxOutputAlert.ForeColor = Color.White
         TextBoxOutputAlert.ReadOnly = True
@@ -321,6 +355,22 @@ Public Class MainFormNew
         End Select
     End Function
 
+    Private Function GetNodeTextFromId(selectedNodeSensor As Dictionary(Of String, List(Of Dictionary(Of String, String))), sensorType As String, nodeId As String) As String
+        Try
+            If selectedNodeSensor.ContainsKey(sensorType) Then
+                Dim sensors = selectedNodeSensor(sensorType)
+                For Each sensor In sensors
+                    If sensor.ContainsKey("NodeId") AndAlso sensor("NodeId") = nodeId Then
+                        Return If(sensor.ContainsKey("NodeText"), sensor("NodeText"), nodeId)
+                    End If
+                Next
+            End If
+        Catch
+            ' Return nodeId if lookup fails
+        End Try
+        Return nodeId
+    End Function
+
     Private Sub ToolStripButtonDebug_Click(sender As Object, e As EventArgs) Handles ToolStripButtonDebug.Click
         ' Activate debug mode
         ToolStripButtonDebug.BackColor = Color.LightBlue
@@ -344,6 +394,7 @@ Public Class MainFormNew
 
     Private Sub UpdateConnectionIndicators(Optional sender As Object = Nothing, Optional e As EventArgs = Nothing)
         Try
+
             ' Update OPC indicator
             If My.Settings.stateConnectionOPC Then
                 ToolStripStatusLabelOPC.Image = My.Resources.server_green_16
@@ -414,7 +465,8 @@ Public Class MainFormNew
     Private Sub LoadAlertsFromDatabase()
         Try
             Dim sqlite As New SQLiteManager()
-            Using conn As New Data.SQLite.SQLiteConnection($"Data Source={IO.Path.Combine(Application.StartupPath, "../../data/sensor.db")};Version=3;")
+            Dim dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "data", "sensor.db")
+            Using conn As New Data.SQLite.SQLiteConnection($"Data Source={dbPath};Version=3;")
                 conn.Open()
 
                 ' Optimized query - only get new alerts since last check
@@ -518,14 +570,111 @@ Public Class MainFormNew
     End Sub
 
     Private Sub DGVRecording_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVRecording.CellClick
-        If e.RowIndex >= 0 Then
-            Dim batchId = DGVRecording.Rows(e.RowIndex).Cells("BatchId").Value.ToString()
-            Dim detailForm As New DetailRecord(batchId)
-            detailForm.ShowDialog()
-        End If
+        Try
+            ' Prevent double-click (ignore clicks within 500ms)
+            Dim now = DateTime.Now
+            If (now - lastClickTime).TotalMilliseconds < 500 Then
+                Console.WriteLine("⚠️ Double-click ignored")
+                Return
+            End If
+            lastClickTime = now
+
+            Console.WriteLine($"🔍 CellClick: isDialogOpen={isDialogOpen}, sender={sender IsNot Nothing}, e={e IsNot Nothing}")
+
+            If isDialogOpen Then
+                Console.WriteLine("⚠️ Dialog already open, returning")
+                Return
+            End If
+
+            If DGVRecording Is Nothing Then
+                Console.WriteLine("❌ DGVRecording is null")
+                Return
+            End If
+
+            If e Is Nothing Then
+                Console.WriteLine("❌ EventArgs is null")
+                Return
+            End If
+
+            Console.WriteLine($"🔍 RowIndex: {e.RowIndex}, RowCount: {DGVRecording.Rows.Count}")
+
+            If e.RowIndex < 0 OrElse e.RowIndex >= DGVRecording.Rows.Count Then
+                Console.WriteLine("❌ Invalid row index")
+                Return
+            End If
+
+            ' Temporarily disable the DataGridView to prevent concurrent access
+            DGVRecording.Enabled = False
+
+            Dim row = DGVRecording.Rows(e.RowIndex)
+            If row Is Nothing Then
+                Console.WriteLine("❌ Row is null")
+                DGVRecording.Enabled = True
+                Return
+            End If
+
+            If DGVRecording.Columns("BatchId") Is Nothing Then
+                Console.WriteLine("❌ BatchId column not found")
+                DGVRecording.Enabled = True
+                Return
+            End If
+
+            Dim batchCell = row.Cells("BatchId")
+            If batchCell Is Nothing OrElse batchCell.Value Is Nothing Then
+                Console.WriteLine("❌ BatchId cell or value is null")
+                DGVRecording.Enabled = True
+                Return
+            End If
+
+            Dim batchId = batchCell.Value.ToString()
+            Console.WriteLine($"✅ Opening DetailRecord for batch: {batchId}")
+
+            If Not String.IsNullOrEmpty(batchId) Then
+                isDialogOpen = True
+
+                ' Stop all timers to prevent conflicts
+                refreshTimerTabPageRecording.Stop()
+                refreshTimerTabPageSensor.Stop()
+                connectionIndicatorTimer.Stop()
+
+                Dim detailForm As New DetailRecord(batchId)
+                detailForm.ShowDialog()
+
+                ' Restart timers based on current tab
+                If TabControlMain.SelectedTab Is TabPageRecording Then
+                    refreshTimerTabPageRecording.Start()
+                ElseIf TabControlMain.SelectedTab Is TabPageSensorState Then
+                    refreshTimerTabPageSensor.Start()
+                End If
+                connectionIndicatorTimer.Start()
+
+                isDialogOpen = False
+            End If
+
+            DGVRecording.Enabled = True
+
+        Catch ex As Exception
+            isDialogOpen = False
+            Try
+                If DGVRecording IsNot Nothing Then DGVRecording.Enabled = True
+                refreshTimerTabPageRecording.Start()
+                connectionIndicatorTimer.Start()
+            Catch
+                ' Ignore cleanup errors
+            End Try
+            Console.WriteLine($"❌ CellClick error: {ex.Message}")
+        End Try
     End Sub
 
     Private Sub MenuStrip1_ItemClicked(sender As Object, e As ToolStripItemClickedEventArgs) Handles MenuStrip1.ItemClicked
 
+    End Sub
+
+    Private Sub ExitToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ExitToolStripMenuItem.Click
+        Try
+            Application.Exit()
+        Catch
+            Environment.Exit(0)
+        End Try
     End Sub
 End Class

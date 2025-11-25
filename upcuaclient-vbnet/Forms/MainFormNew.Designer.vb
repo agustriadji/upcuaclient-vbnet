@@ -50,20 +50,10 @@ Partial Class MainFormNew
         Me.ConfigManagerToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.RefreshToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.LogToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AddNewSensorToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AddNewRecordingToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ExportToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.CSVToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.MicrosoftExcelclsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.CheckServiceStatusToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.TechnicalSupportToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.SendFeedbackToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ReportIssueToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.SuggestionAFeatureToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.ToolStripStatusLabelOPC = New System.Windows.Forms.ToolStripStatusLabel()
         Me.ToolStripStatusLabelDB = New System.Windows.Forms.ToolStripStatusLabel()
@@ -88,7 +78,7 @@ Partial Class MainFormNew
         'SplitContainer1
         '
         Me.SplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.SplitContainer1.Location = New System.Drawing.Point(4, 32)
+        Me.SplitContainer1.Location = New System.Drawing.Point(4, 34)
         Me.SplitContainer1.Name = "SplitContainer1"
         Me.SplitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal
         '
@@ -102,8 +92,8 @@ Partial Class MainFormNew
         '
         Me.SplitContainer1.Panel2.Controls.Add(Me.SplitContainer2)
         Me.SplitContainer1.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No
-        Me.SplitContainer1.Size = New System.Drawing.Size(1283, 491)
-        Me.SplitContainer1.SplitterDistance = 363
+        Me.SplitContainer1.Size = New System.Drawing.Size(1174, 489)
+        Me.SplitContainer1.SplitterDistance = 360
         Me.SplitContainer1.TabIndex = 2
         '
         'TabControlMain
@@ -116,7 +106,7 @@ Partial Class MainFormNew
         Me.TabControlMain.Margin = New System.Windows.Forms.Padding(0)
         Me.TabControlMain.Name = "TabControlMain"
         Me.TabControlMain.SelectedIndex = 0
-        Me.TabControlMain.Size = New System.Drawing.Size(1283, 353)
+        Me.TabControlMain.Size = New System.Drawing.Size(1174, 350)
         Me.TabControlMain.TabIndex = 1
         '
         'TabPageSensorState
@@ -126,7 +116,7 @@ Partial Class MainFormNew
         Me.TabPageSensorState.Location = New System.Drawing.Point(4, 29)
         Me.TabPageSensorState.Name = "TabPageSensorState"
         Me.TabPageSensorState.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageSensorState.Size = New System.Drawing.Size(1275, 320)
+        Me.TabPageSensorState.Size = New System.Drawing.Size(1166, 317)
         Me.TabPageSensorState.TabIndex = 0
         Me.TabPageSensorState.Text = "Sensor State"
         Me.TabPageSensorState.UseVisualStyleBackColor = True
@@ -152,7 +142,7 @@ Partial Class MainFormNew
         Me.DataGridView1.ScrollBars = System.Windows.Forms.ScrollBars.None
         Me.DataGridView1.ShowCellToolTips = False
         Me.DataGridView1.ShowEditingIcon = False
-        Me.DataGridView1.Size = New System.Drawing.Size(1269, 314)
+        Me.DataGridView1.Size = New System.Drawing.Size(1160, 311)
         Me.DataGridView1.TabIndex = 1
         '
         'DTG1_NameSensor
@@ -175,7 +165,7 @@ Partial Class MainFormNew
         Me.TabPageRecording.Location = New System.Drawing.Point(4, 29)
         Me.TabPageRecording.Name = "TabPageRecording"
         Me.TabPageRecording.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageRecording.Size = New System.Drawing.Size(1275, 320)
+        Me.TabPageRecording.Size = New System.Drawing.Size(1166, 319)
         Me.TabPageRecording.TabIndex = 1
         Me.TabPageRecording.Text = "Recording"
         Me.TabPageRecording.UseVisualStyleBackColor = True
@@ -196,7 +186,7 @@ Partial Class MainFormNew
         Me.DGVRecording.RowHeadersVisible = False
         Me.DGVRecording.RowHeadersWidth = 51
         Me.DGVRecording.RowTemplate.Height = 24
-        Me.DGVRecording.Size = New System.Drawing.Size(1269, 314)
+        Me.DGVRecording.Size = New System.Drawing.Size(1160, 313)
         Me.DGVRecording.TabIndex = 0
         '
         'BatchId
@@ -259,7 +249,7 @@ Partial Class MainFormNew
         Me.SplitContainer2.Panel2.Controls.Add(Me.TextBoxOutputDebug)
         Me.SplitContainer2.Panel2.Controls.Add(Me.TextBoxOutputAlert)
         Me.SplitContainer2.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No
-        Me.SplitContainer2.Size = New System.Drawing.Size(1283, 124)
+        Me.SplitContainer2.Size = New System.Drawing.Size(1174, 125)
         Me.SplitContainer2.SplitterDistance = 38
         Me.SplitContainer2.TabIndex = 0
         '
@@ -271,7 +261,7 @@ Partial Class MainFormNew
         Me.ToolStrip1.Location = New System.Drawing.Point(0, 0)
         Me.ToolStrip1.Name = "ToolStrip1"
         Me.ToolStrip1.Padding = New System.Windows.Forms.Padding(0, 5, 4, 2)
-        Me.ToolStrip1.Size = New System.Drawing.Size(1283, 38)
+        Me.ToolStrip1.Size = New System.Drawing.Size(1174, 38)
         Me.ToolStrip1.Stretch = True
         Me.ToolStrip1.TabIndex = 1
         Me.ToolStrip1.Text = "ToolStrip1"
@@ -328,7 +318,7 @@ Partial Class MainFormNew
         Me.TextBoxOutputDebug.Multiline = True
         Me.TextBoxOutputDebug.Name = "TextBoxOutputDebug"
         Me.TextBoxOutputDebug.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.TextBoxOutputDebug.Size = New System.Drawing.Size(1283, 82)
+        Me.TextBoxOutputDebug.Size = New System.Drawing.Size(1174, 83)
         Me.TextBoxOutputDebug.TabIndex = 0
         '
         'TextBoxOutputAlert
@@ -339,16 +329,16 @@ Partial Class MainFormNew
         Me.TextBoxOutputAlert.Multiline = True
         Me.TextBoxOutputAlert.Name = "TextBoxOutputAlert"
         Me.TextBoxOutputAlert.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.TextBoxOutputAlert.Size = New System.Drawing.Size(1283, 82)
+        Me.TextBoxOutputAlert.Size = New System.Drawing.Size(1174, 83)
         Me.TextBoxOutputAlert.TabIndex = 2
         '
         'MenuStrip1
         '
         Me.MenuStrip1.ImageScalingSize = New System.Drawing.Size(20, 20)
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.ViewToolStripMenuItem, Me.ToolsToolStripMenuItem, Me.HelpToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.ViewToolStripMenuItem, Me.ToolsToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(4, 4)
         Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(1283, 28)
+        Me.MenuStrip1.Size = New System.Drawing.Size(1174, 30)
         Me.MenuStrip1.TabIndex = 0
         Me.MenuStrip1.Text = "MenuStrip1"
         '
@@ -368,31 +358,25 @@ Partial Class MainFormNew
         'ExitToolStripMenuItem
         '
         Me.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem"
-        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(199, 26)
+        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(224, 26)
         Me.ExitToolStripMenuItem.Text = "Exit"
         '
         'ViewToolStripMenuItem
         '
-        Me.ViewToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RefreshToolStripMenuItem, Me.LogToolStripMenuItem})
+        Me.ViewToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.LogToolStripMenuItem})
         Me.ViewToolStripMenuItem.Name = "ViewToolStripMenuItem"
         Me.ViewToolStripMenuItem.Size = New System.Drawing.Size(55, 24)
         Me.ViewToolStripMenuItem.Text = "View"
         '
-        'RefreshToolStripMenuItem
-        '
-        Me.RefreshToolStripMenuItem.Name = "RefreshToolStripMenuItem"
-        Me.RefreshToolStripMenuItem.Size = New System.Drawing.Size(141, 26)
-        Me.RefreshToolStripMenuItem.Text = "Refresh"
-        '
         'LogToolStripMenuItem
         '
         Me.LogToolStripMenuItem.Name = "LogToolStripMenuItem"
-        Me.LogToolStripMenuItem.Size = New System.Drawing.Size(141, 26)
+        Me.LogToolStripMenuItem.Size = New System.Drawing.Size(224, 26)
         Me.LogToolStripMenuItem.Text = "Log"
         '
         'ToolsToolStripMenuItem
         '
-        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AddNewSensorToolStripMenuItem, Me.AddNewRecordingToolStripMenuItem, Me.ExportToolStripMenuItem})
+        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AddNewSensorToolStripMenuItem, Me.AddNewRecordingToolStripMenuItem})
         Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
         Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(58, 24)
         Me.ToolsToolStripMenuItem.Text = "Tools"
@@ -409,63 +393,6 @@ Partial Class MainFormNew
         Me.AddNewRecordingToolStripMenuItem.Size = New System.Drawing.Size(226, 26)
         Me.AddNewRecordingToolStripMenuItem.Text = "Add New Recording"
         '
-        'ExportToolStripMenuItem
-        '
-        Me.ExportToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CSVToolStripMenuItem, Me.MicrosoftExcelclsToolStripMenuItem})
-        Me.ExportToolStripMenuItem.Name = "ExportToolStripMenuItem"
-        Me.ExportToolStripMenuItem.Size = New System.Drawing.Size(226, 26)
-        Me.ExportToolStripMenuItem.Text = "Export"
-        '
-        'CSVToolStripMenuItem
-        '
-        Me.CSVToolStripMenuItem.Name = "CSVToolStripMenuItem"
-        Me.CSVToolStripMenuItem.Size = New System.Drawing.Size(280, 26)
-        Me.CSVToolStripMenuItem.Text = "Comma Separate Values .csv"
-        '
-        'MicrosoftExcelclsToolStripMenuItem
-        '
-        Me.MicrosoftExcelclsToolStripMenuItem.Name = "MicrosoftExcelclsToolStripMenuItem"
-        Me.MicrosoftExcelclsToolStripMenuItem.Size = New System.Drawing.Size(280, 26)
-        Me.MicrosoftExcelclsToolStripMenuItem.Text = "Microsoft Excel .clsx"
-        '
-        'HelpToolStripMenuItem
-        '
-        Me.HelpToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CheckServiceStatusToolStripMenuItem, Me.TechnicalSupportToolStripMenuItem, Me.SendFeedbackToolStripMenuItem})
-        Me.HelpToolStripMenuItem.Name = "HelpToolStripMenuItem"
-        Me.HelpToolStripMenuItem.Size = New System.Drawing.Size(55, 24)
-        Me.HelpToolStripMenuItem.Text = "Help"
-        '
-        'CheckServiceStatusToolStripMenuItem
-        '
-        Me.CheckServiceStatusToolStripMenuItem.Name = "CheckServiceStatusToolStripMenuItem"
-        Me.CheckServiceStatusToolStripMenuItem.Size = New System.Drawing.Size(226, 26)
-        Me.CheckServiceStatusToolStripMenuItem.Text = "Check Service Status"
-        '
-        'TechnicalSupportToolStripMenuItem
-        '
-        Me.TechnicalSupportToolStripMenuItem.Name = "TechnicalSupportToolStripMenuItem"
-        Me.TechnicalSupportToolStripMenuItem.Size = New System.Drawing.Size(226, 26)
-        Me.TechnicalSupportToolStripMenuItem.Text = "Technical Support"
-        '
-        'SendFeedbackToolStripMenuItem
-        '
-        Me.SendFeedbackToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ReportIssueToolStripMenuItem, Me.SuggestionAFeatureToolStripMenuItem})
-        Me.SendFeedbackToolStripMenuItem.Name = "SendFeedbackToolStripMenuItem"
-        Me.SendFeedbackToolStripMenuItem.Size = New System.Drawing.Size(226, 26)
-        Me.SendFeedbackToolStripMenuItem.Text = "Send Feedback"
-        '
-        'ReportIssueToolStripMenuItem
-        '
-        Me.ReportIssueToolStripMenuItem.Name = "ReportIssueToolStripMenuItem"
-        Me.ReportIssueToolStripMenuItem.Size = New System.Drawing.Size(231, 26)
-        Me.ReportIssueToolStripMenuItem.Text = "Report Issue"
-        '
-        'SuggestionAFeatureToolStripMenuItem
-        '
-        Me.SuggestionAFeatureToolStripMenuItem.Name = "SuggestionAFeatureToolStripMenuItem"
-        Me.SuggestionAFeatureToolStripMenuItem.Size = New System.Drawing.Size(231, 26)
-        Me.SuggestionAFeatureToolStripMenuItem.Text = "Suggestion a Feature"
-        '
         'StatusStrip1
         '
         Me.StatusStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Visible
@@ -474,7 +401,7 @@ Partial Class MainFormNew
         Me.StatusStrip1.Location = New System.Drawing.Point(4, 523)
         Me.StatusStrip1.Name = "StatusStrip1"
         Me.StatusStrip1.RightToLeft = System.Windows.Forms.RightToLeft.Yes
-        Me.StatusStrip1.Size = New System.Drawing.Size(1283, 26)
+        Me.StatusStrip1.Size = New System.Drawing.Size(1174, 26)
         Me.StatusStrip1.TabIndex = 1
         Me.StatusStrip1.Text = "StatusStrip1"
         '
@@ -497,16 +424,18 @@ Partial Class MainFormNew
         '
         'MainFormNew
         '
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None
-        Me.AutoSize = True
-        Me.ClientSize = New System.Drawing.Size(1291, 553)
+        'Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 23.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoSize = False
+        Me.ClientSize = New System.Drawing.Size(1182, 553)
         Me.Controls.Add(Me.SplitContainer1)
         Me.Controls.Add(Me.StatusStrip1)
         Me.Controls.Add(Me.MenuStrip1)
-        Me.Font = New System.Drawing.Font("Segoe UI", 10.0!)
+        Me.Font = New Font("Segoe UI", 9.0!, FontStyle.Regular, GraphicsUnit.Point)
         Me.HelpButton = True
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MainMenuStrip = Me.MenuStrip1
+        Me.MinimumSize = New System.Drawing.Size(1024, 600)
         Me.Name = "MainFormNew"
         Me.Padding = New System.Windows.Forms.Padding(4)
         Me.RightToLeft = System.Windows.Forms.RightToLeft.No
@@ -543,18 +472,8 @@ Partial Class MainFormNew
     Friend WithEvents ConfigManagerToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ExitToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ToolsToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents ExportToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents CSVToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents MicrosoftExcelclsToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents HelpToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ViewToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents LogToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents CheckServiceStatusToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents TechnicalSupportToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents SendFeedbackToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents ReportIssueToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents SuggestionAFeatureToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents RefreshToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents StatusStrip1 As StatusStrip
     Friend WithEvents ToolStripStatusLabelDB As ToolStripStatusLabel
     Friend WithEvents ToolStripStatusLabelOPC As ToolStripStatusLabel

@@ -147,9 +147,21 @@ Public Class OpcConnection
 
     ' === Health check koneksi server ===
     Public Shared Async Function CheckHealthServer() As Task(Of Boolean)
-        If IsConnected Then Return True
-        Console.WriteLine("⚠️ Server OPC tidak terhubung, mencoba reconnect...")
-        Return Await ConnectAsync(My.Settings.hostOpc)
+        Try
+            ' First check if session exists and is connected
+            If _session Is Nothing OrElse Not _session.Connected Then
+                Return False
+            End If
+
+            ' Perform actual network test by reading a system node with timeout
+            Using cts As New Threading.CancellationTokenSource(5000) ' 5 second timeout
+                Dim testValue = Await _session.ReadValueAsync(VariableIds.Server_ServerStatus_State)
+                Return StatusCode.IsGood(testValue.StatusCode)
+            End Using
+        Catch ex As Exception
+            ' Any exception means connection is bad
+            Return False
+        End Try
     End Function
 
     ' === Health check tag/object === (NOT USE)
@@ -168,11 +180,11 @@ Public Class OpcConnection
     Public Shared Async Function BrowseNodes() As Task
         Try
             If Not IsConnected Then
-                Console.WriteLine("⚠️ Session tidak aktif")
+                ' Console.WriteLine("⚠️ Session tidak aktif")
                 Return
             End If
 
-            Console.WriteLine("🔍 Browsing OPC UA nodes...")
+            ' Console.WriteLine("🔍 Browsing OPC UA nodes...")
 
             Dim browser = New Browser(_session) With {
                     .BrowseDirection = BrowseDirection.Forward,
@@ -185,12 +197,12 @@ Public Class OpcConnection
                 'rootRef.NodeId
                 'rootRef.NodeClass
                 'rootRef.DisplayName
-                Console.WriteLine($"📁 Root: {rootRef.DisplayName} [{rootRef.NodeClass}]")
+                ' Console.WriteLine($"📁 Root: {rootRef.DisplayName} [{rootRef.NodeClass}]")
 
                 ' Focus on PressureGauge and PressureTire nodes
                 If rootRef.DisplayName.Text.Contains("Pressure") Then
                     Dim nodeId = ExpandedNodeId.ToNodeId(rootRef.NodeId, _session.NamespaceUris)
-                    Console.WriteLine($"🎯 Found {rootRef.DisplayName}: {nodeId}")
+                    'Console.WriteLine($"🎯 Found {rootRef.DisplayName}: {nodeId}")
 
                     ' Browse sensors
                     Dim sensorRefs = Await browser.BrowseAsync(nodeId)
@@ -199,13 +211,13 @@ Public Class OpcConnection
                             Try
                                 Dim sensorNodeId = ExpandedNodeId.ToNodeId(sensorRef.NodeId, _session.NamespaceUris)
                                 Dim value = Await _session.ReadValueAsync(sensorNodeId)
-                                If StatusCode.IsGood(value.StatusCode) Then
-                                    Console.WriteLine($"  🔧 {sensorRef.DisplayName}: {value.Value} PSI [{value.StatusCode}]")
-                                Else
-                                    Console.WriteLine($"  ⚠️ {sensorRef.DisplayName}: {value.StatusCode}")
-                                End If
+                                'If StatusCode.IsGood(value.StatusCode) Then
+                                '    'Console.WriteLine($"  🔧 {sensorRef.DisplayName}: {value.Value} PSI [{value.StatusCode}]")
+                                'Else
+                                '    'Console.WriteLine($"  ⚠️ {sensorRef.DisplayName}: {value.StatusCode}")
+                                'End If
                             Catch ex As Exception
-                                Console.WriteLine($"  ⚠️ {sensorRef.DisplayName}: Read error - {ex.Message}")
+                                ' Console.WriteLine($"  ⚠️ {sensorRef.DisplayName}: Read error - {ex.Message}")
                             End Try
                         End If
                     Next
@@ -213,7 +225,7 @@ Public Class OpcConnection
             Next
 
         Catch ex As Exception
-            Console.WriteLine($"⚠️ Browse error: {ex.Message}")
+            ' Console.WriteLine($"⚠️ Browse error: {ex.Message}")
         End Try
     End Function
 
@@ -234,7 +246,7 @@ Public Class OpcConnection
 
             Return True
         Catch ex As Exception
-            Console.WriteLine($"❌ Test connection failed: {ex.Message}")
+            ' Console.WriteLine($"❌ Test connection failed: {ex.Message}")
             Return False
         End Try
     End Function
@@ -242,21 +254,21 @@ Public Class OpcConnection
     ' === Test connection with detailed logging ===
     Public Shared Async Function TestConnectionWithDetails(endpointUrl As String) As Task(Of Boolean)
         Try
-            Console.WriteLine($"🔍 Testing connection to: {endpointUrl}")
+            'Console.WriteLine($"🔍 Testing connection to: {endpointUrl}")
 
             Dim appConfig = Await BuildApplicationConfigurationAsync()
-            Console.WriteLine("✅ Application configuration built")
+            'Console.WriteLine("✅ Application configuration built")
 
             Dim useSecurity = False
             Dim selectedEndpoint = Await CoreClientUtils.SelectEndpointAsync(appConfig, endpointUrl, useSecurity)
-            Console.WriteLine($"✅ Endpoint selected: {selectedEndpoint.EndpointUrl}")
+            ' Console.WriteLine($"✅ Endpoint selected: {selectedEndpoint.EndpointUrl}")
 
             Dim endpointConfig = EndpointConfiguration.Create(appConfig)
             Dim configuredEndpoint = New ConfiguredEndpoint(Nothing, selectedEndpoint, endpointConfig)
-            Console.WriteLine("✅ Endpoint configured")
+            ' Console.WriteLine("✅ Endpoint configured")
 
             Dim testSession = Await Session.Create(appConfig, configuredEndpoint, False, "Test Session", 30000, Nothing, Nothing)
-            Console.WriteLine($"✅ Session created: {testSession.SessionName}")
+            ' Console.WriteLine($"✅ Session created: {testSession.SessionName}")
 
             'Dim Avaliable = Await GetAvailableObjects(endpointUrl)
 
@@ -267,12 +279,12 @@ Public Class OpcConnection
 
             Await testSession.CloseAsync()
             testSession.Dispose()
-            Console.WriteLine("✅ Test session closed successfully")
+            'Console.WriteLine("✅ Test session closed successfully")
 
             Return True
         Catch ex As Exception
-            Console.WriteLine($"❌ Test connection failed: {ex.Message}")
-            Console.WriteLine($"❌ Stack trace: {ex.StackTrace}")
+            ' Console.WriteLine($"❌ Test connection failed: {ex.Message}")
+            ' Console.WriteLine($"❌ Stack trace: {ex.StackTrace}")
             Return False
         End Try
     End Function
@@ -282,7 +294,7 @@ Public Class OpcConnection
         Dim testSession As Session = Nothing
         Dim foundPaths As New List(Of String)
         Try
-            Console.WriteLine($"🔍 Deep searching for object: {objectName}")
+            ' Console.WriteLine($"🔍 Deep searching for object: {objectName}")
 
             ' Create test session
             Dim appConfig = Await BuildApplicationConfigurationAsync()
@@ -292,7 +304,7 @@ Public Class OpcConnection
             Dim configuredEndpoint = New ConfiguredEndpoint(Nothing, selectedEndpoint, endpointConfig)
             testSession = Await Session.Create(appConfig, configuredEndpoint, False, "Deep Search Session", 30000, Nothing, Nothing)
 
-            Console.WriteLine("✅ Deep search session created")
+            ' Console.WriteLine("✅ Deep search session created")
 
             Dim browser = New Browser(testSession) With {
                 .BrowseDirection = BrowseDirection.Forward,
@@ -302,7 +314,7 @@ Public Class OpcConnection
             ' Start recursive search from Objects folder
             Await SearchRecursive(browser, ObjectIds.ObjectsFolder, objectName, foundPaths, testSession.NamespaceUris, "Objects", 0)
 
-            Console.WriteLine($"✅ Search completed. Found {foundPaths.Count} matches for '{objectName}'")
+            ' Console.WriteLine($"✅ Search completed. Found {foundPaths.Count} matches for '{objectName}'")
             Return foundPaths
 
         Catch ex As Exception
@@ -329,24 +341,24 @@ Public Class OpcConnection
                 Dim childNodeId = ExpandedNodeId.ToNodeId(ref.NodeId, namespaceUris)
                 Dim childPath = $"{currentPath}/{ref.DisplayName}"
 
-                Console.WriteLine($"{New String(" "c, depth * 2)}📝 {ref.DisplayName} [{childNodeId}] - {ref.NodeClass}")
+                ' Console.WriteLine($"{New String(" "c, depth * 2)}📝 {ref.DisplayName} [{childNodeId}] - {ref.NodeClass}")
 
                 ' Check if this matches our search
                 If ref.DisplayName.Text.ToLower().Contains(searchName.ToLower()) Then
                     Dim fullPath = $"Path: {childPath} | NodeId: {childNodeId} | Class: {ref.NodeClass}"
                     foundPaths.Add(fullPath)
-                    Console.WriteLine($"✅ FOUND MATCH: {fullPath}")
+                    ' Console.WriteLine($"✅ FOUND MATCH: {fullPath}")
 
                     ' If it's a variable, try to read its value
                     If ref.NodeClass = NodeClass.Variable Then
                         Try
                             Dim session = browser.Session
                             Dim value = Await session.ReadValueAsync(childNodeId)
-                            If StatusCode.IsGood(value.StatusCode) Then
-                                Console.WriteLine($"  → Value: {value.Value} [{value.StatusCode}]")
-                            Else
-                                Console.WriteLine($"  → Status: {value.StatusCode}")
-                            End If
+                            'If StatusCode.IsGood(value.StatusCode) Then
+                            '    Console.WriteLine($"  → Value: {value.Value} [{value.StatusCode}]")
+                            'Else
+                            '    Console.WriteLine($"  → Status: {value.StatusCode}")
+                            'End If
                         Catch readEx As Exception
                             Console.WriteLine($"  → Read error: {readEx.Message}")
                         End Try
@@ -372,7 +384,7 @@ Public Class OpcConnection
         Dim testSession As Session = Nothing
         Dim objects As New List(Of Dictionary(Of String, String))
         Try
-            Console.WriteLine("🔍 Getting available objects...")
+            'Console.WriteLine("🔍 Getting available objects...")
 
             ' Create test session
             Dim appConfig = Await BuildApplicationConfigurationAsync()
@@ -382,7 +394,7 @@ Public Class OpcConnection
             Dim configuredEndpoint = New ConfiguredEndpoint(Nothing, selectedEndpoint, endpointConfig)
             testSession = Await Session.Create(appConfig, configuredEndpoint, False, "Objects Session", 30000, Nothing, Nothing)
 
-            Console.WriteLine("✅ Objects session created")
+            ' Console.WriteLine("✅ Objects session created")
 
             Dim browser = New Browser(testSession) With {
                 .BrowseDirection = BrowseDirection.Forward,
@@ -401,8 +413,46 @@ Public Class OpcConnection
             '    rootRef.NodeClass
             '    rootRef.DisplayName
 
-            ' Browse Objects folder for all objects
-            Dim objectsRefs = Await browser.BrowseAsync(ObjectIds.ObjectsFolder)
+            ' Check if endpoint has path (like /PLC or /PLC/S7-1500)
+            Dim browsePath As String = ""
+            If endpointUrl.Contains("/") Then
+                Dim parts = endpointUrl.Split("/"c)
+                If parts.Length > 3 Then
+                    ' Join all path parts after the port
+                    Dim pathParts As New List(Of String)
+                    For i = 3 To parts.Length - 1
+                        pathParts.Add(parts(i))
+                    Next
+                    browsePath = String.Join(".", pathParts)
+                    Console.WriteLine($"🔍 Detected path in endpoint: {browsePath}")
+                End If
+            End If
+            
+            Dim objectsRefs As ReferenceDescriptionCollection
+            
+            If Not String.IsNullOrEmpty(browsePath) Then
+                ' Try to browse from specific NodeId based on path
+                Try
+                    Dim targetNodeId = NodeId.Parse($"ns=2;s={browsePath}")
+                    Console.WriteLine($"🔍 Browsing from specific node: {targetNodeId}")
+                    objectsRefs = Await browser.BrowseAsync(targetNodeId)
+                    Console.WriteLine($"🔍 Found {objectsRefs.Count} objects in {browsePath}")
+                Catch pathEx As Exception
+                    Console.WriteLine($"⚠️ Cannot browse path {browsePath}: {pathEx.Message}")
+                    Console.WriteLine($"🔍 Falling back to root Objects folder")
+                    objectsRefs = Nothing
+                End Try
+
+                ' Fallback if path browsing failed
+                If objectsRefs Is Nothing Then
+                    objectsRefs = Await browser.BrowseAsync(ObjectIds.ObjectsFolder)
+                End If
+            Else
+                ' Browse Objects folder for all objects
+                objectsRefs = Await browser.BrowseAsync(ObjectIds.ObjectsFolder)
+                Console.WriteLine($"🔍 GetAvailableObjects - Found {objectsRefs.Count} root objects")
+            End If
+            
             For Each objRef As ReferenceDescription In objectsRefs
                 ' Include all objects (Server, Locations, custom objects, etc.)
                 Dim objectInfo As New Dictionary(Of String, String) From {
@@ -435,7 +485,7 @@ Public Class OpcConnection
         Dim testSession As Session = Nothing
         Dim namespaces As New List(Of String)
         Try
-            Console.WriteLine("🔍 Browsing all available namespaces...")
+            ' Console.WriteLine("🔍 Browsing all available namespaces...")
 
             ' Create test session
             Dim appConfig = Await BuildApplicationConfigurationAsync()
@@ -445,13 +495,13 @@ Public Class OpcConnection
             Dim configuredEndpoint = New ConfiguredEndpoint(Nothing, selectedEndpoint, endpointConfig)
             testSession = Await Session.Create(appConfig, configuredEndpoint, False, "Namespace Browse Session", 30000, Nothing, Nothing)
 
-            Console.WriteLine("✅ Namespace browse session created")
+            ' Console.WriteLine("✅ Namespace browse session created")
 
             ' Browse namespace array
-            Console.WriteLine("🔍 Available namespaces:")
+            ' Console.WriteLine("🔍 Available namespaces:")
             For i = 0 To testSession.NamespaceUris.Count - 1
                 Dim namespaceUri = testSession.NamespaceUris.GetString(CUInt(i))
-                Console.WriteLine($"  ns={i}: {namespaceUri}")
+                ' Console.WriteLine($"  ns={i}: {namespaceUri}")
                 namespaces.Add($"ns={i}")
             Next
 
@@ -461,11 +511,11 @@ Public Class OpcConnection
                 .NodeClassMask = NodeClass.Object Or NodeClass.Variable
             }
 
-            Console.WriteLine("🔍 Objects in root folder:")
+            ' Console.WriteLine("🔍 Objects in root folder:")
             Dim objectsRefs = Await browser.BrowseAsync(ObjectIds.ObjectsFolder)
             For Each objRef As ReferenceDescription In objectsRefs
                 Dim objNodeId = ExpandedNodeId.ToNodeId(objRef.NodeId, testSession.NamespaceUris)
-                Console.WriteLine($"  📝 {objRef.DisplayName} [{objNodeId}] - {objRef.NodeClass}")
+                ' Console.WriteLine($"  📝 {objRef.DisplayName} [{objNodeId}] - {objRef.NodeClass}")
             Next
 
             Return namespaces
@@ -489,7 +539,7 @@ Public Class OpcConnection
         Dim testSession As Session = Nothing
         Dim discoveredNodes As New List(Of String)
         Try
-            Console.WriteLine($"🔍 Browsing namespace: {namespaceUri}")
+            ' Console.WriteLine($"🔍 Browsing namespace: {namespaceUri}")
 
             ' Create test session
             Dim appConfig = Await BuildApplicationConfigurationAsync()
@@ -499,7 +549,7 @@ Public Class OpcConnection
             Dim configuredEndpoint = New ConfiguredEndpoint(Nothing, selectedEndpoint, endpointConfig)
             testSession = Await Session.Create(appConfig, configuredEndpoint, False, "Browse Session", 30000, Nothing, Nothing)
 
-            Console.WriteLine("✅ Browse session created")
+            'Console.WriteLine("✅ Browse session created")
 
             Dim browser = New Browser(testSession) With {
                 .BrowseDirection = BrowseDirection.Forward,
@@ -507,13 +557,13 @@ Public Class OpcConnection
             }
 
             ' First try to browse from Objects folder
-            Console.WriteLine("🔍 Browsing from Objects folder...")
+            ' Console.WriteLine("🔍 Browsing from Objects folder...")
             Dim objectsRefs = Await browser.BrowseAsync(ObjectIds.ObjectsFolder)
-            Console.WriteLine($"✅ Found {objectsRefs.Count} objects in root")
+            ' Console.WriteLine($"✅ Found {objectsRefs.Count} objects in root")
 
             For Each objRef As ReferenceDescription In objectsRefs
                 Dim objNodeId = ExpandedNodeId.ToNodeId(objRef.NodeId, testSession.NamespaceUris)
-                Console.WriteLine($"📝 Object: {objRef.DisplayName} [{objNodeId}] - {objRef.NodeClass}")
+                ' Console.WriteLine($"📝 Object: {objRef.DisplayName} [{objNodeId}] - {objRef.NodeClass}")
 
                 ' Browse each object for variables
                 Try
@@ -521,30 +571,30 @@ Public Class OpcConnection
                     For Each childRef As ReferenceDescription In childRefs
                         Dim childNodeId = ExpandedNodeId.ToNodeId(childRef.NodeId, testSession.NamespaceUris)
                         discoveredNodes.Add(childNodeId.ToString())
-                        Console.WriteLine($"  → Child: {childRef.DisplayName} [{childNodeId}] - {childRef.NodeClass}")
+                        '  Console.WriteLine($"  → Child: {childRef.DisplayName} [{childNodeId}] - {childRef.NodeClass}")
                     Next
                 Catch childEx As Exception
-                    Console.WriteLine($"  ⚠️ Cannot browse {objRef.DisplayName}: {childEx.Message}")
+                    ' Console.WriteLine($"  ⚠️ Cannot browse {objRef.DisplayName}: {childEx.Message}")
                 End Try
             Next
 
             ' Also try to browse the specific namespace node if provided
             If Not String.IsNullOrEmpty(namespaceUri) Then
                 Try
-                    Console.WriteLine($"🔍 Trying specific namespace: {namespaceUri}")
+                    ' Console.WriteLine($"🔍 Trying specific namespace: {namespaceUri}")
                     Dim namespaceNodeId = NodeId.Parse(namespaceUri)
                     Dim nsRefs = Await browser.BrowseAsync(namespaceNodeId)
-                    Console.WriteLine($"✅ Namespace node has {nsRefs.Count} children")
+                    ' Console.WriteLine($"✅ Namespace node has {nsRefs.Count} children")
 
                     For Each nsRef As ReferenceDescription In nsRefs
                         Dim nsChildNodeId = ExpandedNodeId.ToNodeId(nsRef.NodeId, testSession.NamespaceUris)
                         If Not discoveredNodes.Contains(nsChildNodeId.ToString()) Then
                             discoveredNodes.Add(nsChildNodeId.ToString())
                         End If
-                        Console.WriteLine($"  → NS Child: {nsRef.DisplayName} [{nsChildNodeId}] - {nsRef.NodeClass}")
+                        '  Console.WriteLine($"  → NS Child: {nsRef.DisplayName} [{nsChildNodeId}] - {nsRef.NodeClass}")
                     Next
                 Catch nsEx As Exception
-                    Console.WriteLine($"⚠️ Cannot browse namespace {namespaceUri}: {nsEx.Message}")
+                    ' Console.WriteLine($"⚠️ Cannot browse namespace {namespaceUri}: {nsEx.Message}")
                 End Try
             End If
 
@@ -568,8 +618,8 @@ Public Class OpcConnection
     Public Shared Async Function TestNamespaceAndNodes(endpointUrl As String, namespaceUri As String, nodes As String()) As Task(Of Boolean)
         Dim testSession As Session = Nothing
         Try
-            Console.WriteLine($"🔍 Testing namespace: {namespaceUri}")
-            Console.WriteLine($"🔍 Testing {nodes.Length} nodes")
+            ' Console.WriteLine($"🔍 Testing namespace: {namespaceUri}")
+            ' Console.WriteLine($"🔍 Testing {nodes.Length} nodes")
 
             ' Create test session
             Dim appConfig = Await BuildApplicationConfigurationAsync()
@@ -579,35 +629,35 @@ Public Class OpcConnection
             Dim configuredEndpoint = New ConfiguredEndpoint(Nothing, selectedEndpoint, endpointConfig)
             testSession = Await Session.Create(appConfig, configuredEndpoint, False, "Namespace Test Session", 30000, Nothing, Nothing)
 
-            Console.WriteLine("✅ Test session created for namespace testing")
+            ' Console.WriteLine("✅ Test session created for namespace testing")
 
             ' Test the namespace node itself
             Dim namespaceValid = False
             Try
-                Console.WriteLine($"🔍 Testing namespace node: {namespaceUri}")
+                '  Console.WriteLine($"🔍 Testing namespace node: {namespaceUri}")
                 Dim namespaceNodeId = NodeId.Parse(namespaceUri)
 
                 ' Try to browse the namespace node
                 Dim browser = New Browser(testSession)
                 Dim refs = Await browser.BrowseAsync(namespaceNodeId)
-                Console.WriteLine($"✅ Namespace node browsed successfully, found {refs.Count} references")
+                ' Console.WriteLine($"✅ Namespace node browsed successfully, found {refs.Count} references")
                 namespaceValid = True
 
                 ' Try to read the namespace node (if it's a variable)
                 Try
                     Dim value = Await testSession.ReadValueAsync(namespaceNodeId)
                     If StatusCode.IsGood(value.StatusCode) Then
-                        Console.WriteLine($"✅ Namespace node value: {value.Value} [{value.StatusCode}]")
+                        '    Console.WriteLine($"✅ Namespace node value: {value.Value} [{value.StatusCode}]")
                     Else
-                        Console.WriteLine($"ℹ️ Namespace node status: {value.StatusCode} (might be an object)")
+                        '   Console.WriteLine($"ℹ️ Namespace node status: {value.StatusCode} (might be an object)")
                     End If
                 Catch readEx As Exception
-                    Console.WriteLine($"ℹ️ Namespace node is not readable (object type): {readEx.Message}")
+                    ' Console.WriteLine($"ℹ️ Namespace node is not readable (object type): {readEx.Message}")
                 End Try
 
             Catch nsEx As Exception
-                Console.WriteLine($"❌ Namespace node test failed: {nsEx.Message}")
-                Console.WriteLine($"❌ Trying to browse from Objects folder instead...")
+                ' Console.WriteLine($"❌ Namespace node test failed: {nsEx.Message}")
+                ' Console.WriteLine($"❌ Trying to browse from Objects folder instead...")
             End Try
 
             ' Fallback: browse from Objects folder if namespace test failed
@@ -615,10 +665,10 @@ Public Class OpcConnection
                 Try
                     Dim browser = New Browser(testSession)
                     Dim objectsRefs = Await browser.BrowseAsync(ObjectIds.ObjectsFolder)
-                    Console.WriteLine($"✅ Objects folder browsed, found {objectsRefs.Count} objects")
+                    '  Console.WriteLine($"✅ Objects folder browsed, found {objectsRefs.Count} objects")
                     namespaceValid = True
                 Catch objEx As Exception
-                    Console.WriteLine($"❌ Cannot browse Objects folder: {objEx.Message}")
+                    ' Console.WriteLine($"❌ Cannot browse Objects folder: {objEx.Message}")
                     Return False
                 End Try
             End If
@@ -631,20 +681,20 @@ Public Class OpcConnection
             Dim allNodesValid = True
             For Each nodeStr In nodes
                 Try
-                    Console.WriteLine($"🔍 Testing node: {nodeStr}")
+                    ' Console.WriteLine($"🔍 Testing node: {nodeStr}")
 
                     Dim nodeIds = NodeId.Parse(nodeStr)
                     Dim value = Await testSession.ReadValueAsync(nodeIds)
 
                     If StatusCode.IsGood(value.StatusCode) Then
-                        Console.WriteLine($"✅ Node {nodeStr}: {value.Value} [{value.StatusCode}]")
+                        '    Console.WriteLine($"✅ Node {nodeStr}: {value.Value} [{value.StatusCode}]")
                     Else
-                        Console.WriteLine($"⚠️ Node {nodeStr}: Status - {value.StatusCode}")
+                        '   Console.WriteLine($"⚠️ Node {nodeStr}: Status - {value.StatusCode}")
                         allNodesValid = False
                     End If
                     
                 Catch nodeEx As Exception
-                    Console.WriteLine($"❌ Node {nodeStr}: Error - {nodeEx.Message}")
+                    ' Console.WriteLine($"❌ Node {nodeStr}: Error - {nodeEx.Message}")
                     allNodesValid = False
                 End Try
             Next
@@ -652,14 +702,14 @@ Public Class OpcConnection
             Return allNodesValid
             
         Catch ex As Exception
-            Console.WriteLine($"❌ Namespace test failed: {ex.Message}")
+            ' Console.WriteLine($"❌ Namespace test failed: {ex.Message}")
             Return False
         Finally
             If testSession IsNot Nothing Then
                 Try
                     testSession.Close()
                     testSession.Dispose()
-                    Console.WriteLine("✅ Namespace test session closed")
+                    ' Console.WriteLine("✅ Namespace test session closed")
                 Catch
                     ' Ignore cleanup errors
                 End Try
@@ -672,7 +722,7 @@ Public Class OpcConnection
         Dim testSession As Session = Nothing
         Dim childNodes As New List(Of Dictionary(Of String, String))
         Try
-            Console.WriteLine($"🔍 Browsing child nodes of: {parentNodeId}")
+            ' Console.WriteLine($"🔍 Browsing child nodes of: {parentNodeId}")
 
             ' Create test session
             Dim appConfig = Await BuildApplicationConfigurationAsync()
@@ -708,7 +758,7 @@ Public Class OpcConnection
             Return childNodes
 
         Catch ex As Exception
-            Console.WriteLine($"❌ Browse child nodes failed: {ex.Message}")
+            ' Console.WriteLine($"❌ Browse child nodes failed: {ex.Message}")
             Return childNodes
         Finally
             If testSession IsNot Nothing Then

@@ -22,7 +22,7 @@ Partial Class FormConfigSensor
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Dim TreeNode9 As System.Windows.Forms.TreeNode = New System.Windows.Forms.TreeNode("Available Objects")
+        Dim TreeNode1 As System.Windows.Forms.TreeNode = New System.Windows.Forms.TreeNode("Available Objects")
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
         Me.SplitContainer2 = New System.Windows.Forms.SplitContainer()
         Me.TreeViewSelectedObjects = New System.Windows.Forms.TreeView()
@@ -93,11 +93,11 @@ Partial Class FormConfigSensor
         '
         Me.TreeViewSelectedObjects.Location = New System.Drawing.Point(3, 3)
         Me.TreeViewSelectedObjects.Name = "TreeViewSelectedObjects"
-        TreeNode9.BackColor = System.Drawing.Color.FromArgb(CType(CType(224, Byte), Integer), CType(CType(224, Byte), Integer), CType(CType(224, Byte), Integer))
-        TreeNode9.Name = "Root"
-        TreeNode9.Text = "Available Objects"
-        Me.TreeViewSelectedObjects.Nodes.AddRange(New System.Windows.Forms.TreeNode() {TreeNode9})
-        Me.TreeViewSelectedObjects.Size = New System.Drawing.Size(240, 400)
+        TreeNode1.BackColor = System.Drawing.Color.FromArgb(CType(CType(224, Byte), Integer), CType(CType(224, Byte), Integer), CType(CType(224, Byte), Integer))
+        TreeNode1.Name = "Root"
+        TreeNode1.Text = "Available Objects"
+        Me.TreeViewSelectedObjects.Nodes.AddRange(New System.Windows.Forms.TreeNode() {TreeNode1})
+        Me.TreeViewSelectedObjects.Size = New System.Drawing.Size(240, 403)
         Me.TreeViewSelectedObjects.TabIndex = 0
         '
         'SplitContainer3
@@ -206,6 +206,8 @@ Partial Class FormConfigSensor
         Me.Controls.Add(Me.SplitContainer1)
         Me.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.MaximumSize = New System.Drawing.Size(800, 555)
+        Me.MinimumSize = New System.Drawing.Size(800, 555)
         Me.Name = "FormConfigSensor"
         Me.Padding = New System.Windows.Forms.Padding(6)
         Me.ShowIcon = False

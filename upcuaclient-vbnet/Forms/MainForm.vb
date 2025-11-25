@@ -24,7 +24,7 @@ Public Class MainForm
 
         Dim menu As New ContextMenuStrip()
         menu.Items.Add("Tampilkan Dashboard", Nothing, AddressOf ShowDashboard)
-        'menu.Items.Add("Keluar", Nothing, AddressOf ExitApp)
+        menu.Items.Add("Keluar", Nothing, AddressOf ExitApp)
         trayIcon.ContextMenuStrip = menu
 
         ' Setup tabel UI
@@ -76,20 +76,20 @@ Public Class MainForm
         Me.BringToFront()
     End Sub
 
-    'Private Async Sub ExitApp(sender As Object, e As EventArgs)
-    '    Try
-    '        trayIcon.Visible = False
-    '        If bgWorker IsNot Nothing Then
-    '            bgWorker.StopWorker()
-    '            ' Give some time for cleanup
-    '            Await Task.Delay(1000)
-    '        End If
-    '        Application.Exit()
-    '    Catch ex As Exception
-    '        Console.WriteLine("Error during exit: " & ex.Message)
-    '        Application.Exit()
-    '    End Try
-    'End Sub
+    Private Async Sub ExitApp(sender As Object, e As EventArgs)
+        Try
+            trayIcon.Visible = False
+            If bgWorker IsNot Nothing Then
+                bgWorker.Stop()
+                ' Give some time for cleanup
+                Await Task.Delay(1000)
+            End If
+            Application.Exit()
+        Catch ex As Exception
+            ' Force exit if cleanup fails
+            Environment.Exit(0)
+        End Try
+    End Sub
 
     Private Sub MainForm_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
         e.Cancel = True

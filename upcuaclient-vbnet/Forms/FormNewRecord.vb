@@ -16,7 +16,7 @@ Public Class FormNewRecord
             ' Populate ComboBoxes with available sensors
             PopulateSensorComboBoxes()
 
-            Console.WriteLine("✅ FormNewRecord initialized")
+            ' Console.WriteLine("✅ FormNewRecord initialized")
         Catch ex As Exception
             MessageBox.Show($"Error initializing form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
@@ -71,23 +71,23 @@ Public Class FormNewRecord
             ComboBoxSensorTire.DisplayMember = "Display"
             ComboBoxSensorGuage.DisplayMember = "Display"
 
-            Console.WriteLine($"✅ Loaded {ComboBoxSensorTire.Items.Count} tire sensors, {ComboBoxSensorGuage.Items.Count} guage sensors")
+            ' Console.WriteLine($"✅ Loaded {ComboBoxSensorTire.Items.Count} tire sensors, {ComboBoxSensorGuage.Items.Count} guage sensors")
 
             ' Debug: Show what's in selectedNodeSensor
-            Console.WriteLine($"🔍 Debug selectedNodeSensor keys: {String.Join(", ", selectedNodeSensor.Keys)}")
-            If selectedNodeSensor.ContainsKey("PressureGauge") Then
-                Dim guageSensors = selectedNodeSensor("PressureGauge")
-                Console.WriteLine($"🔍 PressureGauge has {guageSensors.Count} sensors:")
-                For Each sensor In guageSensors
-                    Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "N/A")
-                    Dim active = If(sensor.ContainsKey("NodeActive"), sensor("NodeActive"), "N/A")
-                    Console.WriteLine($"  - {sensor("NodeText")} | Status: {status} | Active: {active}")
-                Next
-            Else
-                Console.WriteLine($"⚠️ PressureGauge key not found in selectedNodeSensor")
-            End If
+            ' Console.WriteLine($"🔍 Debug selectedNodeSensor keys: {String.Join(", ", selectedNodeSensor.Keys)}")
+            ' If selectedNodeSensor.ContainsKey("PressureGauge") Then
+            '     Dim guageSensors = selectedNodeSensor("PressureGauge")
+            '     Console.WriteLine($"🔍 PressureGauge has {guageSensors.Count} sensors:")
+            '     For Each sensor In guageSensors
+            '         Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "N/A")
+            '         Dim active = If(sensor.ContainsKey("NodeActive"), sensor("NodeActive"), "N/A")
+            '         Console.WriteLine($"  - {sensor("NodeText")} | Status: {status} | Active: {active}")
+            '     Next
+            ' Else
+            '     Console.WriteLine($"⚠️ PressureGauge key not found in selectedNodeSensor")
+            ' End If
         Catch ex As Exception
-            Console.WriteLine($"⚠️ Error populating sensors: {ex.Message}")
+            ' Console.WriteLine($"⚠️ Error populating sensors: {ex.Message}")
         End Try
     End Sub
 
@@ -123,16 +123,22 @@ Public Class FormNewRecord
                 .Status = "Recording",
                 .SyncStatus = "Pending",
                 .StartDate = DateTime.UtcNow,
-                .EndDate = If(NumericUpDownAutoEndRecord.Value > 0, DateTime.UtcNow.AddDays(NumericUpDownAutoEndRecord.Value), DateTime.UtcNow.AddYears(1))
+                .EndDate = If(NumericUpDownAutoEndRecord.Value > 0, DateTime.UtcNow.AddDays(NumericUpDownAutoEndRecord.Value), DateTime.UtcNow.AddYears(1)),
+                .EndRecordingDate = If(NumericUpDownAutoEndRecord.Value > 0, DateTime.UtcNow.AddDays(NumericUpDownAutoEndRecord.Value), Nothing)
             }
 
             ' Save to SQLite
             Dim sqlite As New SQLiteManager()
             If sqlite.InsertOrUpdateRecordMetadata(recordMetadata) Then
-                Console.WriteLine($"✅ Record metadata saved: {recordMetadata.BatchId}")
+                ' Console.WriteLine($"✅ Record metadata saved: {recordMetadata.BatchId}")
 
                 ' Update sensor status from idle to running
                 UpdateSensorStatusToRunning(selectedTire.NodeId, selectedGuage.NodeId)
+
+                ' Set auto end recording in settings if enabled
+                If NumericUpDownAutoEndRecord.Value > 0 Then
+                    SettingsManager.AddEndRecording(selectedTire.NodeId, selectedGuage.NodeId, recordMetadata.EndRecordingDate.Value)
+                End If
 
                 MessageBox.Show($"Recording started successfully!\nBatch: {recordMetadata.BatchId}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
@@ -159,7 +165,7 @@ Public Class FormNewRecord
                     If sensor("NodeId") = tireNodeId Then
                         sensor("NodeStatus") = "running"
                         updated = True
-                        Console.WriteLine($"✅ Updated tire sensor {tireNodeId} to running")
+                        ' Console.WriteLine($"✅ Updated tire sensor {tireNodeId} to running")
                         Exit For
                     End If
                 Next
@@ -172,7 +178,7 @@ Public Class FormNewRecord
                     If sensor("NodeId") = guageNodeId Then
                         sensor("NodeStatus") = "running"
                         updated = True
-                        Console.WriteLine($"✅ Updated guage sensor {guageNodeId} to running")
+                        ' Console.WriteLine($"✅ Updated guage sensor {guageNodeId} to running")
                         Exit For
                     End If
                 Next
@@ -181,13 +187,15 @@ Public Class FormNewRecord
             ' Save updated settings
             If updated Then
                 SettingsManager.SetSelectedNodeSensor(selectedNodeSensor)
-                Console.WriteLine($"✅ Sensor status updated to running - BackgroundWorker will detect and start data collection")
+                ' Console.WriteLine($"✅ Sensor status updated to running - BackgroundWorker will detect and start data collection")
             End If
 
         Catch ex As Exception
             Console.WriteLine($"⚠️ Error updating sensor status: {ex.Message}")
         End Try
     End Sub
+
+
 
     Private Sub ButtonCancel_Click(sender As Object, e As EventArgs) Handles ButtonCancel.Click
         Me.DialogResult = DialogResult.Cancel

@@ -8,20 +8,53 @@ Public Class TrayAppContext
 
     Public Sub New()
         Try
-            ' Inisialisasi form default
-            mainFormHandler = New MainFormNew()
-            AddHandler mainFormHandler.FormClosing, AddressOf OnFormClosing
+            ' Initialize settings first
+            SettingsManager.InitializeDefaults()
+            
+            ' Add small delay to ensure all components are ready
+            Threading.Thread.Sleep(100)
+            
+            ' Inisialisasi form default with null check
+            Try
+                mainFormHandler = New MainFormNew()
+                If mainFormHandler IsNot Nothing Then
+                    AddHandler mainFormHandler.FormClosing, AddressOf OnFormClosing
+                End If
+            Catch formEx As Exception
+                Console.WriteLine($"MainFormNew creation error: {formEx.Message}")
+                Throw New Exception($"Failed to create main form: {formEx.Message}", formEx)
+            End Try
 
-            ' Setup tray icon
-            SetupTrayIcon()
+            ' Setup tray icon with null check
+            Try
+                SetupTrayIcon()
+            Catch trayEx As Exception
+                Console.WriteLine($"Tray icon setup error: {trayEx.Message}")
+                ' Continue without tray icon if it fails
+            End Try
 
-            ' Tampilkan form saat start
-            mainFormHandler.Show()
-        Catch ex As Exception
-            MessageBox.Show($"❌ Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            ' Tampilkan form saat start dengan delay
             If mainFormHandler IsNot Nothing Then
-                mainFormHandler.Close()
+                Threading.Thread.Sleep(50)
+                mainFormHandler.Show()
             End If
+        Catch ex As Exception
+            Console.WriteLine($"TrayAppContext Error: {ex.Message}")
+            Console.WriteLine($"Stack: {ex.StackTrace}")
+            Try
+                MessageBox.Show($"❌ Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Catch
+                ' Ignore message box errors
+            End Try
+            
+            If mainFormHandler IsNot Nothing Then
+                Try
+                    mainFormHandler.Close()
+                Catch
+                    ' Ignore close errors
+                End Try
+            End If
+            ExitThread()
         End Try
     End Sub
 
@@ -43,9 +76,15 @@ Public Class TrayAppContext
     End Sub
 
     Private Sub ShowForm(sender As Object, e As EventArgs)
-        mainFormHandler.Show()
-        mainFormHandler.WindowState = FormWindowState.Normal
-        mainFormHandler.BringToFront()
+        Try
+            If mainFormHandler IsNot Nothing Then
+                mainFormHandler.Show()
+                mainFormHandler.WindowState = FormWindowState.Normal
+                mainFormHandler.BringToFront()
+            End If
+        Catch ex As Exception
+            Console.WriteLine($"ShowForm error: {ex.Message}")
+        End Try
     End Sub
 
     Private Sub ExitApplication(sender As Object, e As EventArgs)
@@ -71,7 +110,13 @@ Public Class TrayAppContext
     End Sub
 
     Private Sub OnFormClosing(sender As Object, e As FormClosingEventArgs)
-        e.Cancel = True
-        mainFormHandler.Hide()
+        Try
+            e.Cancel = True
+            If mainFormHandler IsNot Nothing Then
+                mainFormHandler.Hide()
+            End If
+        Catch ex As Exception
+            Console.WriteLine($"OnFormClosing error: {ex.Message}")
+        End Try
     End Sub
 End Class

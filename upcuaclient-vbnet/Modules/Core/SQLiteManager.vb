@@ -5,8 +5,8 @@ Imports upcuaclient_vbnet.upcuaclient_vbnet
 
 
 Public Class SQLiteManager
-    Private dbPath As String = Path.Combine(Application.StartupPath, "../../data/sensor.db")
-    Private schemaPath As String = "Config/sqlite.sql"
+    Private dbPath As String = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "data", "sensor.db")
+    Private schemaPath As String = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "Config", "sqlite.sql")
 
     Public Sub New()
         ' Auto-initialize database on creation
@@ -37,51 +37,116 @@ Public Class SQLiteManager
             Return
         End Try
 
-        ' Try different paths for schema file
-        Dim sqlScript As String = ""
-        Dim possiblePaths = New String() {
-            schemaPath,
-            Path.Combine("../../", schemaPath),
-            Path.Combine(Application.StartupPath, "../../", schemaPath)
-        }
-
-        For Each path In possiblePaths
-            If File.Exists(path) Then
-                sqlScript = File.ReadAllText(path)
-                Console.WriteLine($"📄 Found schema at: {path}")
-                Exit For
-            End If
-        Next
-
-        If String.IsNullOrEmpty(sqlScript) Then
-            Console.WriteLine($"⚠️ Schema file not found. Checked paths:")
-            For Each path In possiblePaths
-                Console.WriteLine($"  - {IO.Path.GetFullPath(path)}")
-            Next
-            Return
-        End If
+        ' Use embedded schema instead of file
+        Dim sqlScript As String = "
+            CREATE TABLE IF NOT EXISTS sensor_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                node_id TEXT NOT NULL,
+                sensor_type TEXT NOT NULL,
+                value REAL NOT NULL,
+                data_type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                sync_status TEXT NOT NULL,
+                timestamp TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS sensor_alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                node_id TEXT NOT NULL,
+                sensor_type TEXT NOT NULL,
+                message TEXT NOT NULL,
+                threshold REAL NOT NULL,
+                current_value REAL NOT NULL,
+                severity TEXT NOT NULL,
+                timestamp TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS system_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                source TEXT NOT NULL,
+                details TEXT NOT NULL,
+                timestamp TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS record_metadata (
+                batch_id TEXT PRIMARY KEY,
+                pressure_tire_id TEXT NOT NULL,
+                pressure_gauge_id TEXT NOT NULL,
+                size INTEGER NOT NULL,
+                created_by TEXT NOT NULL,
+                status TEXT NOT NULL,
+                sync_status TEXT NOT NULL,
+                start_date TEXT NOT NULL,
+                end_date TEXT NOT NULL,
+                end_recording_date TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_sensor_data_node_time ON sensor_data (node_id, timestamp);
+            CREATE INDEX IF NOT EXISTS idx_alerts_node_time ON sensor_alerts (node_id, timestamp);
+            CREATE INDEX IF NOT EXISTS idx_logs_time ON system_logs (timestamp);
+        "
+        
         Dim statements As String() = sqlScript.Split(New String() {";"}, StringSplitOptions.RemoveEmptyEntries)
 
         Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
             conn.Open()
             For Each stmt In statements
-                Using cmd As New SQLiteCommand(stmt.Trim(), conn)
-                    cmd.ExecuteNonQuery()
-                End Using
+                If Not String.IsNullOrWhiteSpace(stmt.Trim()) Then
+                    Using cmd As New SQLiteCommand(stmt.Trim(), conn)
+                        cmd.ExecuteNonQuery()
+                    End Using
+                End If
             Next
         End Using
+
+        ' Run database migrations for existing databases
+        RunDatabaseMigrations()
+
+        Console.WriteLine($"✅ Database schema initialized")
+    End Sub
+
+    Private Sub RunDatabaseMigrations()
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+
+                ' Check if end_recording_date column exists
+                Dim checkColumnQuery = "PRAGMA table_info(record_metadata)"
+                Dim hasEndRecordingDate = False
+
+                Using cmd As New SQLiteCommand(checkColumnQuery, conn)
+                    Using reader = cmd.ExecuteReader()
+                        While reader.Read()
+                            If reader("name").ToString() = "end_recording_date" Then
+                                hasEndRecordingDate = True
+                                Exit While
+                            End If
+                        End While
+                    End Using
+                End Using
+
+                ' Add end_recording_date column if it doesn't exist
+                If Not hasEndRecordingDate Then
+                    Dim alterQuery = "ALTER TABLE record_metadata ADD COLUMN end_recording_date TEXT"
+                    Using cmd As New SQLiteCommand(alterQuery, conn)
+                        cmd.ExecuteNonQuery()
+                        Console.WriteLine($"✅ Added end_recording_date column to record_metadata table")
+                    End Using
+                End If
+            End Using
+        Catch ex As Exception
+            Console.WriteLine($"⚠️ Database migration error: {ex.Message}")
+        End Try
     End Sub
 
     Public Function InsertOrUpdateRecordMetadata(entry As InterfaceRecordMetadata) As Boolean
         Try
+
             Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
                 conn.Open()
 
                 Dim query As String = "
                 INSERT INTO record_metadata 
-                (batch_id, pressure_tire_id, pressure_gauge_id, size, created_by, status, sync_status, start_date, end_date)
+                (batch_id, pressure_tire_id, pressure_gauge_id, size, created_by, status, sync_status, start_date, end_date, end_recording_date)
                 VALUES 
-                (@batch_id, @pressure_tire_id, @pressure_gauge_id, @size, @created_by, @status, @sync_status, @start_date, @end_date)
+                (@batch_id, @pressure_tire_id, @pressure_gauge_id, @size, @created_by, @status, @sync_status, @start_date, @end_date, @end_recording_date)
                 ON CONFLICT(batch_id) DO UPDATE SET
                     pressure_tire_id = excluded.pressure_tire_id,
                     pressure_gauge_id = excluded.pressure_gauge_id,
@@ -90,7 +155,8 @@ Public Class SQLiteManager
                     status = excluded.status,
                     sync_status = excluded.sync_status,
                     start_date = excluded.start_date,
-                    end_date = excluded.end_date
+                    end_date = excluded.end_date,
+                    end_recording_date = excluded.end_recording_date
             "
 
                 Using cmd As New SQLiteCommand(query, conn)
@@ -103,13 +169,15 @@ Public Class SQLiteManager
                     cmd.Parameters.AddWithValue("@sync_status", entry.SyncStatus)
                     cmd.Parameters.AddWithValue("@start_date", entry.StartDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))
                     cmd.Parameters.AddWithValue("@end_date", entry.EndDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))
+                    cmd.Parameters.AddWithValue("@end_recording_date", If(entry.EndRecordingDate.HasValue, entry.EndRecordingDate.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"), DBNull.Value))
 
                     cmd.ExecuteNonQuery()
+                    Console.WriteLine($"✅ Record metadata saved successfully")
                 End Using
             End Using
             Return True
         Catch ex As Exception
-            Console.WriteLine("InsertOrUpdateRecordMetadata Error: " & ex.Message)
+            Console.WriteLine($"🔍 Stack trace: {ex.StackTrace}")
             Return False
         End Try
     End Function
@@ -267,6 +335,7 @@ Public Class SQLiteManager
                             result.SyncStatus = reader("sync_status").ToString()
                             result.StartDate = DateTime.Parse(reader("start_date").ToString())
                             result.EndDate = DateTime.Parse(reader("end_date").ToString())
+                            result.EndRecordingDate = If(reader("end_recording_date") IsNot DBNull.Value, DateTime.Parse(reader("end_recording_date").ToString()), Nothing)
                         End If
                     End Using
                 End Using
@@ -370,30 +439,16 @@ Public Class SQLiteManager
                 GROUP BY rm.batch_id
                 ORDER BY rm.start_date DESC
             "
-                Console.WriteLine("
-                SELECT * FROM record_metadata 
-                WHERE start_date >= @start AND end_date <= @end
-                ORDER BY start_date ASC
-            ")
+
 
                 Using cmd As New SQLiteCommand(query, conn)
-                    Console.WriteLine($"🔍 QueryBatchRange: Getting all records")
 
-                    ' Debug: Check what sensor_data exists
-                    Using debugCmd As New SQLiteCommand("SELECT DISTINCT node_id, sensor_type FROM sensor_data ORDER BY node_id", conn)
-                        Using debugReader = debugCmd.ExecuteReader()
-                            Console.WriteLine("🔍 Available sensor_data:")
-                            While debugReader.Read()
-                                Console.WriteLine($"  - NodeId: {debugReader("node_id")} | SensorType: '{debugReader("sensor_type")}'")
-                            End While
-                        End Using
-                    End Using
 
                     Using reader = cmd.ExecuteReader()
                         Dim recordCount = 0
                         While reader.Read()
                             recordCount += 1
-                            Console.WriteLine($"📄 Reading record #{recordCount}")
+
                             Try
                                 Dim entry As New InterfaceRecordMetadata With {
                                     .BatchId = If(reader("batch_id") IsNot DBNull.Value, reader("batch_id").ToString(), ""),
@@ -407,11 +462,6 @@ Public Class SQLiteManager
                                     .EndDate = If(reader("actual_end_date") IsNot DBNull.Value, DateTime.Parse(reader("actual_end_date").ToString()), DateTime.MinValue)
                                 }
 
-                                Console.WriteLine($"  ✅ Added record: {entry.BatchId} | Status: {entry.Status}")
-                                Console.WriteLine($"      Start: {entry.StartDate:yyyy-MM-dd HH:mm:ss}")
-                                Console.WriteLine($"      End: {entry.EndDate:yyyy-MM-dd HH:mm:ss}")
-                                Console.WriteLine($"      Raw actual_end_date: {reader("actual_end_date")}")
-                                Console.WriteLine($"      Raw end_date: {reader("end_date")}")
                                 results.Add(entry)
                             Catch readerEx As Exception
                                 Console.WriteLine($"Error reading record row: {readerEx.Message}")
@@ -543,5 +593,21 @@ Public Class SQLiteManager
             Console.WriteLine("GetLatestSensorData Error: " & ex.Message)
         End Try
         Return result
+    End Function
+    
+    Public Function CheckHealth() As (isHealthy As Boolean, recordCount As Integer)
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+                Dim query = "SELECT COUNT(*) FROM sensor_data"
+                Using cmd As New SQLiteCommand(query, conn)
+                    Dim count = Convert.ToInt32(cmd.ExecuteScalar())
+                    Return (True, count)
+                End Using
+            End Using
+        Catch ex As Exception
+            Console.WriteLine($"SQLite CheckHealth Error: {ex.Message}")
+            Return (False, 0)
+        End Try
     End Function
 End Class
