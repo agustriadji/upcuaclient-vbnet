@@ -1,10 +1,10 @@
 [Setup]
-AppName=UPC UA Client
-AppVersion=1.0
-DefaultDirName={autopf}\UPC UA Client
-DefaultGroupName=UPC UA Client
+AppName=AirLM
+AppVersion=1.1.1
+DefaultDirName={autopf}\AirLM
+DefaultGroupName=AirLM
 OutputDir=Output
-OutputBaseFilename=UPCUAClient-Setup
+OutputBaseFilename=AirLM-Setup
 Compression=lzma
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -15,11 +15,16 @@ Source: "upcuaclient-vbnet\data\*"; DestDir: "{app}\data"; Flags: ignoreversion 
 Source: "upcuaclient-vbnet\Config\*"; DestDir: "{app}\Config"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\UPC UA Client"; Filename: "{app}\upcuaclient-vbnet.exe"
-Name: "{autodesktop}\UPC UA Client"; Filename: "{app}\upcuaclient-vbnet.exe"
+Name: "{group}\AirLM"; Filename: "{app}\upcuaclient-vbnet.exe"
+Name: "{autodesktop}\AirLM"; Filename: "{app}\upcuaclient-vbnet.exe"
 
 [Run]
-Filename: "{app}\upcuaclient-vbnet.exe"; Description: "Launch UPC UA Client"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\upcuaclient-vbnet.exe"; Description: "AirLM"; Flags: nowait postinstall skipifsilent
+
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
+    ValueType: string; ValueName: "AirLM"; \
+    ValueData: """{app}\upcuaclient-vbnet.exe"""; Flags: uninsdeletevalue
 
 [Prerequisites]
 Name: "dotnetfx472"; Title: ".NET Framework 4.7.2"; Url: "https://download.microsoft.com/download/6/E/4/6E48E8AB-DC00-419E-9704-06DD46E5F81D/NDP472-KB4054530-x86-x64-AllOS-ENU.exe"; Check: not IsDotNet472Installed

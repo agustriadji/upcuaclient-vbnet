@@ -24,6 +24,9 @@ Partial Class FormConfigManager
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(FormConfigManager))
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.TextBoxThresholdPressureGauge = New System.Windows.Forms.TextBox()
+        Me.Label2 = New System.Windows.Forms.Label()
         Me.LabelInfoInterval = New System.Windows.Forms.Label()
         Me.NumericUpDownInterval = New System.Windows.Forms.NumericUpDown()
         Me.LabelInternal = New System.Windows.Forms.Label()
@@ -31,9 +34,6 @@ Partial Class FormConfigManager
         Me.ButtonSelectObjectOpc = New System.Windows.Forms.Button()
         Me.ComboBoxSelectObjectOpc = New System.Windows.Forms.ComboBox()
         Me.DGVSelectedNodeOpc = New System.Windows.Forms.DataGridView()
-        Me.NodeText = New System.Windows.Forms.DataGridViewComboBoxColumn()
-        Me.NodeId = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.NodeType = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.LabelExampleHostOpc = New System.Windows.Forms.Label()
         Me.LabelMessageStateNamespaceOpc = New System.Windows.Forms.Label()
         Me.ButtonTestNamespaceOpc = New System.Windows.Forms.Button()
@@ -52,9 +52,9 @@ Partial Class FormConfigManager
         Me.TextBoxHostDB = New System.Windows.Forms.TextBox()
         Me.ButtonSaveForm = New System.Windows.Forms.Button()
         Me.ButtonCancelForm = New System.Windows.Forms.Button()
-        Me.Label2 = New System.Windows.Forms.Label()
-        Me.TextBoxThresholdPressureGauge = New System.Windows.Forms.TextBox()
-        Me.Label1 = New System.Windows.Forms.Label()
+        Me.NodeText = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.NodeId = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.NodeType = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.GroupBox1.SuspendLayout()
         CType(Me.NumericUpDownInterval, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.GroupBox2.SuspendLayout()
@@ -77,6 +77,37 @@ Partial Class FormConfigManager
         Me.GroupBox1.TabIndex = 0
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "General"
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.BackColor = System.Drawing.Color.Transparent
+        Me.Label1.Font = New System.Drawing.Font("Segoe UI", 7.8!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label1.ForeColor = System.Drawing.SystemColors.ControlDarkDark
+        Me.Label1.Location = New System.Drawing.Point(433, 39)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(80, 17)
+        Me.Label1.TabIndex = 24
+        Me.Label1.Text = "(Default: 0.2)"
+        Me.Label1.Visible = False
+        '
+        'TextBoxThresholdPressureGauge
+        '
+        Me.TextBoxThresholdPressureGauge.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.TextBoxThresholdPressureGauge.Location = New System.Drawing.Point(358, 34)
+        Me.TextBoxThresholdPressureGauge.Name = "TextBoxThresholdPressureGauge"
+        Me.TextBoxThresholdPressureGauge.Size = New System.Drawing.Size(67, 27)
+        Me.TextBoxThresholdPressureGauge.TabIndex = 23
+        '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.Label2.Location = New System.Drawing.Point(186, 37)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(166, 20)
+        Me.Label2.TabIndex = 21
+        Me.Label2.Text = "Threshold Leak Pressure"
         '
         'LabelInfoInterval
         '
@@ -167,27 +198,6 @@ Partial Class FormConfigManager
         Me.DGVSelectedNodeOpc.ShowCellToolTips = False
         Me.DGVSelectedNodeOpc.Size = New System.Drawing.Size(770, 80)
         Me.DGVSelectedNodeOpc.TabIndex = 20
-        '
-        'NodeText
-        '
-        Me.NodeText.HeaderText = "Name"
-        Me.NodeText.MinimumWidth = 6
-        Me.NodeText.Name = "NodeText"
-        Me.NodeText.ReadOnly = True
-        '
-        'NodeId
-        '
-        Me.NodeId.HeaderText = "Node ID"
-        Me.NodeId.MinimumWidth = 6
-        Me.NodeId.Name = "NodeId"
-        Me.NodeId.ReadOnly = True
-        '
-        'NodeType
-        '
-        Me.NodeType.HeaderText = "Type"
-        Me.NodeType.MinimumWidth = 6
-        Me.NodeType.Name = "NodeType"
-        Me.NodeType.ReadOnly = True
         '
         'LabelExampleHostOpc
         '
@@ -384,36 +394,26 @@ Partial Class FormConfigManager
         Me.ButtonCancelForm.Text = "Cancel"
         Me.ButtonCancelForm.UseVisualStyleBackColor = True
         '
-        'Label2
+        'NodeText
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.Label2.Location = New System.Drawing.Point(186, 37)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(166, 20)
-        Me.Label2.TabIndex = 21
-        Me.Label2.Text = "Threshold Leak Pressure"
+        Me.NodeText.HeaderText = "Name"
+        Me.NodeText.MinimumWidth = 6
+        Me.NodeText.Name = "NodeText"
+        Me.NodeText.ReadOnly = True
         '
-        'TextBoxThresholdPressureGauge
+        'NodeId
         '
-        Me.TextBoxThresholdPressureGauge.Font = New System.Drawing.Font("Segoe UI Semibold", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.TextBoxThresholdPressureGauge.Location = New System.Drawing.Point(358, 34)
-        Me.TextBoxThresholdPressureGauge.Name = "TextBoxThresholdPressureGauge"
-        Me.TextBoxThresholdPressureGauge.Size = New System.Drawing.Size(67, 27)
-        Me.TextBoxThresholdPressureGauge.TabIndex = 23
+        Me.NodeId.HeaderText = "Node ID"
+        Me.NodeId.MinimumWidth = 6
+        Me.NodeId.Name = "NodeId"
+        Me.NodeId.ReadOnly = True
         '
-        'Label1
+        'NodeType
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.BackColor = System.Drawing.Color.Transparent
-        Me.Label1.Font = New System.Drawing.Font("Segoe UI", 7.8!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.ForeColor = System.Drawing.SystemColors.ControlDarkDark
-        Me.Label1.Location = New System.Drawing.Point(433, 39)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(80, 17)
-        Me.Label1.TabIndex = 24
-        Me.Label1.Text = "(Default: 0.2)"
-        Me.Label1.Visible = False
+        Me.NodeType.HeaderText = "Type"
+        Me.NodeType.MinimumWidth = 6
+        Me.NodeType.Name = "NodeType"
+        Me.NodeType.ReadOnly = True
         '
         'FormConfigManager
         '
@@ -471,10 +471,10 @@ Partial Class FormConfigManager
     Friend WithEvents ButtonBrowseNodes As Button
     Friend WithEvents ButtonSelectObjectOpc As Button
     Friend WithEvents ComboBoxSelectObjectOpc As ComboBox
-    Friend WithEvents NodeText As DataGridViewComboBoxColumn
-    Friend WithEvents NodeId As DataGridViewTextBoxColumn
-    Friend WithEvents NodeType As DataGridViewTextBoxColumn
     Friend WithEvents Label2 As Label
     Friend WithEvents Label1 As Label
     Friend WithEvents TextBoxThresholdPressureGauge As TextBox
+    Friend WithEvents NodeText As DataGridViewTextBoxColumn
+    Friend WithEvents NodeId As DataGridViewTextBoxColumn
+    Friend WithEvents NodeType As DataGridViewTextBoxColumn
 End Class

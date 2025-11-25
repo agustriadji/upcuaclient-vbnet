@@ -2,6 +2,11 @@ Imports Newtonsoft.Json
 Imports System.IO
 
 Public Class FormConfigManager
+    ' Temporary variables to track original settings
+    Private hostOpcTemp As String = ""
+    Private selectedNodeIdOpcTemp As String = ""
+    ' Temporary variable for DataGridView data (separate from settings)
+    Private dgvTempData As New List(Of Dictionary(Of String, String))
 
     Private Sub FormConfigManager_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         FormStyler.ApplyStandardStyle(Me)
@@ -13,11 +18,10 @@ Public Class FormConfigManager
     End Sub
 
     Private Sub TextBoxHostOpc_TextChanged(sender As Object, e As EventArgs)
-        ' Only clear UI when hostOpc changes to prevent ComboBox value errors
+        ' Clear UI and temporary data when hostOpc changes
         Try
             DGVSelectedNodeOpc.Rows.Clear()
-            Dim nodeColumn = CType(DGVSelectedNodeOpc.Columns("NodeText"), DataGridViewComboBoxColumn)
-            nodeColumn.Items.Clear()
+            dgvTempData.Clear() ' Clear temporary DGV data
             ComboBoxSelectObjectOpc.Items.Clear()
             LabelMessageStateHostOpc.Visible = False
             LabelMessageStateNamespaceOpc.Visible = False
@@ -74,6 +78,10 @@ Public Class FormConfigManager
 
 
     Private Sub PopulateForm()
+        ' Store original settings in temporary variables
+        hostOpcTemp = My.Settings.hostOpc
+        selectedNodeIdOpcTemp = My.Settings.selectedNodeIdOpc
+
         ' General Settings
         NumericUpDownInterval.Value = My.Settings.intervalTime \ 60000 ' Convert ms to minutes
         TextBoxThresholdPressureGauge.Text = My.Settings.thresholdPressureGauge
@@ -87,6 +95,9 @@ Public Class FormConfigManager
 
         ' Load nodes into DataGridView
         LoadNodesIntoGrid()
+
+        ' Populate ComboBox from saved nodeIdOpc settings
+        PopulateObjectsComboBoxFromSettings()
     End Sub
 
     Private Sub LoadNodesIntoGrid()
@@ -105,12 +116,28 @@ Public Class FormConfigManager
             DGVSelectedNodeOpc.ContextMenuStrip = contextMenu
         End If
 
-        ' Populate ComboBox items first
-        Dim nodeColumn = CType(DGVSelectedNodeOpc.Columns("NodeText"), DataGridViewComboBoxColumn)
-        nodeColumn.Items.Clear()
+        ' NodeText is now TextBox, no need to populate ComboBox items
 
-        ' Get selected nodes (user's chosen objects) for DGV
-        Dim selectedNodes = SettingsManager.GetSelectedNodeIdOpc()
+        ' Use temporary data if available, otherwise load from settings
+        Dim nodesToDisplay As List(Of Dictionary(Of String, String))
+        If dgvTempData.Count > 0 Then
+            ' Use temporary data (currently being edited)
+            nodesToDisplay = dgvTempData
+            Console.WriteLine($"📋 Using temporary DGV data: {dgvTempData.Count} nodes")
+        Else
+            ' Load from settings and convert to temp format
+            Dim selectedNodes = SettingsManager.GetSelectedNodeIdOpc()
+            nodesToDisplay = New List(Of Dictionary(Of String, String))
+            For Each node In selectedNodes
+                nodesToDisplay.Add(New Dictionary(Of String, String) From {
+                    {"NodeText", If(node.ContainsKey("NodeText"), node("NodeText").ToString(), "")},
+                    {"NodeId", If(node.ContainsKey("NodeId"), node("NodeId").ToString(), "")},
+                    {"NodeType", If(node.ContainsKey("NodeType"), node("NodeType").ToString(), "Object")}
+                })
+            Next
+            dgvTempData = nodesToDisplay ' Store in temp for future edits
+            Console.WriteLine($"📋 Loaded from settings: {nodesToDisplay.Count} nodes")
+        End If
         ' LoggerDebug.LogInfo($"LoadNodesIntoGrid: Found {selectedNodes.Count} selected nodes")
 
         ' Debug selected nodes
@@ -121,22 +148,14 @@ Public Class FormConfigManager
         '     Next
         ' Next
 
-        ' Get available nodes for ComboBox options
-        Dim availableNodes = SettingsManager.GetNodeIdOpc()
+        ' NodeText is now TextBox, no ComboBox items needed
 
-        ' Add items to ComboBox from available objects
-        For Each nodeItem In availableNodes
-            If nodeItem.ContainsKey("NodeText") Then
-                nodeColumn.Items.Add(nodeItem("NodeText"))
-            End If
-        Next
-
-        ' Add rows with selected objects
-        For Each nodeItem In selectedNodes
+        ' Add rows with nodes to display
+        For Each nodeItem In nodesToDisplay
             Dim rowIndex = DGVSelectedNodeOpc.Rows.Add()
-            DGVSelectedNodeOpc.Rows(rowIndex).Cells("NodeText").Value = If(nodeItem.ContainsKey("NodeText"), nodeItem("NodeText"), "")
-            DGVSelectedNodeOpc.Rows(rowIndex).Cells("NodeId").Value = If(nodeItem.ContainsKey("NodeId"), nodeItem("NodeId"), "")
-            DGVSelectedNodeOpc.Rows(rowIndex).Cells("NodeType").Value = If(nodeItem.ContainsKey("NodeType"), nodeItem("NodeType"), "Object")
+            DGVSelectedNodeOpc.Rows(rowIndex).Cells("NodeText").Value = nodeItem("NodeText")
+            DGVSelectedNodeOpc.Rows(rowIndex).Cells("NodeId").Value = nodeItem("NodeId")
+            DGVSelectedNodeOpc.Rows(rowIndex).Cells("NodeType").Value = nodeItem("NodeType")
         Next
     End Sub
 
@@ -144,25 +163,51 @@ Public Class FormConfigManager
         SaveConfiguration()
     End Sub
 
-    Private Sub SaveConfiguration()
+    Private Async Sub SaveConfiguration()
         Try
-            ' Check if hostOpc changed
-            Dim hostOpcChanged = (My.Settings.hostOpc <> TextBoxHostOpc.Text)
+            ' Check if hostOpc changed using temporary variable
+            Dim hostOpcChanged = (hostOpcTemp <> TextBoxHostOpc.Text)
 
             If hostOpcChanged Then
-                ' Warn user about force stopping recordings
-                Dim result = MessageBox.Show(
-                    "Changing OPC host will force stop all active recordings and reset OPC settings. Continue?",
-                    "Confirm OPC Host Change",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning)
+                ' Determine if this is first-time setup or actual change
+                Dim isFirstTimeSetup = (selectedNodeIdOpcTemp = "[]")
+                Dim hasExistingNodes = (selectedNodeIdOpcTemp <> "[]")
 
-                If result = DialogResult.No Then
-                    Return
+                Console.WriteLine($"🔍 hostOpcChanged: {hostOpcChanged}")
+                Console.WriteLine($"🔍 isFirstTimeSetup: {isFirstTimeSetup}")
+                Console.WriteLine($"🔍 hasExistingNodes: {hasExistingNodes}")
+                Console.WriteLine($"🔍 selectedNodeIdOpcTemp: {selectedNodeIdOpcTemp}")
+
+                If isFirstTimeSetup Then
+                    ' First-time setup - no warning needed
+                    Console.WriteLine("🎆 First-time OPC setup - no warning needed")
+                ElseIf hasExistingNodes Then
+                    ' Has existing configuration - show warning
+                    Dim result = MessageBox.Show(
+                        "Changing OPC host will force stop all active recordings and reset OPC settings. Continue?",
+                        "Confirm OPC Host Change",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning)
+
+                    If result = DialogResult.No Then
+                        Return
+                    End If
+
+                    ' Force stop all recordings and reset OPC settings (synchronous)
+                    ForceStopAllRecordingsSync()
+
+                    ' After force stop, save the new settings from form
+                    SaveNewOpcSettings()
+
+                    ' Auto-discover objects for new host
+                    Try
+                        Await DiscoverAndSaveObjects()
+                        PopulateObjectsComboBoxFromSettings()
+                    Catch ex As Exception
+                        Console.WriteLine($"⚠️ Auto-discover failed: {ex.Message}")
+                        ComboBoxSelectObjectOpc.Items.Clear()
+                    End Try
                 End If
-
-                ' Force stop all recordings and reset OPC settings (synchronous)
-                ForceStopAllRecordingsSync()
             End If
 
             ' Update settings with form values
@@ -171,6 +216,35 @@ Public Class FormConfigManager
             My.Settings.hostOpc = TextBoxHostOpc.Text
             My.Settings.namespaceOpc = TextBoxNamespaceOpc.Text
             My.Settings.hostDB = TextBoxHostDB.Text
+
+            ' Save temporary DGV data to selectedNodeIdOpc settings with child nodes
+            Dim selectedNodes As New List(Of Dictionary(Of String, Object))
+            For Each tempNode In dgvTempData
+                ' Browse child nodes for each parent
+                Dim childNodes As New List(Of Object)
+                Try
+                    Dim childNodesList = Await BrowseChildNodes(tempNode("NodeId"))
+                    For Each child In childNodesList
+                        childNodes.Add(New Dictionary(Of String, Object) From {
+                            {"NodeText", child("NodeText")},
+                            {"NodeId", child("NodeId")},
+                            {"NodeType", child("NodeType")}
+                        })
+                    Next
+                    Console.WriteLine($"📋 Found {childNodes.Count} child nodes for {tempNode("NodeText")}")
+                Catch ex As Exception
+                    Console.WriteLine($"⚠️ Failed to browse children for {tempNode("NodeText")}: {ex.Message}")
+                End Try
+
+                selectedNodes.Add(New Dictionary(Of String, Object) From {
+                    {"NodeText", tempNode("NodeText")},
+                    {"NodeId", tempNode("NodeId")},
+                    {"NodeType", tempNode("NodeType")},
+                    {"ChildNodeId", childNodes}
+                })
+            Next
+            SettingsManager.SetSelectedNodeIdOpc(selectedNodes)
+            Console.WriteLine($"💾 Saved {selectedNodes.Count} nodes to settings")
 
             ' Save all settings
             SettingsManager.SaveAll()
@@ -183,7 +257,7 @@ Public Class FormConfigManager
             MessageBox.Show($"Error saving config:  {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-    
+
     Private Sub ForceStopAllRecordingsSync()
         Try
             Console.WriteLine("🚨 Force stopping all recordings due to hostOpc change...")
@@ -205,9 +279,20 @@ Public Class FormConfigManager
                 ' Export to SQL Server if connected (synchronous)
                 If My.Settings.stateConnectionDB Then
                     Try
-                        Dim sqlServerManager As New SQLServerManager()
-                        sqlServerManager.ExportRecordData(batch.BatchId)
-                        Console.WriteLine($"✅ Exported force stopped batch: {batch.BatchId}")
+                        If Not String.IsNullOrEmpty(batch.PressureTireId) AndAlso Not String.IsNullOrEmpty(batch.PressureGaugeId) Then
+                            Dim sqlServerManager As New SQLServerManager()
+                            Dim exportSuccess = sqlServerManager.ExportRecordData(batch.BatchId)
+                            If exportSuccess Then
+                                Console.WriteLine($"✅ Exported force stopped batch: {batch.BatchId}")
+                                ' Clean up sensor_data after successful export
+                                sqlite.DeleteSensorDataByNodeIds(batch.PressureTireId, batch.PressureGaugeId)
+                                Console.WriteLine($"🧹 Cleaned sensor_data for nodes: {batch.PressureTireId}, {batch.PressureGaugeId}")
+                            Else
+                                Console.WriteLine($"⚠️ Export failed for {batch.BatchId} - keeping sensor_data")
+                            End If
+                        Else
+                            Console.WriteLine($"⚠️ Invalid node IDs for {batch.BatchId} - skipping export")
+                        End If
                     Catch exportEx As Exception
                         Console.WriteLine($"⚠️ Export failed for {batch.BatchId}: {exportEx.Message}")
                     End Try
@@ -226,6 +311,47 @@ Public Class FormConfigManager
 
         Catch ex As Exception
             Console.WriteLine($"⚠️ ForceStopAllRecordings Error: {ex.Message}")
+        End Try
+    End Sub
+
+    Private Async Sub SaveNewOpcSettings()
+        Try
+            ' Save the new OPC settings from form after force stop
+            My.Settings.hostOpc = TextBoxHostOpc.Text
+            My.Settings.namespaceOpc = TextBoxNamespaceOpc.Text
+
+            ' Save selected nodes from temporary DGV data to selectedNodeIdOpc with child nodes
+            Dim selectedNodes As New List(Of Dictionary(Of String, Object))
+            For Each tempNode In dgvTempData
+                ' Browse child nodes for each parent
+                Dim childNodes As New List(Of Object)
+                Try
+                    Dim childNodesList = Await BrowseChildNodes(tempNode("NodeId"))
+                    For Each child In childNodesList
+                        childNodes.Add(New Dictionary(Of String, Object) From {
+                            {"NodeText", child("NodeText")},
+                            {"NodeId", child("NodeId")},
+                            {"NodeType", child("NodeType")}
+                        })
+                    Next
+                Catch ex As Exception
+                    Console.WriteLine($"⚠️ Failed to browse children for {tempNode("NodeText")}: {ex.Message}")
+                End Try
+
+                selectedNodes.Add(New Dictionary(Of String, Object) From {
+                    {"NodeText", tempNode("NodeText")},
+                    {"NodeId", tempNode("NodeId")},
+                    {"NodeType", tempNode("NodeType")},
+                    {"ChildNodeId", childNodes}
+                })
+            Next
+
+            SettingsManager.SetSelectedNodeIdOpc(selectedNodes)
+            My.Settings.Save()
+
+            Console.WriteLine($"✅ Saved new OPC settings after force stop: {selectedNodes.Count} nodes")
+        Catch ex As Exception
+            Console.WriteLine($"⚠️ SaveNewOpcSettings Error: {ex.Message}")
         End Try
     End Sub
 
@@ -348,19 +474,21 @@ Public Class FormConfigManager
             ' Browse child nodes for the selected object
             Dim childNodes = Await BrowseChildNodes(nodeId)
             ' LoggerDebug.LogInfo($"SelectObject: Found {childNodes.Count} child nodes")
-            
+
             ' Debug what we're about to save
             ' LoggerDebug.LogInfo($"SelectObject: Saving object - NodeText: {nodeText}, NodeId: {nodeId}, NodeType: {nodeType}")
             ' LoggerDebug.LogInfo($"SelectObject: Child nodes to save: {childNodes.Count}")
 
-            ' Add to selectedNodeIdOpc (user's chosen objects)
-            SettingsManager.AddSelectedNodeIdOpc(nodeText, nodeId, nodeType, childNodes)
+            ' Add to temporary DGV data (don't save to settings yet)
+            dgvTempData.Add(New Dictionary(Of String, String) From {
+                {"NodeText", nodeText},
+                {"NodeId", nodeId},
+                {"NodeType", nodeType}
+            })
 
-            ' Update namespace
-            My.Settings.namespaceOpc = nodeId
-            SettingsManager.SaveAll()
+            Console.WriteLine($"➕ Added to temp data: {nodeText} - Total: {dgvTempData.Count}")
 
-            ' Refresh grid
+            ' Refresh grid with temporary data
             LoadNodesIntoGrid()
 
             ' LoggerDebug.LogSuccess("Object saved with child nodes")
@@ -373,11 +501,11 @@ Public Class FormConfigManager
     Private Async Function BrowseChildNodes(parentNodeId As String) As Task(Of List(Of Dictionary(Of String, String)))
         Try
             ' LoggerDebug.LogInfo($"BrowseChildNodes: Starting browse for parent: {parentNodeId}")
-            
+
             Dim childNodes = Await OpcConnection.BrowseChildNodes(TextBoxHostOpc.Text, parentNodeId)
-            
+
             ' LoggerDebug.LogInfo($"BrowseChildNodes: Retrieved {childNodes.Count} child nodes")
-            
+
             ' Debug each child node
             ' For i = 0 To childNodes.Count - 1
             '     LoggerDebug.LogInfo($"  Child {i}: {childNodes(i).Keys.Count} keys")
@@ -385,7 +513,7 @@ Public Class FormConfigManager
             '         LoggerDebug.LogInfo($"    Key: {key} = {childNodes(i)(key)}")
             '     Next
             ' Next
-            
+
             Return childNodes
         Catch ex As Exception
             ' LoggerDebug.LogError($"Failed to browse child nodes: {ex.Message}")
@@ -406,26 +534,29 @@ Public Class FormConfigManager
 
             Dim result = MessageBox.Show("Delete selected objects?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
             If result = DialogResult.Yes Then
-                ' Get NodeIds to delete
+                ' Get NodeIds to delete from selected rows (exclude new row)
                 Dim nodeIdsToDelete As New List(Of String)
                 For Each row As DataGridViewRow In DGVSelectedNodeOpc.SelectedRows
-                    If Not row.IsNewRow AndAlso row.Cells("NodeId").Value IsNot Nothing Then
+                    If Not row.IsNewRow AndAlso row.Cells("NodeId").Value IsNot Nothing AndAlso Not String.IsNullOrEmpty(row.Cells("NodeId").Value.ToString()) Then
                         nodeIdsToDelete.Add(row.Cells("NodeId").Value.ToString())
                     End If
                 Next
 
-                ' Remove from settings
-                For Each NodeIds In nodeIdsToDelete
-                    SettingsManager.RemoveSelectedNodeIdOpc(NodeIds)
-                    ' LoggerDebug.LogInfo($"Deleted object with NodeId: {NodeIds}")
+                ' Remove from temporary data
+                For Each nodeIdToDelete In nodeIdsToDelete
+                    dgvTempData.RemoveAll(Function(node) node("NodeId") = nodeIdToDelete)
+                    Console.WriteLine($"🗑️ Removed from temp data: {nodeIdToDelete}")
                 Next
 
-                SettingsManager.SaveAll()
-                LoadNodesIntoGrid() ' Refresh grid
-                ' LoggerDebug.LogSuccess($"Deleted {nodeIdsToDelete.Count} objects")
+                ' Clear grid and reload only if there's remaining data
+                DGVSelectedNodeOpc.Rows.Clear()
+                If dgvTempData.Count > 0 Then
+                    LoadNodesIntoGrid()
+                End If
+                Console.WriteLine($"✅ Deleted {nodeIdsToDelete.Count} objects - Remaining: {dgvTempData.Count}")
             End If
         Catch ex As Exception
-            ' LoggerDebug.LogError($"Failed to delete objects: {ex.Message}")
+            Console.WriteLine($"⚠️ Failed to delete objects: {ex.Message}")
         End Try
     End Sub
 

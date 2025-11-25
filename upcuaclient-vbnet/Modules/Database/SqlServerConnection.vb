@@ -67,7 +67,9 @@ Public Class SqlServerConnection
                     Console.WriteLine($"📋 record_metadata table exists: {tableExists}")
 
                     If tableExists Then
-                        Console.WriteLine($"✅ Schema already exists, skipping creation")
+                        Console.WriteLine($"✅ Tables exist, running migrations only")
+                        ' Run database migrations for existing tables
+                        Await RunDatabaseMigrations(connection)
                         Return True
                     End If
                 End Using
@@ -85,6 +87,7 @@ Public Class SqlServerConnection
                     data_type NVARCHAR(50) NOT NULL,
                     status NVARCHAR(20) NOT NULL,
                     sync_status NVARCHAR(20) NOT NULL,
+                    batch_id NVARCHAR(50) NULL,
                     timestamp DATETIME2 NOT NULL DEFAULT GETDATE()
                 )"
 
@@ -183,6 +186,27 @@ Public Class SqlServerConnection
                     Using alterCmd As New SqlCommand(alterQuery, connection)
                         Await alterCmd.ExecuteNonQueryAsync()
                         Console.WriteLine($"✅ Added end_recording_date column to record_metadata table")
+                    End Using
+                End If
+            End Using
+            
+            ' Check if batch_id column exists in sensor_data table
+            Dim checkBatchIdQuery = "
+                SELECT COUNT(*) 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'sensor_data' 
+                AND COLUMN_NAME = 'batch_id'
+            "
+            
+            Using checkBatchCmd As New SqlCommand(checkBatchIdQuery, connection)
+                Dim batchColumnExists = CInt(Await checkBatchCmd.ExecuteScalarAsync()) > 0
+                
+                If Not batchColumnExists Then
+                    ' Add batch_id column to existing sensor_data table
+                    Dim alterBatchQuery = "ALTER TABLE sensor_data ADD batch_id NVARCHAR(50) NULL"
+                    Using alterBatchCmd As New SqlCommand(alterBatchQuery, connection)
+                        Await alterBatchCmd.ExecuteNonQueryAsync()
+                        Console.WriteLine($"✅ Added batch_id column to sensor_data table")
                     End Using
                 End If
             End Using

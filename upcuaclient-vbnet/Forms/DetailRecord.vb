@@ -358,9 +358,10 @@ Public Class DetailRecord
             Dim connectionString = $"Server={My.Settings.hostDB.Split(";"c)(0).Split("="c)(1)};Database={My.Settings.hostDB.Split(";"c)(1).Split("="c)(1)};Integrated Security=true;TrustServerCertificate=true;"
             Using conn As New System.Data.SqlClient.SqlConnection(connectionString)
                 conn.Open()
-                Dim query = "SELECT node_id, sensor_type, value, timestamp FROM sensor_data WHERE node_id = @node_id ORDER BY timestamp"
+                Dim query = "SELECT node_id, sensor_type, value, timestamp FROM sensor_data WHERE node_id = @node_id AND (batch_id = @batch_id OR batch_id IS NULL) ORDER BY timestamp"
                 Using cmd As New System.Data.SqlClient.SqlCommand(query, conn)
                     cmd.Parameters.AddWithValue("@node_id", nodeId)
+                    cmd.Parameters.AddWithValue("@batch_id", recordMetadata.BatchId)
                     Using reader = cmd.ExecuteReader()
                         While reader.Read()
                             sensorDataList.Add(New InterfaceSensorData With {
@@ -596,26 +597,37 @@ Public Class DetailRecord
 
     Private Sub ExportDataToSQLServer()
         Try
-            ' Console.WriteLine($"🔄 Starting export to SQL Server for batch: {recordMetadata.BatchId}")
+            Console.WriteLine($"🔄 Starting export to SQL Server for batch: {recordMetadata.BatchId}")
+            Console.WriteLine($"🔍 SQL Server connection state: {My.Settings.stateConnectionDB}")
+            Console.WriteLine($"🔍 Node IDs - Tire: {recordMetadata.PressureTireId}, Gauge: {recordMetadata.PressureGaugeId}")
 
             ' Check SQL Server connection status from settings
             If Not My.Settings.stateConnectionDB Then
-                ' Console.WriteLine($"❌ SQL Server not connected - skipping export")
+                Console.WriteLine($"❌ SQL Server not connected - skipping export and cleanup")
                 Return
             End If
 
-            ' Console.WriteLine($"✅ SQL Server connection OK - proceeding with export")
+            Console.WriteLine($"✅ SQL Server connection OK - proceeding with export")
             Dim sqlServerManager As New SQLServerManager()
             Dim success = sqlServerManager.ExportRecordData(recordMetadata.BatchId)
+            Console.WriteLine($"🔍 Export result: {success}")
 
             If success Then
-                ' Console.WriteLine($"📤 Successfully exported batch: {recordMetadata.BatchId}")
+                Console.WriteLine($"✅ Successfully exported batch: {recordMetadata.BatchId}")
+                ' Clean up sensor_data after successful export
+                If Not String.IsNullOrEmpty(recordMetadata.PressureTireId) AndAlso Not String.IsNullOrEmpty(recordMetadata.PressureGaugeId) Then
+                    Console.WriteLine($"🧹 Starting sensor_data cleanup...")
+                    Dim deleteSuccess = sqlite.DeleteSensorDataByNodeIds(recordMetadata.PressureTireId, recordMetadata.PressureGaugeId)
+                    Console.WriteLine($"🧹 Cleanup result: {deleteSuccess} for nodes: {recordMetadata.PressureTireId}, {recordMetadata.PressureGaugeId}")
+                Else
+                    Console.WriteLine($"⚠️ Invalid node IDs - skipping sensor_data cleanup")
+                End If
             Else
-                ' Console.WriteLine($"❌ Failed to export batch: {recordMetadata.BatchId}")
+                Console.WriteLine($"⚠️ Export failed for {recordMetadata.BatchId} - keeping sensor_data")
             End If
         Catch ex As Exception
-            ' Console.WriteLine($"❌ Export error: {ex.Message}")
-            ' Console.WriteLine($"🔍 Export error details: {ex.ToString()}")
+            Console.WriteLine($"❌ Export error: {ex.Message}")
+            Console.WriteLine($"🔍 Export error details: {ex.ToString()}")
         End Try
     End Sub
 

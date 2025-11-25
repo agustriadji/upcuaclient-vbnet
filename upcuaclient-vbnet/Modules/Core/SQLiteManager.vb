@@ -610,4 +610,23 @@ Public Class SQLiteManager
             Return (False, 0)
         End Try
     End Function
+
+    Public Function DeleteSensorDataByNodeIds(pressureTireId As String, pressureGaugeId As String) As Boolean
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+                Dim query = "DELETE FROM sensor_data WHERE node_id IN (@tire_id, @gauge_id)"
+                Using cmd As New SQLiteCommand(query, conn)
+                    cmd.Parameters.AddWithValue("@tire_id", pressureTireId)
+                    cmd.Parameters.AddWithValue("@gauge_id", pressureGaugeId)
+                    Dim deletedRows = cmd.ExecuteNonQuery()
+                    Console.WriteLine($"🗑️ Deleted {deletedRows} sensor_data rows for nodes: {pressureTireId}, {pressureGaugeId}")
+                End Using
+            End Using
+            Return True
+        Catch ex As Exception
+            Console.WriteLine($"❌ DeleteSensorDataByNodeIds Error: {ex.Message}")
+            Return False
+        End Try
+    End Function
 End Class

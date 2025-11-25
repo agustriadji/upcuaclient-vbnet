@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{19FD343C-6DE0-42D5-A8F5-FB273D61D897}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <StartupObject>upcuaclient_vbnet.upcuaclient_vbnet.Main</StartupObject>
+    <StartupObject>Sub Main</StartupObject>
     <RootNamespace>upcuaclient_vbnet</RootNamespace>
     <AssemblyName>upcuaclient-vbnet</AssemblyName>
     <FileAlignment>512</FileAlignment>
@@ -256,6 +256,7 @@
     <Compile Include="Modules\Core\AnalyticsManager.vb" />
     <Compile Include="Modules\Core\AnalyticsManager2.vb" />
     <Compile Include="Modules\Core\ConnectionMonitor.vb" />
+    <Compile Include="Modules\Core\ConsoleRedirect.vb" />
     <Compile Include="Modules\Core\DataViewManager.vb" />
     <Compile Include="Modules\Core\FormStyler.vb" />
     <Compile Include="Modules\Core\Helper.vb" />
@@ -336,8 +337,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="data\sensor.db" />
-    <None Include="end_of_record.md" />
-    <None Include="logs.log" />
     <None Include="My Project\app.manifest" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>

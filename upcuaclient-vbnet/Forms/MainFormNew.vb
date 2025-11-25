@@ -571,98 +571,78 @@ Public Class MainFormNew
 
     Private Sub DGVRecording_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVRecording.CellClick
         Try
+            ' Comprehensive null and state checks
+            If DGVRecording Is Nothing OrElse DGVRecording.IsDisposed Then Return
+            If e Is Nothing OrElse e.RowIndex < 0 Then Return
+            If isDialogOpen Then Return
+            If DGVRecording.Rows Is Nothing OrElse e.RowIndex >= DGVRecording.Rows.Count Then Return
+
             ' Prevent double-click (ignore clicks within 500ms)
             Dim now = DateTime.Now
-            If (now - lastClickTime).TotalMilliseconds < 500 Then
-                Console.WriteLine("⚠️ Double-click ignored")
-                Return
-            End If
+            If (now - lastClickTime).TotalMilliseconds < 500 Then Return
             lastClickTime = now
 
-            Console.WriteLine($"🔍 CellClick: isDialogOpen={isDialogOpen}, sender={sender IsNot Nothing}, e={e IsNot Nothing}")
-
-            If isDialogOpen Then
-                Console.WriteLine("⚠️ Dialog already open, returning")
+            ' Get row safely
+            Dim row As DataGridViewRow = Nothing
+            Try
+                row = DGVRecording.Rows(e.RowIndex)
+            Catch
                 Return
-            End If
+            End Try
 
-            If DGVRecording Is Nothing Then
-                Console.WriteLine("❌ DGVRecording is null")
+            If row Is Nothing OrElse row.IsNewRow Then Return
+
+            ' Get BatchId safely
+            Dim batchId As String = ""
+            Try
+                If DGVRecording.Columns.Contains("BatchId") AndAlso row.Cells("BatchId") IsNot Nothing AndAlso row.Cells("BatchId").Value IsNot Nothing Then
+                    batchId = row.Cells("BatchId").Value.ToString().Trim()
+                End If
+            Catch
                 Return
-            End If
+            End Try
 
-            If e Is Nothing Then
-                Console.WriteLine("❌ EventArgs is null")
-                Return
-            End If
+            If String.IsNullOrEmpty(batchId) Then Return
 
-            Console.WriteLine($"🔍 RowIndex: {e.RowIndex}, RowCount: {DGVRecording.Rows.Count}")
-
-            If e.RowIndex < 0 OrElse e.RowIndex >= DGVRecording.Rows.Count Then
-                Console.WriteLine("❌ Invalid row index")
-                Return
-            End If
-
-            ' Temporarily disable the DataGridView to prevent concurrent access
+            ' Open DetailRecord safely
+            isDialogOpen = True
             DGVRecording.Enabled = False
 
-            Dim row = DGVRecording.Rows(e.RowIndex)
-            If row Is Nothing Then
-                Console.WriteLine("❌ Row is null")
-                DGVRecording.Enabled = True
-                Return
-            End If
+            Try
+                ' Stop timers
+                If refreshTimerTabPageRecording IsNot Nothing Then refreshTimerTabPageRecording.Stop()
+                If refreshTimerTabPageSensor IsNot Nothing Then refreshTimerTabPageSensor.Stop()
+                If connectionIndicatorTimer IsNot Nothing Then connectionIndicatorTimer.Stop()
 
-            If DGVRecording.Columns("BatchId") Is Nothing Then
-                Console.WriteLine("❌ BatchId column not found")
-                DGVRecording.Enabled = True
-                Return
-            End If
-
-            Dim batchCell = row.Cells("BatchId")
-            If batchCell Is Nothing OrElse batchCell.Value Is Nothing Then
-                Console.WriteLine("❌ BatchId cell or value is null")
-                DGVRecording.Enabled = True
-                Return
-            End If
-
-            Dim batchId = batchCell.Value.ToString()
-            Console.WriteLine($"✅ Opening DetailRecord for batch: {batchId}")
-
-            If Not String.IsNullOrEmpty(batchId) Then
-                isDialogOpen = True
-
-                ' Stop all timers to prevent conflicts
-                refreshTimerTabPageRecording.Stop()
-                refreshTimerTabPageSensor.Stop()
-                connectionIndicatorTimer.Stop()
-
-                Dim detailForm As New DetailRecord(batchId)
-                detailForm.ShowDialog()
+                ' Open form
+                Using detailForm As New DetailRecord(batchId)
+                    detailForm.ShowDialog()
+                End Using
 
                 ' Restart timers based on current tab
-                If TabControlMain.SelectedTab Is TabPageRecording Then
-                    refreshTimerTabPageRecording.Start()
-                ElseIf TabControlMain.SelectedTab Is TabPageSensorState Then
-                    refreshTimerTabPageSensor.Start()
+                If TabControlMain IsNot Nothing AndAlso TabControlMain.SelectedTab Is TabPageRecording Then
+                    If refreshTimerTabPageRecording IsNot Nothing Then refreshTimerTabPageRecording.Start()
+                ElseIf TabControlMain IsNot Nothing AndAlso TabControlMain.SelectedTab Is TabPageSensorState Then
+                    If refreshTimerTabPageSensor IsNot Nothing Then refreshTimerTabPageSensor.Start()
                 End If
-                connectionIndicatorTimer.Start()
-
+                If connectionIndicatorTimer IsNot Nothing Then connectionIndicatorTimer.Start()
+            Finally
                 isDialogOpen = False
-            End If
-
-            DGVRecording.Enabled = True
+                If DGVRecording IsNot Nothing AndAlso Not DGVRecording.IsDisposed Then
+                    DGVRecording.Enabled = True
+                End If
+            End Try
 
         Catch ex As Exception
+            ' Silent error handling - reset state
             isDialogOpen = False
             Try
-                If DGVRecording IsNot Nothing Then DGVRecording.Enabled = True
-                refreshTimerTabPageRecording.Start()
-                connectionIndicatorTimer.Start()
+                If DGVRecording IsNot Nothing AndAlso Not DGVRecording.IsDisposed Then DGVRecording.Enabled = True
+                If refreshTimerTabPageRecording IsNot Nothing Then refreshTimerTabPageRecording.Start()
+                If connectionIndicatorTimer IsNot Nothing Then connectionIndicatorTimer.Start()
             Catch
                 ' Ignore cleanup errors
             End Try
-            Console.WriteLine($"❌ CellClick error: {ex.Message}")
         End Try
     End Sub
 

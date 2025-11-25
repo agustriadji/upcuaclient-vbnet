@@ -54,7 +54,7 @@ Public Class SQLServerManager
             If Not ExportRecordMetadata(recordMetadata) Then Return False
 
             ' Export sensor_data
-            If Not ExportSensorData(recordMetadata.PressureTireId, recordMetadata.PressureGaugeId) Then Return False
+            If Not ExportSensorData(recordMetadata) Then Return False
 
             ' Export sensor_alerts
             If Not ExportSensorAlerts(recordMetadata.PressureTireId, recordMetadata.PressureGaugeId) Then Return False
@@ -88,9 +88,9 @@ Public Class SQLServerManager
                     cmd.Parameters.AddWithValue("@created_by", record.CreatedBy)
                     cmd.Parameters.AddWithValue("@status", record.Status)
                     cmd.Parameters.AddWithValue("@sync_status", record.SyncStatus)
-                    cmd.Parameters.AddWithValue("@start_date", record.StartDate)
-                    cmd.Parameters.AddWithValue("@end_date", record.EndDate)
-                    cmd.Parameters.AddWithValue("@end_recording_date", If(record.EndRecordingDate.HasValue, record.EndRecordingDate.Value, DBNull.Value))
+                    cmd.Parameters.AddWithValue("@start_date", ValidateDateTime(record.StartDate))
+                    cmd.Parameters.AddWithValue("@end_date", ValidateDateTime(record.EndDate))
+                    cmd.Parameters.AddWithValue("@end_recording_date", If(record.EndRecordingDate.HasValue, ValidateDateTime(record.EndRecordingDate.Value), DBNull.Value))
 
                     cmd.ExecuteNonQuery()
                 End Using
@@ -102,7 +102,7 @@ Public Class SQLServerManager
         End Try
     End Function
 
-    Private Function ExportSensorData(pressureTireId As String, pressureGaugeId As String) As Boolean
+    Private Function ExportSensorData(recordMetadata As InterfaceRecordMetadata) As Boolean
         Try
             Dim sqlite As New SQLiteManager()
             Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={IO.Path.Combine(Application.StartupPath, "../../data/sensor.db")};Version=3;")
@@ -110,8 +110,8 @@ Public Class SQLServerManager
 
                 Dim query = "SELECT * FROM sensor_data WHERE node_id IN (@tire_id, @gauge_id)"
                 Using cmd As New Data.SQLite.SQLiteCommand(query, sqliteConn)
-                    cmd.Parameters.AddWithValue("@tire_id", pressureTireId)
-                    cmd.Parameters.AddWithValue("@gauge_id", pressureGaugeId)
+                    cmd.Parameters.AddWithValue("@tire_id", recordMetadata.PressureTireId)
+                    cmd.Parameters.AddWithValue("@gauge_id", recordMetadata.PressureGaugeId)
 
                     Using reader = cmd.ExecuteReader()
                         Using sqlConn As New SqlConnection(connectionString)
@@ -120,9 +120,9 @@ Public Class SQLServerManager
                             While reader.Read()
                                 Dim insertQuery = "
                                     INSERT INTO sensor_data 
-                                    (node_id, sensor_type, value, data_type, status, sync_status, timestamp)
+                                    (node_id, sensor_type, value, data_type, status, sync_status, batch_id, timestamp)
                                     VALUES 
-                                    (@node_id, @sensor_type, @value, @data_type, @status, @sync_status, @timestamp)
+                                    (@node_id, @sensor_type, @value, @data_type, @status, @sync_status, @batch_id, @timestamp)
                                 "
 
                                 Using insertCmd As New SqlCommand(insertQuery, sqlConn)
@@ -132,7 +132,8 @@ Public Class SQLServerManager
                                     insertCmd.Parameters.AddWithValue("@data_type", reader("data_type").ToString())
                                     insertCmd.Parameters.AddWithValue("@status", reader("status").ToString())
                                     insertCmd.Parameters.AddWithValue("@sync_status", reader("sync_status").ToString())
-                                    insertCmd.Parameters.AddWithValue("@timestamp", DateTime.Parse(reader("timestamp").ToString()))
+                                    insertCmd.Parameters.AddWithValue("@batch_id", recordMetadata.BatchId)
+                                    insertCmd.Parameters.AddWithValue("@timestamp", ValidateDateTime(DateTime.Parse(reader("timestamp").ToString())))
 
                                     insertCmd.ExecuteNonQuery()
                                 End Using
@@ -177,7 +178,7 @@ Public Class SQLServerManager
                                     insertCmd.Parameters.AddWithValue("@threshold", Convert.ToDouble(reader("threshold")))
                                     insertCmd.Parameters.AddWithValue("@current_value", Convert.ToDouble(reader("current_value")))
                                     insertCmd.Parameters.AddWithValue("@severity", reader("severity").ToString())
-                                    insertCmd.Parameters.AddWithValue("@timestamp", DateTime.Parse(reader("timestamp").ToString()))
+                                    insertCmd.Parameters.AddWithValue("@timestamp", ValidateDateTime(DateTime.Parse(reader("timestamp").ToString())))
 
                                     insertCmd.ExecuteNonQuery()
                                 End Using
@@ -191,5 +192,19 @@ Public Class SQLServerManager
             Console.WriteLine($"❌ Export sensor_alerts error: {ex.Message}")
             Return False
         End Try
+    End Function
+    
+    Private Function ValidateDateTime(dateValue As DateTime) As DateTime
+        ' SQL Server datetime range: 1753-01-01 to 9999-12-31
+        Dim minDate As New DateTime(1753, 1, 1)
+        Dim maxDate As New DateTime(9999, 12, 31)
+        
+        If dateValue < minDate Then
+            Return minDate
+        ElseIf dateValue > maxDate Then
+            Return maxDate
+        Else
+            Return dateValue
+        End If
     End Function
 End Class

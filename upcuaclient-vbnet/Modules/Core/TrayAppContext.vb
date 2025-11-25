@@ -1,122 +1,64 @@
-﻿Imports upcuaclient_vbnet.upcuaclient_vbnet
-
-Public Class TrayAppContext
+﻿Public Class TrayAppContext
     Inherits ApplicationContext
 
     Private mainFormHandler As MainFormNew
     Private trayIcon As NotifyIcon
 
     Public Sub New()
-        Try
-            ' Initialize settings first
-            SettingsManager.InitializeDefaults()
-            
-            ' Add small delay to ensure all components are ready
-            Threading.Thread.Sleep(100)
-            
-            ' Inisialisasi form default with null check
-            Try
-                mainFormHandler = New MainFormNew()
-                If mainFormHandler IsNot Nothing Then
-                    AddHandler mainFormHandler.FormClosing, AddressOf OnFormClosing
-                End If
-            Catch formEx As Exception
-                Console.WriteLine($"MainFormNew creation error: {formEx.Message}")
-                Throw New Exception($"Failed to create main form: {formEx.Message}", formEx)
-            End Try
+        ' Inisialisasi form utama
+        mainFormHandler = New MainFormNew()
+        AddHandler mainFormHandler.FormClosing, AddressOf OnFormClosing
 
-            ' Setup tray icon with null check
-            Try
-                SetupTrayIcon()
-            Catch trayEx As Exception
-                Console.WriteLine($"Tray icon setup error: {trayEx.Message}")
-                ' Continue without tray icon if it fails
-            End Try
+        ' Tampilkan form saat startup
+        mainFormHandler.Show()
 
-            ' Tampilkan form saat start dengan delay
-            If mainFormHandler IsNot Nothing Then
-                Threading.Thread.Sleep(50)
-                mainFormHandler.Show()
-            End If
-        Catch ex As Exception
-            Console.WriteLine($"TrayAppContext Error: {ex.Message}")
-            Console.WriteLine($"Stack: {ex.StackTrace}")
-            Try
-                MessageBox.Show($"❌ Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Catch
-                ' Ignore message box errors
-            End Try
-            
-            If mainFormHandler IsNot Nothing Then
-                Try
-                    mainFormHandler.Close()
-                Catch
-                    ' Ignore close errors
-                End Try
-            End If
-            ExitThread()
-        End Try
+        ' Setup tray icon
+        SetupTrayIcon()
     End Sub
 
     Private Sub SetupTrayIcon()
         trayIcon = New NotifyIcon() With {
             .Icon = My.Resources._24,
-            .Text = "OPC UA Client",
+            .Text = "AirLM",
             .Visible = True
         }
 
-        ' Create context menu
+        ' Context menu tray
         Dim contextMenu = New ContextMenuStrip()
-        contextMenu.Items.Add("Show", Nothing, AddressOf ShowForm)
+        contextMenu.Items.Add("Show apps", Nothing, AddressOf ShowForm)
         contextMenu.Items.Add("-")
-        contextMenu.Items.Add("Exit", Nothing, AddressOf ExitApplication)
+        contextMenu.Items.Add("Exit apps", Nothing, AddressOf ExitApplication)
 
         trayIcon.ContextMenuStrip = contextMenu
         AddHandler trayIcon.DoubleClick, AddressOf ShowForm
     End Sub
 
     Private Sub ShowForm(sender As Object, e As EventArgs)
-        Try
-            If mainFormHandler IsNot Nothing Then
-                mainFormHandler.Show()
-                mainFormHandler.WindowState = FormWindowState.Normal
-                mainFormHandler.BringToFront()
-            End If
-        Catch ex As Exception
-            Console.WriteLine($"ShowForm error: {ex.Message}")
-        End Try
+        If mainFormHandler Is Nothing OrElse mainFormHandler.IsDisposed Then
+            mainFormHandler = New MainFormNew()
+            AddHandler mainFormHandler.FormClosing, AddressOf OnFormClosing
+        End If
+        mainFormHandler.Show()
+        mainFormHandler.WindowState = FormWindowState.Normal
+        mainFormHandler.BringToFront()
     End Sub
 
     Private Sub ExitApplication(sender As Object, e As EventArgs)
-        Try
-            ' Hide tray icon
-            If trayIcon IsNot Nothing Then
-                trayIcon.Visible = False
-                trayIcon.Dispose()
-            End If
+        ' Hapus tray icon
+        trayIcon.Visible = False
+        trayIcon.Dispose()
 
-            ' Close main form
-            If mainFormHandler IsNot Nothing Then
-                RemoveHandler mainFormHandler.FormClosing, AddressOf OnFormClosing
-                mainFormHandler.Close()
-            End If
+        ' Tutup form utama benar-benar
+        RemoveHandler mainFormHandler.FormClosing, AddressOf OnFormClosing
+        mainFormHandler.Close()
 
-            ' Exit application - BackgroundWorker stop dihandle oleh Main.vb
-            ExitThread()
-        Catch ex As Exception
-            Console.WriteLine($"⚠️ Exit error: {ex.Message}")
-            Environment.Exit(0)
-        End Try
+        ' Exit loop
+        ExitThread()
     End Sub
 
     Private Sub OnFormClosing(sender As Object, e As FormClosingEventArgs)
-        Try
-            e.Cancel = True
-            If mainFormHandler IsNot Nothing Then
-                mainFormHandler.Hide()
-            End If
-        Catch ex As Exception
-            Console.WriteLine($"OnFormClosing error: {ex.Message}")
-        End Try
+        ' Cancel close → hide form
+        e.Cancel = True
+        mainFormHandler.Hide()
     End Sub
 End Class

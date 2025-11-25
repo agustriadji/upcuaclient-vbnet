@@ -14,6 +14,7 @@ Namespace upcuaclient_vbnet
         <STAThread()>
         Sub Main()
             ' Soft error handling - suppress all UI errors
+            DisableConsole()
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException)
             AddHandler Application.ThreadException, Sub(s, e)
                                                         ' Ignore UI errors silently
@@ -27,7 +28,7 @@ Namespace upcuaclient_vbnet
             bgWorker.Start()
 
             ' Alokasi console untuk debugging
-            AllocConsole()
+            'AllocConsole()
             Console.WriteLine("🚀 Starting OPC UA Client...")
 
             Try
@@ -39,9 +40,9 @@ Namespace upcuaclient_vbnet
 
                 ' Fallback: Run MainFormNew directly
                 Try
-                    Console.WriteLine("🔄 Fallback: Starting MainFormNew directly...")
-                    Dim mainForm As New MainFormNew()
-                    Application.Run(mainForm)
+                    'Console.WriteLine("🔄 Fallback: Starting MainFormNew directly...")
+                    'Dim mainForm As New MainFormNew()
+                    'Application.Run(mainForm)
                 Catch fallbackEx As Exception
                     Console.WriteLine($"❌ Fallback failed: {fallbackEx.Message}")
                     MessageBox.Show($"Critical error starting application: {fallbackEx.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
