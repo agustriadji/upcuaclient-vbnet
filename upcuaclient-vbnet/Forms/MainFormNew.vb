@@ -69,6 +69,7 @@ Public Class MainFormNew
                 DGVRecording.Columns.Add("RunningDay", "Running Days")
                 DGVRecording.Columns.Add("Size", "Size")
                 DGVRecording.Columns.Add("State", "Status")
+                DGVRecording.Columns.Add("CreatedAt", "Start Date")
                 DGVRecording.Columns.Add("UpdatedAt", "Last Updated")
                 If DGVRecording.Columns.Count > 0 Then
                     DGVRecording.Columns(0).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
@@ -212,6 +213,8 @@ Public Class MainFormNew
                 Dim runningDays = Math.Ceiling((DateTime.Now - record.StartDate).TotalDays)
                 Dim lastUpdated = record.EndDate.ToString("yyyy-MM-dd HH:mm")
 
+                Dim startDateFormatted = record.StartDate.ToString("yyyy-MM-dd HH:mm")
+
                 ' Get NodeText for PressureTire
                 Dim tireNodeText = Helper.GetNodeTextFromId(selectedNodeSensor, "PressureTire", record.PressureTireId)
 
@@ -222,6 +225,7 @@ Public Class MainFormNew
                     runningDays.ToString(),
                     record.Size.ToString(),
                     record.Status,
+                    startDateFormatted,
                     lastUpdated
                 )
 

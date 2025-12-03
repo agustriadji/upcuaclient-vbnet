@@ -31,12 +31,6 @@ Partial Class MainFormNew
         Me.DTG1_StatusSensor = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.TabPageRecording = New System.Windows.Forms.TabPage()
         Me.DGVRecording = New System.Windows.Forms.DataGridView()
-        Me.BatchId = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.SensorId = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.RunningDay = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.SizeTire = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.State = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.UpdatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.SplitContainer2 = New System.Windows.Forms.SplitContainer()
         Me.ToolStrip1 = New System.Windows.Forms.ToolStrip()
         Me.ToolStripButton1 = New System.Windows.Forms.ToolStripButton()
@@ -57,6 +51,13 @@ Partial Class MainFormNew
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.ToolStripStatusLabelOPC = New System.Windows.Forms.ToolStripStatusLabel()
         Me.ToolStripStatusLabelDB = New System.Windows.Forms.ToolStripStatusLabel()
+        Me.BatchId = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.SensorId = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.RunningDay = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.SizeTire = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.State = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.CreatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.UpdatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainer1.Panel1.SuspendLayout()
         Me.SplitContainer1.Panel2.SuspendLayout()
@@ -116,7 +117,7 @@ Partial Class MainFormNew
         Me.TabPageSensorState.Location = New System.Drawing.Point(4, 29)
         Me.TabPageSensorState.Name = "TabPageSensorState"
         Me.TabPageSensorState.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageSensorState.Size = New System.Drawing.Size(1166, 317)
+        Me.TabPageSensorState.Size = New System.Drawing.Size(1166, 318)
         Me.TabPageSensorState.TabIndex = 0
         Me.TabPageSensorState.Text = "Sensor State"
         Me.TabPageSensorState.UseVisualStyleBackColor = True
@@ -142,7 +143,7 @@ Partial Class MainFormNew
         Me.DataGridView1.ScrollBars = System.Windows.Forms.ScrollBars.None
         Me.DataGridView1.ShowCellToolTips = False
         Me.DataGridView1.ShowEditingIcon = False
-        Me.DataGridView1.Size = New System.Drawing.Size(1160, 311)
+        Me.DataGridView1.Size = New System.Drawing.Size(1160, 312)
         Me.DataGridView1.TabIndex = 1
         '
         'DTG1_NameSensor
@@ -165,7 +166,7 @@ Partial Class MainFormNew
         Me.TabPageRecording.Location = New System.Drawing.Point(4, 29)
         Me.TabPageRecording.Name = "TabPageRecording"
         Me.TabPageRecording.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageRecording.Size = New System.Drawing.Size(1166, 319)
+        Me.TabPageRecording.Size = New System.Drawing.Size(1166, 317)
         Me.TabPageRecording.TabIndex = 1
         Me.TabPageRecording.Text = "Recording"
         Me.TabPageRecording.UseVisualStyleBackColor = True
@@ -178,7 +179,7 @@ Partial Class MainFormNew
         Me.DGVRecording.BackgroundColor = System.Drawing.SystemColors.ButtonFace
         Me.DGVRecording.BorderStyle = System.Windows.Forms.BorderStyle.None
         Me.DGVRecording.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DGVRecording.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.BatchId, Me.SensorId, Me.RunningDay, Me.SizeTire, Me.State, Me.UpdatedAt})
+        Me.DGVRecording.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.BatchId, Me.SensorId, Me.RunningDay, Me.SizeTire, Me.State, Me.CreatedAt, Me.UpdatedAt})
         Me.DGVRecording.Dock = System.Windows.Forms.DockStyle.Fill
         Me.DGVRecording.Location = New System.Drawing.Point(3, 3)
         Me.DGVRecording.Name = "DGVRecording"
@@ -186,49 +187,8 @@ Partial Class MainFormNew
         Me.DGVRecording.RowHeadersVisible = False
         Me.DGVRecording.RowHeadersWidth = 51
         Me.DGVRecording.RowTemplate.Height = 24
-        Me.DGVRecording.Size = New System.Drawing.Size(1160, 313)
+        Me.DGVRecording.Size = New System.Drawing.Size(1160, 311)
         Me.DGVRecording.TabIndex = 0
-        '
-        'BatchId
-        '
-        Me.BatchId.HeaderText = "Batch"
-        Me.BatchId.MinimumWidth = 6
-        Me.BatchId.Name = "BatchId"
-        Me.BatchId.ReadOnly = True
-        '
-        'SensorId
-        '
-        Me.SensorId.HeaderText = "Sensor ID"
-        Me.SensorId.MinimumWidth = 6
-        Me.SensorId.Name = "SensorId"
-        Me.SensorId.ReadOnly = True
-        '
-        'RunningDay
-        '
-        Me.RunningDay.HeaderText = "Running Days"
-        Me.RunningDay.MinimumWidth = 6
-        Me.RunningDay.Name = "RunningDay"
-        Me.RunningDay.ReadOnly = True
-        '
-        'SizeTire
-        '
-        Me.SizeTire.MinimumWidth = 6
-        Me.SizeTire.Name = "SizeTire"
-        Me.SizeTire.ReadOnly = True
-        '
-        'State
-        '
-        Me.State.HeaderText = "Status"
-        Me.State.MinimumWidth = 6
-        Me.State.Name = "State"
-        Me.State.ReadOnly = True
-        '
-        'UpdatedAt
-        '
-        Me.UpdatedAt.HeaderText = "Last updated"
-        Me.UpdatedAt.MinimumWidth = 6
-        Me.UpdatedAt.Name = "UpdatedAt"
-        Me.UpdatedAt.ReadOnly = True
         '
         'SplitContainer2
         '
@@ -358,7 +318,7 @@ Partial Class MainFormNew
         'ExitToolStripMenuItem
         '
         Me.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem"
-        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(224, 26)
+        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(199, 26)
         Me.ExitToolStripMenuItem.Text = "Exit"
         '
         'ViewToolStripMenuItem
@@ -371,7 +331,7 @@ Partial Class MainFormNew
         'LogToolStripMenuItem
         '
         Me.LogToolStripMenuItem.Name = "LogToolStripMenuItem"
-        Me.LogToolStripMenuItem.Size = New System.Drawing.Size(224, 26)
+        Me.LogToolStripMenuItem.Size = New System.Drawing.Size(117, 26)
         Me.LogToolStripMenuItem.Text = "Log"
         '
         'ToolsToolStripMenuItem
@@ -422,16 +382,64 @@ Partial Class MainFormNew
         Me.ToolStripStatusLabelDB.Size = New System.Drawing.Size(165, 20)
         Me.ToolStripStatusLabelDB.Text = "DB Not Connected"
         '
+        'BatchId
+        '
+        Me.BatchId.HeaderText = "Batch"
+        Me.BatchId.MinimumWidth = 6
+        Me.BatchId.Name = "BatchId"
+        Me.BatchId.ReadOnly = True
+        '
+        'SensorId
+        '
+        Me.SensorId.HeaderText = "Sensor ID"
+        Me.SensorId.MinimumWidth = 6
+        Me.SensorId.Name = "SensorId"
+        Me.SensorId.ReadOnly = True
+        '
+        'RunningDay
+        '
+        Me.RunningDay.HeaderText = "Running Days"
+        Me.RunningDay.MinimumWidth = 6
+        Me.RunningDay.Name = "RunningDay"
+        Me.RunningDay.ReadOnly = True
+        '
+        'SizeTire
+        '
+        Me.SizeTire.HeaderText = "SizeTire"
+        Me.SizeTire.MinimumWidth = 6
+        Me.SizeTire.Name = "SizeTire"
+        Me.SizeTire.ReadOnly = True
+        '
+        'State
+        '
+        Me.State.HeaderText = "Status"
+        Me.State.MinimumWidth = 6
+        Me.State.Name = "State"
+        Me.State.ReadOnly = True
+        '
+        'CreatedAt
+        '
+        Me.CreatedAt.HeaderText = "Start date"
+        Me.CreatedAt.MinimumWidth = 6
+        Me.CreatedAt.Name = "CreatedAt"
+        Me.CreatedAt.ReadOnly = True
+        '
+        'UpdatedAt
+        '
+        Me.UpdatedAt.HeaderText = "Last updated"
+        Me.UpdatedAt.MinimumWidth = 6
+        Me.UpdatedAt.Name = "UpdatedAt"
+        Me.UpdatedAt.ReadOnly = True
+        '
         'MainFormNew
         '
-        'Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 23.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.AutoSize = False
         Me.ClientSize = New System.Drawing.Size(1182, 553)
         Me.Controls.Add(Me.SplitContainer1)
         Me.Controls.Add(Me.StatusStrip1)
         Me.Controls.Add(Me.MenuStrip1)
-        Me.Font = New Font("Segoe UI", 9.0!, FontStyle.Regular, GraphicsUnit.Point)
+        Me.Font = New System.Drawing.Font("Segoe UI", 9.0!)
         Me.HelpButton = True
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MainMenuStrip = Me.MenuStrip1
@@ -488,12 +496,6 @@ Partial Class MainFormNew
     Friend WithEvents DTG1_StatusSensor As DataGridViewTextBoxColumn
     Friend WithEvents TabPageRecording As TabPage
     Friend WithEvents DGVRecording As DataGridView
-    Friend WithEvents BatchId As DataGridViewTextBoxColumn
-    Friend WithEvents SensorId As DataGridViewTextBoxColumn
-    Friend WithEvents RunningDay As DataGridViewTextBoxColumn
-    Friend WithEvents SizeTire As DataGridViewTextBoxColumn
-    Friend WithEvents State As DataGridViewTextBoxColumn
-    Friend WithEvents UpdatedAt As DataGridViewTextBoxColumn
     Friend WithEvents ToolStripButtonDebug As ToolStripButton
     Friend WithEvents ToolStripSeparator1 As ToolStripSeparator
     Friend WithEvents ToolStripButtonAlert As ToolStripButton
@@ -501,4 +503,11 @@ Partial Class MainFormNew
     Friend WithEvents SplitContainer2 As SplitContainer
     Friend WithEvents AddNewSensorToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents AddNewRecordingToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents BatchId As DataGridViewTextBoxColumn
+    Friend WithEvents SensorId As DataGridViewTextBoxColumn
+    Friend WithEvents RunningDay As DataGridViewTextBoxColumn
+    Friend WithEvents SizeTire As DataGridViewTextBoxColumn
+    Friend WithEvents State As DataGridViewTextBoxColumn
+    Friend WithEvents CreatedAt As DataGridViewTextBoxColumn
+    Friend WithEvents UpdatedAt As DataGridViewTextBoxColumn
 End Class

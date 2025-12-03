@@ -22,7 +22,7 @@ Partial Class DetailRecord
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.TextBoxStartPressure = New System.Windows.Forms.TextBox()
@@ -57,6 +57,7 @@ Partial Class DetailRecord
         Me.BTNExport = New System.Windows.Forms.Button()
         Me.BTNClose = New System.Windows.Forms.Button()
         Me.BTNEndRecording = New System.Windows.Forms.Button()
+        Me.BTNStart = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.SplitContainerDetailRecord, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainerDetailRecord.Panel1.SuspendLayout()
@@ -338,14 +339,14 @@ Partial Class DetailRecord
         Me.DGVWatch.MultiSelect = False
         Me.DGVWatch.Name = "DGVWatch"
         Me.DGVWatch.ReadOnly = True
-        DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle1.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        DataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
-        DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle1
+        DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle2.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        DataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
+        DataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
         Me.DGVWatch.RowHeadersVisible = False
         Me.DGVWatch.RowHeadersWidth = 51
         Me.DGVWatch.RowTemplate.Height = 24
@@ -390,7 +391,7 @@ Partial Class DetailRecord
         Me.TabPageGraph.Location = New System.Drawing.Point(4, 29)
         Me.TabPageGraph.Name = "TabPageGraph"
         Me.TabPageGraph.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageGraph.Size = New System.Drawing.Size(1067, 337)
+        Me.TabPageGraph.Size = New System.Drawing.Size(1067, 368)
         Me.TabPageGraph.TabIndex = 1
         Me.TabPageGraph.Text = "Graph"
         Me.TabPageGraph.UseVisualStyleBackColor = True
@@ -400,13 +401,14 @@ Partial Class DetailRecord
         Me.CartesianChart2.Dock = System.Windows.Forms.DockStyle.Fill
         Me.CartesianChart2.Location = New System.Drawing.Point(3, 3)
         Me.CartesianChart2.Name = "CartesianChart2"
-        Me.CartesianChart2.Size = New System.Drawing.Size(1061, 331)
+        Me.CartesianChart2.Size = New System.Drawing.Size(1061, 362)
         Me.CartesianChart2.TabIndex = 1
         Me.CartesianChart2.Text = "Graph"
         '
         'PanelBottom
         '
         Me.PanelBottom.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink
+        Me.PanelBottom.Controls.Add(Me.BTNStart)
         Me.PanelBottom.Controls.Add(Me.BTNExport)
         Me.PanelBottom.Controls.Add(Me.BTNClose)
         Me.PanelBottom.Controls.Add(Me.BTNEndRecording)
@@ -420,7 +422,7 @@ Partial Class DetailRecord
         'BTNExport
         '
         Me.BTNExport.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.BTNExport.Location = New System.Drawing.Point(773, 17)
+        Me.BTNExport.Location = New System.Drawing.Point(657, 17)
         Me.BTNExport.Name = "BTNExport"
         Me.BTNExport.Size = New System.Drawing.Size(90, 34)
         Me.BTNExport.TabIndex = 4
@@ -446,6 +448,15 @@ Partial Class DetailRecord
         Me.BTNEndRecording.TabIndex = 3
         Me.BTNEndRecording.Text = "End Record"
         Me.BTNEndRecording.UseVisualStyleBackColor = True
+        '
+        'BTNStart
+        '
+        Me.BTNStart.Location = New System.Drawing.Point(771, 17)
+        Me.BTNStart.Name = "BTNStart"
+        Me.BTNStart.Size = New System.Drawing.Size(90, 34)
+        Me.BTNStart.TabIndex = 19
+        Me.BTNStart.Text = "Start"
+        Me.BTNStart.UseVisualStyleBackColor = True
         '
         'DetailRecord
         '
@@ -518,4 +529,5 @@ Partial Class DetailRecord
     Friend WithEvents Panel2 As Panel
     Friend WithEvents CartesianChart2 As LiveCharts.WinForms.CartesianChart
     Friend WithEvents Label1 As Label
+    Friend WithEvents BTNStart As Button
 End Class

@@ -169,8 +169,8 @@ Public Class DetailRecord
         TextBoxStartDate.Text = recordMetadata.StartDate.ToString("yyyy-MM-dd HH:mm")
         TextBoxState.Text = recordMetadata.Status
 
-        ' Disable End Recording button jika status finished
-        BTNEndRecording.Enabled = recordMetadata.Status.ToLower() <> "finished"
+        ' Update button states based on status
+        UpdateButtonStates()
 
         ' Running days and start pressure will be calculated after RefreshRawData
         ' Console.WriteLine($"🔍 Metadata loaded for batch: {recordMetadata.BatchId}")
@@ -536,7 +536,9 @@ Public Class DetailRecord
             ' 3. Export data to SQL Server
             ExportDataToSQLServer()
 
-            ' 4. Stop timer and close form
+            ' 4. Update UI and stop timer
+            TextBoxState.Text = "Finished"
+            UpdateButtonStates()
             refreshTimerWatch.Stop()
             MessageBox.Show("Recording ended successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Me.Close()
@@ -704,7 +706,7 @@ Public Class DetailRecord
     Private Sub ExportToCSV(filePath As String)
         Using writer As New IO.StreamWriter(filePath)
             ' Write header
-            writer.WriteLine("BatchId,StartPressure,CurrentPressure,LeakPressure,PressureTire,PressureGauge,Timestamp")
+            writer.WriteLine("BatchId,StartPressure,CurrentPressure,PressureTire,PressureGauge,Timestamp")
 
             ' Get sensor names in format [key_object].nodeText
             Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
@@ -725,7 +727,7 @@ Public Class DetailRecord
                 Dim matchingGauge = gaugeDataProcessed?.FirstOrDefault(Function(g) Math.Abs((DateTime.Parse(DL.Timestamp) - DateTime.Parse(g.Timestamp)).TotalMinutes) < 1)
                 Dim currentLeakPressure = If(matchingGauge?.Pressure, 0).ToString("F2")
 
-                writer.WriteLine($"{recordMetadata.BatchId},{startPressure},{currentPressure},{currentLeakPressure},{pressureTireName},{pressureGaugeName},{currentTimestamp}")
+                writer.WriteLine($"{recordMetadata.BatchId},{startPressure},{currentPressure},{pressureTireName},{pressureGaugeName},{currentTimestamp}")
             Next
         End Using
     End Sub
@@ -744,10 +746,10 @@ Public Class DetailRecord
             xlWorksheet.Cells(1, 1) = "BatchId"
             xlWorksheet.Cells(1, 2) = "StartPressure"
             xlWorksheet.Cells(1, 3) = "CurrentPressure"
-            xlWorksheet.Cells(1, 4) = "LeakPressure"
-            xlWorksheet.Cells(1, 5) = "PressureTire"
-            xlWorksheet.Cells(1, 6) = "PressureGauge"
-            xlWorksheet.Cells(1, 7) = "Timestamp"
+            'xlWorksheet.Cells(1, 4) = "LeakPressure"
+            xlWorksheet.Cells(1, 4) = "PressureTire"
+            xlWorksheet.Cells(1, 5) = "PressureGauge"
+            xlWorksheet.Cells(1, 6) = "Timestamp"
 
             ' Get sensor names
             Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
@@ -771,10 +773,10 @@ Public Class DetailRecord
                 xlWorksheet.Cells(row, 1) = recordMetadata.BatchId
                 xlWorksheet.Cells(row, 2) = startPressure
                 xlWorksheet.Cells(row, 3) = currentPressure
-                xlWorksheet.Cells(row, 4) = currentLeakPressure
-                xlWorksheet.Cells(row, 5) = pressureTireName
-                xlWorksheet.Cells(row, 6) = pressureGaugeName
-                xlWorksheet.Cells(row, 7) = currentTimestamp
+                'xlWorksheet.Cells(row, 4) = currentLeakPressure
+                xlWorksheet.Cells(row, 4) = pressureTireName
+                xlWorksheet.Cells(row, 5) = pressureGaugeName
+                xlWorksheet.Cells(row, 6) = currentTimestamp
                 row += 1
             Next
 
@@ -840,5 +842,142 @@ Public Class DetailRecord
 
         LoadSensorPressureTable()
         LoadSensorPressureGraph()
+    End Sub
+
+    Private Sub UpdateButtonStates()
+        If recordMetadata Is Nothing Then Return
+
+        Dim status = recordMetadata.Status.ToLower()
+
+        Select Case status
+            Case "not-start"
+                BTNStart.Enabled = True
+                BTNStart.Text = "Start"
+                BTNEndRecording.Enabled = False
+            Case "recording"
+                BTNStart.Enabled = True
+                BTNStart.Text = "Stop"
+                BTNEndRecording.Enabled = True
+            Case "finished"
+                BTNStart.Enabled = False
+                BTNStart.Text = "Start"
+                BTNEndRecording.Enabled = False
+        End Select
+    End Sub
+
+    Private Sub BTNStart_Click(sender As Object, e As EventArgs) Handles BTNStart.Click
+        If recordMetadata Is Nothing Then Return
+
+        If recordMetadata.Status.ToLower() = "recording" Then
+            ' Stop recording - update to Not-Start
+            Dim result = MessageBox.Show($"Stop recording for batch {recordMetadata.BatchId}?", "Confirm Stop Recording", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+            If result = DialogResult.Yes Then
+                StopRecordingProcess()
+            End If
+        Else
+            ' Start recording
+            Dim result = MessageBox.Show($"Start recording for batch {recordMetadata.BatchId}?", "Confirm Start Recording", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+            If result = DialogResult.Yes Then
+                StartRecordingProcess()
+            End If
+        End If
+    End Sub
+
+    Private Sub StartRecordingProcess()
+        Try
+            ' 1. Update record_metadata status to Recording
+            recordMetadata.Status = "Recording"
+            recordMetadata.SyncStatus = "Recording"
+            sqlite.InsertOrUpdateRecordMetadata(recordMetadata)
+
+            ' 2. Update sensor status to Recording in My.Settings.selectedNodeSensor
+            UpdateSensorStatusToRecording()
+
+            ' 3. Update UI
+            TextBoxState.Text = "Recording"
+            UpdateButtonStates()
+
+            ' 4. Start timer if not already running
+            If Not refreshTimerWatch.Enabled Then
+                TimeManager.StartTimerWithInitialFetch(refreshTimerWatch, Sub() LoadSensorPressureTable())
+            End If
+
+            MessageBox.Show("Recording started successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+        Catch ex As Exception
+            MessageBox.Show($"Error starting recording: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub UpdateSensorStatusToRecording()
+        Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
+
+        ' Update PressureTire status to running
+        If selectedNodeSensor.ContainsKey("PressureTire") Then
+            For Each sensor In selectedNodeSensor("PressureTire")
+                If sensor("NodeId") = recordMetadata.PressureTireId Then
+                    sensor("NodeStatus") = "running"
+                End If
+            Next
+        End If
+
+        ' Update PressureGauge status to running
+        If selectedNodeSensor.ContainsKey("PressureGauge") Then
+            For Each sensor In selectedNodeSensor("PressureGauge")
+                If sensor("NodeId") = recordMetadata.PressureGaugeId Then
+                    sensor("NodeStatus") = "running"
+                End If
+            Next
+        End If
+
+        SettingsManager.SetSelectedNodeSensor(selectedNodeSensor)
+    End Sub
+
+    Private Sub StopRecordingProcess()
+        Try
+            ' 1. Update record_metadata status to Not-Start
+            recordMetadata.Status = "Not-Start"
+            recordMetadata.SyncStatus = "Not-Start"
+            sqlite.InsertOrUpdateRecordMetadata(recordMetadata)
+
+            ' 2. Update sensor status to Not-Start
+            UpdateSensorStatusToNotStart()
+
+            ' 3. Update UI
+            TextBoxState.Text = "Not-Start"
+            UpdateButtonStates()
+
+            ' 4. Stop timer
+            refreshTimerWatch.Stop()
+
+            MessageBox.Show("Recording stopped successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+        Catch ex As Exception
+            MessageBox.Show($"Error stopping recording: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub UpdateSensorStatusToNotStart()
+        Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
+
+        ' Update PressureTire status to Not-Start
+        If selectedNodeSensor.ContainsKey("PressureTire") Then
+            For Each sensor In selectedNodeSensor("PressureTire")
+                If sensor("NodeId") = recordMetadata.PressureTireId Then
+                    sensor("NodeStatus") = "Not-Start"
+                End If
+            Next
+        End If
+
+        ' Update PressureGauge status to Not-Start
+        If selectedNodeSensor.ContainsKey("PressureGauge") Then
+            For Each sensor In selectedNodeSensor("PressureGauge")
+                If sensor("NodeId") = recordMetadata.PressureGaugeId Then
+                    sensor("NodeStatus") = "Not-Start"
+                End If
+            Next
+        End If
+
+        SettingsManager.SetSelectedNodeSensor(selectedNodeSensor)
     End Sub
 End Class

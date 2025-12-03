@@ -120,7 +120,7 @@ Public Class FormNewRecord
                 .PressureGaugeId = selectedGuage.NodeId,
                 .Size = Convert.ToInt32(Val(TextBoxSizeTire.Text)),
                 .CreatedBy = TextBoxOperator.Text,
-                .Status = "Recording",
+                .Status = "Not-Start",
                 .SyncStatus = "Pending",
                 .StartDate = DateTime.UtcNow,
                 .EndDate = If(NumericUpDownAutoEndRecord.Value > 0, DateTime.UtcNow.AddDays(NumericUpDownAutoEndRecord.Value), DateTime.UtcNow.AddYears(1)),
@@ -163,7 +163,7 @@ Public Class FormNewRecord
                 Dim tireSensors = selectedNodeSensor("PressureTire")
                 For Each sensor In tireSensors
                     If sensor("NodeId") = tireNodeId Then
-                        sensor("NodeStatus") = "running"
+                        sensor("NodeStatus") = "no-start"
                         updated = True
                         ' Console.WriteLine($"✅ Updated tire sensor {tireNodeId} to running")
                         Exit For
@@ -176,7 +176,7 @@ Public Class FormNewRecord
                 Dim guageSensors = selectedNodeSensor("PressureGauge")
                 For Each sensor In guageSensors
                     If sensor("NodeId") = guageNodeId Then
-                        sensor("NodeStatus") = "running"
+                        sensor("NodeStatus") = "no-start"
                         updated = True
                         ' Console.WriteLine($"✅ Updated guage sensor {guageNodeId} to running")
                         Exit For
