@@ -83,7 +83,7 @@ Public Class FormConfigManager
         selectedNodeIdOpcTemp = My.Settings.selectedNodeIdOpc
 
         ' General Settings
-        NumericUpDownInterval.Value = My.Settings.intervalTime \ 60000 ' Convert ms to minutes
+        NumericUpDownInterval.Value = My.Settings.intervalRefreshTimer \ 60000 ' Convert ms to minutes
         TextBoxThresholdPressureGauge.Text = My.Settings.thresholdPressureGauge
 
         ' OPC Settings

@@ -139,7 +139,7 @@ Public Class FormConfigSensor
                                 {"NodeText", row.Cells("NodeText").Value.ToString()},
                                 {"NodeId", row.Cells("NodeId").Value.ToString()},
                                 {"NodeType", row.Cells("NodeType").Value.ToString()},
-                                {"NodeStatus", "Idle"},
+                                {"NodeStatus", "ready"},
                                 {"NodeActive", "True"}
                             })
                         End If
@@ -348,9 +348,7 @@ Public Class FormConfigSensor
                 Dim cellValue = DGVNodeSensor.Rows(e.RowIndex).Cells("NodeActive").Value
                 If cellValue IsNot Nothing Then
                     Dim isActive = CBool(cellValue)
-                    ' Keep status as Idle - sensor is only activated, not running
-                    DGVNodeSensor.Rows(e.RowIndex).Cells("NodeStatus").Value = "Idle"
-                    ' LoggerDebug.LogInfo($"Sensor activated: {isActive}, Status remains: Idle")
+                    DGVNodeSensor.Rows(e.RowIndex).Cells("NodeStatus").Value = If(isActive, "ready", "idle")
                 End If
             End If
         Catch ex As Exception

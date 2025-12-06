@@ -22,7 +22,7 @@ Partial Class DetailRecord
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.TextBoxStartPressure = New System.Windows.Forms.TextBox()
@@ -54,10 +54,10 @@ Partial Class DetailRecord
         Me.TabPageGraph = New System.Windows.Forms.TabPage()
         Me.CartesianChart2 = New LiveCharts.WinForms.CartesianChart()
         Me.PanelBottom = New System.Windows.Forms.Panel()
+        Me.BTNStart = New System.Windows.Forms.Button()
         Me.BTNExport = New System.Windows.Forms.Button()
         Me.BTNClose = New System.Windows.Forms.Button()
         Me.BTNEndRecording = New System.Windows.Forms.Button()
-        Me.BTNStart = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.SplitContainerDetailRecord, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainerDetailRecord.Panel1.SuspendLayout()
@@ -339,14 +339,14 @@ Partial Class DetailRecord
         Me.DGVWatch.MultiSelect = False
         Me.DGVWatch.Name = "DGVWatch"
         Me.DGVWatch.ReadOnly = True
-        DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle2.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        DataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
-        DataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
+        DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle1.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        DataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
+        DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle1
         Me.DGVWatch.RowHeadersVisible = False
         Me.DGVWatch.RowHeadersWidth = 51
         Me.DGVWatch.RowTemplate.Height = 24
@@ -419,6 +419,15 @@ Partial Class DetailRecord
         Me.PanelBottom.Size = New System.Drawing.Size(1099, 65)
         Me.PanelBottom.TabIndex = 0
         '
+        'BTNStart
+        '
+        Me.BTNStart.Location = New System.Drawing.Point(771, 17)
+        Me.BTNStart.Name = "BTNStart"
+        Me.BTNStart.Size = New System.Drawing.Size(90, 34)
+        Me.BTNStart.TabIndex = 19
+        Me.BTNStart.Text = "Start"
+        Me.BTNStart.UseVisualStyleBackColor = True
+        '
         'BTNExport
         '
         Me.BTNExport.Font = New System.Drawing.Font("Segoe UI", 9.0!)
@@ -448,15 +457,6 @@ Partial Class DetailRecord
         Me.BTNEndRecording.TabIndex = 3
         Me.BTNEndRecording.Text = "End Record"
         Me.BTNEndRecording.UseVisualStyleBackColor = True
-        '
-        'BTNStart
-        '
-        Me.BTNStart.Location = New System.Drawing.Point(771, 17)
-        Me.BTNStart.Name = "BTNStart"
-        Me.BTNStart.Size = New System.Drawing.Size(90, 34)
-        Me.BTNStart.TabIndex = 19
-        Me.BTNStart.Text = "Start"
-        Me.BTNStart.UseVisualStyleBackColor = True
         '
         'DetailRecord
         '

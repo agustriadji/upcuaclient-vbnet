@@ -17,8 +17,8 @@ Public Class DetailRecord
     Private gaugeDataRaw As List(Of InterfacePressureRecords) 'gauge mentah
     Private gaugeDataProcessed As List(Of InterfacePressureRecords) 'gauge processed
     Private intervalAggregate As String = ""
-    Private refreshTimerWatch As New Timer() With {.Interval = 2000}
-    Private refreshTimerGraph As New Timer() With {.Interval = 2000}
+    Private refreshTimerWatch As New Timer() With {.Interval = 3000}
+    Private refreshTimerGraph As New Timer() With {.Interval = 3000}
 
 
     Public Sub New(batchIdParam As String)
@@ -95,15 +95,13 @@ Public Class DetailRecord
             LoadSensorMetadata()
             RefreshRawData()
 
-            ' Set default ComboBox selection to "2m"
+            ' Set default ComboBox selection to raw (no aggregation)
             Try
-                If CMBGroupingGraph IsNot Nothing AndAlso CMBGroupingGraph.Items.Contains("2m") Then
-                    CMBGroupingGraph.SelectedItem = "2m"
-                    intervalAggregate = "2m"
-                    If rawDataRaw IsNot Nothing AndAlso gaugeDataRaw IsNot Nothing Then
-                        rawData = AggregatePressureData(rawDataRaw, intervalAggregate)
-                        gaugeDataProcessed = AggregatePressureData(gaugeDataRaw, intervalAggregate)
-                    End If
+                If CMBGroupingGraph IsNot Nothing AndAlso CMBGroupingGraph.Items.Count > 0 Then
+                    CMBGroupingGraph.SelectedIndex = 0
+                    intervalAggregate = ""
+                    rawData = rawDataRaw
+                    gaugeDataProcessed = gaugeDataRaw
                 End If
             Catch
                 ' Ignore ComboBox errors
@@ -166,7 +164,9 @@ Public Class DetailRecord
 
         TextBoxSize.Text = recordMetadata.Size.ToString()
         TextBoxOperator.Text = recordMetadata.CreatedBy
-        TextBoxStartDate.Text = recordMetadata.StartDate.ToString("yyyy-MM-dd HH:mm")
+        ' Convert UTC to local time for display
+        Dim localStartDate = If(recordMetadata.StartDate.Kind = DateTimeKind.Utc, recordMetadata.StartDate.ToLocalTime(), recordMetadata.StartDate)
+        TextBoxStartDate.Text = localStartDate.ToString("yyyy-MM-dd HH:mm")
         TextBoxState.Text = recordMetadata.Status
 
         ' Update button states based on status
@@ -209,44 +209,38 @@ Public Class DetailRecord
     ' For Graph
     Private Sub LoadSensorPressureGraph()
         Try
-            If rawData Is Nothing Then Return
+            If rawData Is Nothing OrElse rawData.Count = 0 Then Return
             If CartesianChart2 Is Nothing OrElse CartesianChart2.Series Is Nothing OrElse CartesianChart2.Series.Count = 0 Then Return
 
-            Dim pressureValues As New ChartValues(Of Double)()
-            Dim timeLabels As New List(Of String)()
+            ' Sort data ASC (oldest first) for graph
+            Dim sortedData = rawData.OrderBy(Function(d)
+                                                 Dim dt As DateTime
+                                                 Return If(DateTime.TryParse(d.Timestamp, dt), dt, DateTime.MinValue)
+                                             End Function).ToList()
 
-            For Each DL In rawData
-                Dim parsedTime As DateTime
-                If Not DateTime.TryParse(DL.Timestamp, parsedTime) Then Continue For
+            Dim lineSeries = DirectCast(CartesianChart2.Series(0), LineSeries)
+            Dim currentValues = DirectCast(lineSeries.Values, ChartValues(Of Double))
+            Dim currentLabels = DirectCast(CartesianChart2.AxisX(0).Labels, List(Of String))
 
-                Dim timestampFormatted = parsedTime.ToString("yyyy-MM-dd HH:mm")
+            ' Get current count
+            Dim currentCount = currentValues.Count
+            Dim newDataCount = sortedData.Count
 
-                pressureValues.Add(DL.Pressure)
-                timeLabels.Add(timestampFormatted)
-            Next
-
-
-            'Dim sortedData = ReadSortedPressureData(sensorDirAnalytics, isSorted:=False)
-            'For Each DL In sortedData
-            '    Dim parsedTime As DateTime
-            '    If Not DateTime.TryParse(DL.Timestamp, parsedTime) Then
-            '        Console.WriteLine($"⚠️ Format timestamp invalid: {DL.Timestamp}")
-            '        Continue For
-            '    End If
-            '    Dim pressureValue = DL.Pressure.ToString("F2")
-            '    Dim timestampFormatted = parsedTime.ToString("yyyy-MM-dd HH:mm")
-
-            '    pressureValues.Add(pressureValue)
-            '    timeLabels.Add(timestampFormatted)
-            'Next
-
-            If CartesianChart2.Series.Count > 0 Then
-                Dim lineSeries = CartesianChart2.Series(0)
-                lineSeries.Values = pressureValues
-                If CartesianChart2.AxisX.Count > 0 Then
-                    CartesianChart2.AxisX(0).Labels = timeLabels
-                End If
-                CartesianChart2.Refresh()
+            ' Only append new data
+            If newDataCount > currentCount Then
+                For i As Integer = currentCount To newDataCount - 1
+                    Dim DL = sortedData(i)
+                    currentValues.Add(DL.Pressure)
+                    currentLabels.Add(DL.Timestamp)
+                Next
+            ElseIf newDataCount < currentCount Then
+                ' Data changed (aggregation changed), reload all
+                currentValues.Clear()
+                currentLabels.Clear()
+                For Each DL In sortedData
+                    currentValues.Add(DL.Pressure)
+                    currentLabels.Add(DL.Timestamp)
+                Next
             End If
         Catch ex As Exception
             Console.WriteLine($"LoadSensorPressureGraph Error: {ex.Message}")
@@ -263,10 +257,8 @@ Public Class DetailRecord
             End If
 
             DGVWatch.SuspendLayout()
-            DGVWatch.Rows.Clear()
-            DGVWatch.RowHeadersVisible = False
 
-            ' Get StartPressure (same as TextBoxStartPressure - first data)
+            ' Get StartPressure
             Dim startPressure = TextBoxStartPressure.Text
 
             ' Sort data DESC (newest first)
@@ -275,23 +267,24 @@ Public Class DetailRecord
                                                                Return If(DateTime.TryParse(d.Timestamp, dt), dt, DateTime.MinValue)
                                                            End Function).ToList()
 
-            ' Add all rows with same StartPressure, but different CurrentPressure per timestamp
-            For Each DL In sortedTireData
-                Dim parsedTime As DateTime
-                If Not DateTime.TryParse(DL.Timestamp, parsedTime) Then Continue For
+            ' Check if we need to refresh
+            Dim currentRowCount = DGVWatch.Rows.Count
+            Dim newDataCount = sortedTireData.Count
 
-                Dim currentPressure = DL.Pressure.ToString("F2")
-                Dim currentTimestamp = parsedTime.ToString("yyyy-MM-dd HH:mm")
+            If newDataCount <> currentRowCount Then
+                ' Refresh all data
+                DGVWatch.Rows.Clear()
+                DGVWatch.RowHeadersVisible = False
+                For Each DL In sortedTireData
+                    Dim currentPressure = DL.Pressure.ToString("F2")
+                    Dim currentTimestamp = DL.Timestamp
 
-                ' Find matching gauge data for this timestamp
-                Dim matchingGauge = gaugeDataProcessed?.FirstOrDefault(Function(g)
-                                                                           Dim gTime As DateTime
-                                                                           Return DateTime.TryParse(g.Timestamp, gTime) AndAlso Math.Abs((parsedTime - gTime).TotalMinutes) < 1
-                                                                       End Function)
-                Dim currentLeakPressure = If(matchingGauge?.Pressure, 0).ToString("F2")
+                    Dim matchingGauge = gaugeDataProcessed?.FirstOrDefault(Function(g) g.Timestamp = DL.Timestamp)
+                    Dim currentLeakPressure = If(matchingGauge?.Pressure, 0).ToString("F2")
 
-                DGVWatch.Rows.Add(startPressure, currentPressure, currentLeakPressure, currentTimestamp)
-            Next
+                    DGVWatch.Rows.Add(startPressure, currentPressure, currentLeakPressure, currentTimestamp)
+                Next
+            End If
         Catch ex As Exception
             Console.WriteLine($"LoadSensorPressureTable Error: {ex.Message}")
         Finally
@@ -381,20 +374,29 @@ Public Class DetailRecord
     End Function
 
     Private Sub ConvertSensorDataToInterfaceRecords(tireSensorData As List(Of InterfaceSensorData), gaugeSensorData As List(Of InterfaceSensorData))
+        ' Clear existing data first
+        If gaugeDataRaw Is Nothing Then gaugeDataRaw = New List(Of InterfacePressureRecords)
+        If rawDataRaw Is Nothing Then rawDataRaw = New List(Of InterfacePressureRecords)
+
+        gaugeDataRaw.Clear()
+        rawDataRaw.Clear()
+
         ' Convert PressureGauge data ke existing format
-        gaugeDataRaw = New List(Of InterfacePressureRecords)
         For Each sensorData In gaugeSensorData
+            ' Convert UTC to Local time
+            Dim localTime = If(sensorData.Timestamp.Kind = DateTimeKind.Utc, sensorData.Timestamp.ToLocalTime(), sensorData.Timestamp)
             gaugeDataRaw.Add(New InterfacePressureRecords With {
-                .Timestamp = sensorData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                .Timestamp = localTime.ToString("yyyy-MM-dd HH:mm"),
                 .Pressure = sensorData.Value
             })
         Next
 
         ' Convert PressureTire data ke existing format
-        rawDataRaw = New List(Of InterfacePressureRecords)
         For Each sensorData In tireSensorData
+            ' Convert UTC to Local time
+            Dim localTime = If(sensorData.Timestamp.Kind = DateTimeKind.Utc, sensorData.Timestamp.ToLocalTime(), sensorData.Timestamp)
             rawDataRaw.Add(New InterfacePressureRecords With {
-                .Timestamp = sensorData.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                .Timestamp = localTime.ToString("yyyy-MM-dd HH:mm"),
                 .Pressure = sensorData.Value
             })
         Next
@@ -479,7 +481,7 @@ Public Class DetailRecord
         Dim result = grouped.
         Where(Function(g) g.Value.Count > 0).
         Select(Function(g) New InterfacePressureRecords With {
-            .Timestamp = g.Key.ToString("yyyy-MM-dd HH:mm:ss"),
+            .Timestamp = g.Key.ToString("yyyy-MM-dd HH:mm"),
             .Pressure = g.Value.Average()
         }).
         OrderBy(Function(d) DateTime.Parse(d.Timestamp)).
@@ -506,7 +508,7 @@ Public Class DetailRecord
         Next
 
         Return grouped.Select(Function(g) New InterfacePressureRecords With {
-        .Timestamp = g.Key.ToString("yyyy-MM-dd HH:mm:ss"),
+        .Timestamp = g.Key.ToString("yyyy-MM-dd HH:mm"),
         .Pressure = g.Value.Average()
     }).OrderBy(Function(d) DateTime.Parse(d.Timestamp)).ToList()
     End Function
@@ -879,6 +881,7 @@ Public Class DetailRecord
             Dim result = MessageBox.Show($"Start recording for batch {recordMetadata.BatchId}?", "Confirm Start Recording", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
             If result = DialogResult.Yes Then
                 StartRecordingProcess()
+                RefreshRawData()
             End If
         End If
     End Sub

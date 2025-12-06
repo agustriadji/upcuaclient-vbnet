@@ -11,6 +11,7 @@ Public Class MainFormNew
     Private connectionIndicatorTimer As New Timer() With {.Interval = 3000}
     Private isDialogOpen As Boolean = False
     Private lastClickTime As DateTime = DateTime.MinValue
+    Private isDeleting As Boolean = False
 
     Sub InitializeTimers()
         ' Use My.Settings instead of config file
@@ -71,6 +72,11 @@ Public Class MainFormNew
                 DGVRecording.Columns.Add("State", "Status")
                 DGVRecording.Columns.Add("CreatedAt", "Start Date")
                 DGVRecording.Columns.Add("UpdatedAt", "Last Updated")
+                Dim deleteColumn As New DataGridViewTextBoxColumn()
+                deleteColumn.Name = "Delete"
+                deleteColumn.HeaderText = "Action"
+                deleteColumn.ReadOnly = True
+                DGVRecording.Columns.Add(deleteColumn)
                 If DGVRecording.Columns.Count > 0 Then
                     DGVRecording.Columns(0).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
                 End If
@@ -187,7 +193,7 @@ Public Class MainFormNew
 
     Private Sub RefreshDataTabPageRecording(sender As Object, e As EventArgs)
         Try
-            If isDialogOpen Then Return
+            If isDialogOpen OrElse isDeleting Then Return
             If DGVRecording Is Nothing OrElse DGVRecording.IsDisposed Then Return
             If Not DGVRecording.Enabled Then Return
             If DGVRecording.InvokeRequired Then
@@ -240,6 +246,17 @@ Public Class MainFormNew
                     Case "offline"
                         statusCell.Style.BackColor = Color.LightGray
                 End Select
+
+                ' Show Delete button only for Finished status
+                If record.Status.ToLower() = "finished" Or record.Status.ToLower() = "force stop" Then
+                    row.Cells("Delete").Value = "Delete"
+                    row.Cells("Delete").Style.BackColor = Color.LightCoral
+                    row.Cells("Delete").Style.ForeColor = Color.DarkRed
+                    row.Cells("Delete").Style.Alignment = DataGridViewContentAlignment.MiddleCenter
+                Else
+                    row.Cells("Delete").Value = ""
+                    row.Cells("Delete").Style.BackColor = Color.LightGray
+                End If
 
                 count += 1
             Next
@@ -575,55 +592,63 @@ Public Class MainFormNew
 
     Private Sub DGVRecording_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVRecording.CellClick
         Try
-            ' Comprehensive null and state checks
+            If isDeleting Then Return
             If DGVRecording Is Nothing OrElse DGVRecording.IsDisposed Then Return
             If e Is Nothing OrElse e.RowIndex < 0 Then Return
-            If isDialogOpen Then Return
             If DGVRecording.Rows Is Nothing OrElse e.RowIndex >= DGVRecording.Rows.Count Then Return
 
-            ' Prevent double-click (ignore clicks within 500ms)
+            Dim row = DGVRecording.Rows(e.RowIndex)
+            If row Is Nothing OrElse row.IsNewRow Then Return
+
+            ' Check if Delete button clicked
+            If e.ColumnIndex = DGVRecording.Columns("Delete").Index Then
+                Dim deleteValue = row.Cells("Delete").Value?.ToString()
+                If String.IsNullOrEmpty(deleteValue) OrElse deleteValue <> "Delete" Then Return
+
+                Dim batchId = row.Cells("BatchId").Value?.ToString()
+                If String.IsNullOrEmpty(batchId) Then Return
+
+                isDeleting = True
+                refreshTimerTabPageRecording.Stop()
+
+                Dim result = MessageBox.Show($"Delete record {batchId}?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                If result = DialogResult.Yes Then
+                    Try
+                        Dim sqlite As New SQLiteManager()
+                        sqlite.DeleteRecordMetadata(batchId)
+                        RefreshDataTabPageRecording(Nothing, Nothing)
+                        MessageBox.Show("Record deleted successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                    Catch ex As Exception
+                        MessageBox.Show($"Delete failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    End Try
+                End If
+
+                isDeleting = False
+                refreshTimerTabPageRecording.Start()
+                Return
+            End If
+
+            ' Prevent double-click for detail view
+            If isDialogOpen Then Return
             Dim now = DateTime.Now
             If (now - lastClickTime).TotalMilliseconds < 500 Then Return
             lastClickTime = now
 
-            ' Get row safely
-            Dim row As DataGridViewRow = Nothing
-            Try
-                row = DGVRecording.Rows(e.RowIndex)
-            Catch
-                Return
-            End Try
+            Dim batchIdDetail = row.Cells("BatchId").Value?.ToString()
+            If String.IsNullOrEmpty(batchIdDetail) Then Return
 
-            If row Is Nothing OrElse row.IsNewRow Then Return
-
-            ' Get BatchId safely
-            Dim batchId As String = ""
-            Try
-                If DGVRecording.Columns.Contains("BatchId") AndAlso row.Cells("BatchId") IsNot Nothing AndAlso row.Cells("BatchId").Value IsNot Nothing Then
-                    batchId = row.Cells("BatchId").Value.ToString().Trim()
-                End If
-            Catch
-                Return
-            End Try
-
-            If String.IsNullOrEmpty(batchId) Then Return
-
-            ' Open DetailRecord safely
             isDialogOpen = True
             DGVRecording.Enabled = False
 
             Try
-                ' Stop timers
                 If refreshTimerTabPageRecording IsNot Nothing Then refreshTimerTabPageRecording.Stop()
                 If refreshTimerTabPageSensor IsNot Nothing Then refreshTimerTabPageSensor.Stop()
                 If connectionIndicatorTimer IsNot Nothing Then connectionIndicatorTimer.Stop()
 
-                ' Open form
-                Using detailForm As New DetailRecord(batchId)
+                Using detailForm As New DetailRecord(batchIdDetail)
                     detailForm.ShowDialog()
                 End Using
 
-                ' Restart timers based on current tab
                 If TabControlMain IsNot Nothing AndAlso TabControlMain.SelectedTab Is TabPageRecording Then
                     If refreshTimerTabPageRecording IsNot Nothing Then refreshTimerTabPageRecording.Start()
                 ElseIf TabControlMain IsNot Nothing AndAlso TabControlMain.SelectedTab Is TabPageSensorState Then
@@ -638,14 +663,12 @@ Public Class MainFormNew
             End Try
 
         Catch ex As Exception
-            ' Silent error handling - reset state
             isDialogOpen = False
             Try
                 If DGVRecording IsNot Nothing AndAlso Not DGVRecording.IsDisposed Then DGVRecording.Enabled = True
                 If refreshTimerTabPageRecording IsNot Nothing Then refreshTimerTabPageRecording.Start()
                 If connectionIndicatorTimer IsNot Nothing Then connectionIndicatorTimer.Start()
             Catch
-                ' Ignore cleanup errors
             End Try
         End Try
     End Sub
@@ -661,4 +684,95 @@ Public Class MainFormNew
             Environment.Exit(0)
         End Try
     End Sub
+
+    Private Sub ExportToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ExportToolStripMenuItem.Click
+        Try
+            Using saveDialog As New SaveFileDialog()
+                saveDialog.Filter = "JSON files (*.json)|*.json"
+                saveDialog.FileName = $"settings_{DateTime.Now:yyyyMMdd_HHmmss}.json"
+
+                If saveDialog.ShowDialog() = DialogResult.OK Then
+                    Dim settings As New Dictionary(Of String, Object) From {
+                        {"hostDB", My.Settings.hostDB},
+                        {"hostOpc", My.Settings.hostOpc},
+                        {"nodeIdOpc", My.Settings.nodeIdOpc},
+                        {"selectedNodeIdOpc", My.Settings.selectedNodeIdOpc},
+                        {"intervalTime", My.Settings.intervalTime},
+                        {"intervalRefreshTimer", My.Settings.intervalRefreshTimer},
+                        {"selectedNodeSensor", My.Settings.selectedNodeSensor},
+                        {"intervalRefreshMain", My.Settings.intervalRefreshMain},
+                        {"thresholdPressureGauge", My.Settings.thresholdPressureGauge}
+                    }
+
+                    File.WriteAllText(saveDialog.FileName, JsonConvert.SerializeObject(settings, Formatting.Indented))
+                    MessageBox.Show("Settings exported successfully", "Export Complete", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                End If
+            End Using
+        Catch ex As Exception
+            MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub ImportToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ImportToolStripMenuItem.Click
+        Try
+            Using openDialog As New OpenFileDialog()
+                openDialog.Filter = "JSON files (*.json)|*.json"
+
+                If openDialog.ShowDialog() = DialogResult.OK Then
+                    Dim json = File.ReadAllText(openDialog.FileName)
+                    Dim settings = JsonConvert.DeserializeObject(Of Dictionary(Of String, Object))(json)
+
+                    If settings.ContainsKey("hostDB") Then My.Settings.hostDB = settings("hostDB").ToString()
+                    If settings.ContainsKey("hostOpc") Then My.Settings.hostOpc = settings("hostOpc").ToString()
+                    If settings.ContainsKey("nodeIdOpc") Then My.Settings.nodeIdOpc = settings("nodeIdOpc").ToString()
+                    If settings.ContainsKey("selectedNodeIdOpc") Then My.Settings.selectedNodeIdOpc = settings("selectedNodeIdOpc").ToString()
+                    If settings.ContainsKey("intervalTime") Then My.Settings.intervalTime = Convert.ToInt32(settings("intervalTime"))
+                    If settings.ContainsKey("intervalRefreshTimer") Then My.Settings.intervalRefreshTimer = Convert.ToInt32(settings("intervalRefreshTimer"))
+                    If settings.ContainsKey("selectedNodeSensor") Then My.Settings.selectedNodeSensor = settings("selectedNodeSensor").ToString()
+                    If settings.ContainsKey("intervalRefreshMain") Then My.Settings.intervalRefreshMain = Convert.ToInt32(settings("intervalRefreshMain"))
+                    If settings.ContainsKey("thresholdPressureGauge") Then My.Settings.thresholdPressureGauge = Convert.ToDouble(settings("thresholdPressureGauge"))
+
+                    My.Settings.Save()
+                    MessageBox.Show("Settings imported successfully. Please restart the application.", "Import Complete", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                End If
+            End Using
+        Catch ex As Exception
+            MessageBox.Show($"Import failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub AboutAirLMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles AboutAirLMToolStripMenuItem.Click
+        Try
+            Process.Start(New ProcessStartInfo("https://github.com/agustriadji/upcuaclient-vbnet/wiki") With {.UseShellExecute = True})
+        Catch ex As Exception
+            MessageBox.Show($"Failed to open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub FeedbackToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles FeedbackToolStripMenuItem1.Click
+        Try
+            Process.Start(New ProcessStartInfo("mailto:agus.triadji@gmail.com") With {.UseShellExecute = True})
+        Catch ex As Exception
+            MessageBox.Show($"Failed to open email client: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub DGVRecording_CellPainting(sender As Object, e As DataGridViewCellPaintingEventArgs) Handles DGVRecording.CellPainting
+        Try
+            If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Return
+            If DGVRecording Is Nothing OrElse DGVRecording.IsDisposed Then Return
+            If DGVRecording.Columns.Count = 0 OrElse Not DGVRecording.Columns.Contains("Delete") Then Return
+            If e.ColumnIndex <> DGVRecording.Columns("Delete").Index Then Return
+            If e.RowIndex >= DGVRecording.Rows.Count Then Return
+
+            Dim cellValue = DGVRecording.Rows(e.RowIndex).Cells("Delete").Value?.ToString()
+            If String.IsNullOrEmpty(cellValue) Then
+                e.Paint(e.CellBounds, DataGridViewPaintParts.All And Not DataGridViewPaintParts.ContentForeground)
+                e.Handled = True
+            End If
+        Catch
+            ' Ignore painting errors
+        End Try
+    End Sub
+
 End Class

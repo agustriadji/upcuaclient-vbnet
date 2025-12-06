@@ -82,42 +82,52 @@ Namespace upcuaclient_vbnet
                 Dim dataProcessor As New InterfaceData()
                 Dim analytics2 As New AnalyticsManager2()
 
-                ' 4. Process each root object
-                For Each rootObj In selectedRootObjects
-                    Dim rootNodeId = rootObj("NodeId").ToString()
-                    Dim rootNodeText = rootObj("NodeText").ToString()
+                ' 4. Process each running sensor (avoid nested loop with root objects)
+                Dim processedSensors As New HashSet(Of String)
 
-                    Console.WriteLine($"📊 Reading all child sensors from {rootNodeText} ({rootNodeId})...")
+                For Each runningSensor In runningSensors
+                    Dim sensorNodeText = runningSensor("NodeText")
+                    Dim sensorNodeId = runningSensor("NodeId")
 
-                    ' 5. Read all child sensors dari OPC (single connection per root object)
-                    Dim allChildSensorData = Await ReadChildSensors(rootNodeId)
+                    ' Skip if already processed in this cycle
+                    If processedSensors.Contains(sensorNodeId) Then
+                        Console.WriteLine($"⚠️ Skipping duplicate sensor {sensorNodeText}")
+                        Continue For
+                    End If
 
-                    ' 6. Filter hanya sensor yang running dari selectedNodeSensor
-                    For Each runningSensor In runningSensors
-                        Dim sensorNodeText = runningSensor("NodeText")
-                        Dim sensorNodeId = runningSensor("NodeId")
+                    ' Find parent root object for this sensor
+                    Dim parentFound = False
+                    For Each rootObj In selectedRootObjects
+                        Dim rootNodeId = rootObj("NodeId").ToString()
+                        Dim rootNodeText = rootObj("NodeText").ToString()
 
-                        ' Check if this running sensor data exists in OPC reading
+                        ' Read child sensors from this root
+                        Dim allChildSensorData = Await ReadChildSensors(rootNodeId)
+
+                        ' Check if this running sensor exists under this root
                         If allChildSensorData.ContainsKey(sensorNodeText) Then
                             Dim pressure = allChildSensorData(sensorNodeText)
 
-                            ' 7. Process data melalui AnalyticsManager dan SQLiteManager
+                            ' Process data
                             Dim sensorData = analytics2.MapSensorData(sensorNodeId, sensorNodeText, pressure, "Good")
                             Dim alert = analytics2.GenerateAlert(sensorNodeId, pressure)
 
                             dataProcessor.ProcessSensorData(sensorData)
                             If alert IsNot Nothing Then
-                                Console.WriteLine($"🚨 Alert will be processed: {alert.Message}")
+                                Console.WriteLine($"🚨 Alert: {alert.Message}")
                                 dataProcessor.ProcessAlert(alert)
-                            Else
-                                Console.WriteLine($"ℹ️ No alert generated for {sensorNodeText}")
                             End If
 
-                            Console.WriteLine($"💾 Processed running sensor {sensorNodeText}: {pressure} PSI")
-
-                            Console.WriteLine($"💾 Processed running sensor {sensorNodeText}: {pressure} PSI")
+                            Console.WriteLine($"💾 Processed {sensorNodeText}: {pressure} PSI")
+                            processedSensors.Add(sensorNodeId)
+                            parentFound = True
+                            Exit For
                         End If
                     Next
+
+                    If Not parentFound Then
+                        Console.WriteLine($"⚠️ No parent root found for sensor {sensorNodeText}")
+                    End If
                 Next
 
             Catch ex As Exception
@@ -415,15 +425,11 @@ Namespace upcuaclient_vbnet
                     End Try
 
                     cycleCount += 1
-                    Console.WriteLine($"✅ BackgroundWorker cycle {cycleCount} completed - OPC: {My.Settings.stateConnectionOPC}, DB: {My.Settings.stateConnectionDB}")
-                    Console.WriteLine($"⏱️ Next cycle in {My.Settings.intervalRefreshTimer} ms")
 
                     ' 3. Sleep sesuai interval dari My.Settings
                     Threading.Thread.Sleep(My.Settings.intervalRefreshTimer)
 
                 Catch ex As Exception
-                    Console.WriteLine($"⚠️ BackgroundWorker cycle error: {ex.Message}")
-                    Console.WriteLine($"🔍 Exception details: {ex.ToString()}")
 
                     ' Set connections to false on error
                     SettingsManager.SetConnectionOPC(False)

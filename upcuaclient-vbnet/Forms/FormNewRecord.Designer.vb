@@ -67,7 +67,7 @@ Partial Class FormNewRecord
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(18, 180)
+        Me.Label3.Location = New System.Drawing.Point(18, 134)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(106, 20)
         Me.Label3.TabIndex = 4
@@ -76,7 +76,7 @@ Partial Class FormNewRecord
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(18, 227)
+        Me.Label4.Location = New System.Drawing.Point(18, 181)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(36, 20)
         Me.Label4.TabIndex = 5
@@ -85,7 +85,7 @@ Partial Class FormNewRecord
         'Label5
         '
         Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(18, 272)
+        Me.Label5.Location = New System.Drawing.Point(18, 226)
         Me.Label5.Name = "Label5"
         Me.Label5.Size = New System.Drawing.Size(69, 20)
         Me.Label5.TabIndex = 6
@@ -93,23 +93,23 @@ Partial Class FormNewRecord
         '
         'TextBoxSizeTire
         '
-        Me.TextBoxSizeTire.Location = New System.Drawing.Point(141, 227)
+        Me.TextBoxSizeTire.Location = New System.Drawing.Point(141, 181)
         Me.TextBoxSizeTire.Name = "TextBoxSizeTire"
         Me.TextBoxSizeTire.Size = New System.Drawing.Size(150, 27)
         Me.TextBoxSizeTire.TabIndex = 7
         '
         'TextBoxOperator
         '
-        Me.TextBoxOperator.Location = New System.Drawing.Point(141, 272)
+        Me.TextBoxOperator.Location = New System.Drawing.Point(141, 226)
         Me.TextBoxOperator.MaximumSize = New System.Drawing.Size(150, 30)
         Me.TextBoxOperator.MinimumSize = New System.Drawing.Size(150, 30)
         Me.TextBoxOperator.Name = "TextBoxOperator"
-        Me.TextBoxOperator.Size = New System.Drawing.Size(150, 27)
+        Me.TextBoxOperator.Size = New System.Drawing.Size(150, 30)
         Me.TextBoxOperator.TabIndex = 8
         '
         'NumericUpDownAutoEndRecord
         '
-        Me.NumericUpDownAutoEndRecord.Location = New System.Drawing.Point(141, 180)
+        Me.NumericUpDownAutoEndRecord.Location = New System.Drawing.Point(141, 134)
         Me.NumericUpDownAutoEndRecord.Name = "NumericUpDownAutoEndRecord"
         Me.NumericUpDownAutoEndRecord.Size = New System.Drawing.Size(150, 27)
         Me.NumericUpDownAutoEndRecord.TabIndex = 9
@@ -138,6 +138,7 @@ Partial Class FormNewRecord
         Me.ComboBoxSensorGuage.Name = "ComboBoxSensorGuage"
         Me.ComboBoxSensorGuage.Size = New System.Drawing.Size(150, 28)
         Me.ComboBoxSensorGuage.TabIndex = 13
+        Me.ComboBoxSensorGuage.Visible = False
         '
         'Label6
         '
@@ -147,6 +148,7 @@ Partial Class FormNewRecord
         Me.Label6.Size = New System.Drawing.Size(87, 20)
         Me.Label6.TabIndex = 12
         Me.Label6.Text = "Sensor Leak"
+        Me.Label6.Visible = False
         '
         'ButtonCancel
         '

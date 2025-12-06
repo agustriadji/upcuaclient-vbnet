@@ -25,7 +25,7 @@ Public Class SettingsManager
         End If
 
         If My.Settings.intervalTime = 0 Then
-            My.Settings.intervalTime = 120000
+            My.Settings.intervalTime = 5000
         End If
 
         If My.Settings.intervalRefreshTimer = 0 Then
@@ -41,7 +41,7 @@ Public Class SettingsManager
         End If
 
         If My.Settings.intervalCheckConnections = 0 Then
-            My.Settings.intervalCheckConnections = 10000  ' 10 detik untuk indicator dinamis
+            My.Settings.intervalCheckConnections = 5000  ' 10 detik untuk indicator dinamis
         End If
 
         If String.IsNullOrEmpty(My.Settings.selectedNodeSensor) Then
@@ -49,7 +49,7 @@ Public Class SettingsManager
         End If
 
         If My.Settings.intervalRefreshMain = 0 Then
-            My.Settings.intervalRefreshMain = 3000  ' 3 detik untuk main form refresh
+            My.Settings.intervalRefreshMain = 5000  ' 3 detik untuk main form refresh
         End If
 
         If String.IsNullOrEmpty(My.Settings.thresholdPressureGauge) Then

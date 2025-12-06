@@ -333,9 +333,9 @@ Public Class SQLiteManager
                             result.CreatedBy = reader("created_by").ToString()
                             result.Status = reader("status").ToString()
                             result.SyncStatus = reader("sync_status").ToString()
-                            result.StartDate = DateTime.Parse(reader("start_date").ToString())
-                            result.EndDate = DateTime.Parse(reader("end_date").ToString())
-                            result.EndRecordingDate = If(reader("end_recording_date") IsNot DBNull.Value, DateTime.Parse(reader("end_recording_date").ToString()), Nothing)
+                            result.StartDate = DateTime.ParseExact(reader("start_date").ToString(), "yyyy-MM-ddTHH:mm:ss.fffZ", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal Or System.Globalization.DateTimeStyles.AdjustToUniversal)
+                            result.EndDate = DateTime.ParseExact(reader("end_date").ToString(), "yyyy-MM-ddTHH:mm:ss.fffZ", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal Or System.Globalization.DateTimeStyles.AdjustToUniversal)
+                            result.EndRecordingDate = If(reader("end_recording_date") IsNot DBNull.Value, DateTime.ParseExact(reader("end_recording_date").ToString(), "yyyy-MM-ddTHH:mm:ss.fffZ", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal Or System.Globalization.DateTimeStyles.AdjustToUniversal), Nothing)
                         End If
                     End Using
                 End Using
@@ -537,6 +537,9 @@ Public Class SQLiteManager
 
                     Using reader As SQLiteDataReader = cmd.ExecuteReader()
                         While reader.Read()
+                            Dim timestampStr = reader("timestamp").ToString()
+                            Dim timestamp = DateTime.ParseExact(timestampStr, "yyyy-MM-ddTHH:mm:ss.fffZ", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal Or System.Globalization.DateTimeStyles.AdjustToUniversal)
+                            
                             Dim data As New InterfaceSensorData With {
                                 .NodeId = reader("node_id").ToString(),
                                 .SensorType = reader("sensor_type").ToString(),
@@ -544,7 +547,7 @@ Public Class SQLiteManager
                                 .DataType = reader("data_type").ToString(),
                                 .Status = reader("status").ToString(),
                                 .SyncStatus = reader("sync_status").ToString(),
-                                .Timestamp = DateTime.Parse(reader("timestamp").ToString())
+                                .Timestamp = timestamp
                             }
                             results.Add(data)
                         End While
@@ -626,6 +629,23 @@ Public Class SQLiteManager
             Return True
         Catch ex As Exception
             Console.WriteLine($"❌ DeleteSensorDataByNodeIds Error: {ex.Message}")
+            Return False
+        End Try
+    End Function
+
+    Public Function DeleteRecordMetadata(batchId As String) As Boolean
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+                Dim query = "DELETE FROM record_metadata WHERE batch_id = @batch_id"
+                Using cmd As New SQLiteCommand(query, conn)
+                    cmd.Parameters.AddWithValue("@batch_id", batchId)
+                    cmd.ExecuteNonQuery()
+                End Using
+            End Using
+            Return True
+        Catch ex As Exception
+            Console.WriteLine($"DeleteRecordMetadata Error: {ex.Message}")
             Return False
         End Try
     End Function

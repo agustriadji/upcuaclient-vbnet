@@ -14,7 +14,7 @@ Namespace upcuaclient_vbnet
         <STAThread()>
         Sub Main()
             ' Soft error handling - suppress all UI errors
-            DisableConsole()
+            'DisableConsole()
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException)
             AddHandler Application.ThreadException, Sub(s, e)
                                                         ' Ignore UI errors silently
@@ -28,7 +28,7 @@ Namespace upcuaclient_vbnet
             bgWorker.Start()
 
             ' Alokasi console untuk debugging
-            'AllocConsole()
+            AllocConsole()
             Console.WriteLine("🚀 Starting OPC UA Client...")
 
             Try
@@ -47,6 +47,7 @@ Namespace upcuaclient_vbnet
                     Console.WriteLine($"❌ Fallback failed: {fallbackEx.Message}")
                     MessageBox.Show($"Critical error starting application: {fallbackEx.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 End Try
+
             End Try
         End Sub
         Private Async Sub ExitApp(sender As Object, e As EventArgs)

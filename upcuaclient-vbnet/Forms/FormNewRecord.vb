@@ -16,6 +16,9 @@ Public Class FormNewRecord
             ' Populate ComboBoxes with available sensors
             PopulateSensorComboBoxes()
 
+            ' Hide sensor gauge combobox
+            ComboBoxSensorGuage.Visible = False
+
             ' Console.WriteLine("✅ FormNewRecord initialized")
         Catch ex As Exception
             MessageBox.Show($"Error initializing form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -70,6 +73,9 @@ Public Class FormNewRecord
 
             ComboBoxSensorTire.DisplayMember = "Display"
             ComboBoxSensorGuage.DisplayMember = "Display"
+
+            ' Add event handler for tire sensor selection
+            AddHandler ComboBoxSensorTire.SelectedIndexChanged, AddressOf ComboBoxSensorTire_SelectedIndexChanged
 
             ' Console.WriteLine($"✅ Loaded {ComboBoxSensorTire.Items.Count} tire sensors, {ComboBoxSensorGuage.Items.Count} guage sensors")
 
@@ -195,7 +201,25 @@ Public Class FormNewRecord
         End Try
     End Sub
 
+    Private Sub ComboBoxSensorTire_SelectedIndexChanged(sender As Object, e As EventArgs)
+        Try
+            If ComboBoxSensorTire.SelectedItem IsNot Nothing Then
+                Dim selectedTire = ComboBoxSensorTire.SelectedItem
+                Dim tireNodeText = selectedTire.NodeText
 
+                ' Find matching gauge sensor with same NodeText
+                For i As Integer = 0 To ComboBoxSensorGuage.Items.Count - 1
+                    Dim gaugeItem = ComboBoxSensorGuage.Items(i)
+                    If gaugeItem.NodeText = tireNodeText Then
+                        ComboBoxSensorGuage.SelectedIndex = i
+                        Exit For
+                    End If
+                Next
+            End If
+        Catch ex As Exception
+            Console.WriteLine($"⚠️ Error auto-selecting gauge sensor: {ex.Message}")
+        End Try
+    End Sub
 
     Private Sub ButtonCancel_Click(sender As Object, e As EventArgs) Handles ButtonCancel.Click
         Me.DialogResult = DialogResult.Cancel

@@ -31,6 +31,14 @@ Partial Class MainFormNew
         Me.DTG1_StatusSensor = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.TabPageRecording = New System.Windows.Forms.TabPage()
         Me.DGVRecording = New System.Windows.Forms.DataGridView()
+        Me.BatchId = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.SensorId = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.RunningDay = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.SizeTire = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.State = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.CreatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.UpdatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.Delete = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.SplitContainer2 = New System.Windows.Forms.SplitContainer()
         Me.ToolStrip1 = New System.Windows.Forms.ToolStrip()
         Me.ToolStripButton1 = New System.Windows.Forms.ToolStripButton()
@@ -42,22 +50,21 @@ Partial Class MainFormNew
         Me.MenuStrip1 = New System.Windows.Forms.MenuStrip()
         Me.FileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ConfigManagerToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ImportToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ExportToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.LogToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AddNewSensorToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AddNewRecordingToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.AboutAirLMToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.FeedbackToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.FeedbackToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.ToolStripStatusLabelOPC = New System.Windows.Forms.ToolStripStatusLabel()
         Me.ToolStripStatusLabelDB = New System.Windows.Forms.ToolStripStatusLabel()
-        Me.BatchId = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.SensorId = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.RunningDay = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.SizeTire = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.State = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.CreatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.UpdatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainer1.Panel1.SuspendLayout()
         Me.SplitContainer1.Panel2.SuspendLayout()
@@ -79,7 +86,7 @@ Partial Class MainFormNew
         'SplitContainer1
         '
         Me.SplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.SplitContainer1.Location = New System.Drawing.Point(4, 34)
+        Me.SplitContainer1.Location = New System.Drawing.Point(4, 32)
         Me.SplitContainer1.Name = "SplitContainer1"
         Me.SplitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal
         '
@@ -93,8 +100,9 @@ Partial Class MainFormNew
         '
         Me.SplitContainer1.Panel2.Controls.Add(Me.SplitContainer2)
         Me.SplitContainer1.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No
-        Me.SplitContainer1.Size = New System.Drawing.Size(1174, 489)
-        Me.SplitContainer1.SplitterDistance = 360
+        Me.SplitContainer1.Panel2Collapsed = True
+        Me.SplitContainer1.Size = New System.Drawing.Size(1174, 491)
+        Me.SplitContainer1.SplitterDistance = 361
         Me.SplitContainer1.TabIndex = 2
         '
         'TabControlMain
@@ -107,7 +115,7 @@ Partial Class MainFormNew
         Me.TabControlMain.Margin = New System.Windows.Forms.Padding(0)
         Me.TabControlMain.Name = "TabControlMain"
         Me.TabControlMain.SelectedIndex = 0
-        Me.TabControlMain.Size = New System.Drawing.Size(1174, 350)
+        Me.TabControlMain.Size = New System.Drawing.Size(1174, 481)
         Me.TabControlMain.TabIndex = 1
         '
         'TabPageSensorState
@@ -117,7 +125,7 @@ Partial Class MainFormNew
         Me.TabPageSensorState.Location = New System.Drawing.Point(4, 29)
         Me.TabPageSensorState.Name = "TabPageSensorState"
         Me.TabPageSensorState.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageSensorState.Size = New System.Drawing.Size(1166, 318)
+        Me.TabPageSensorState.Size = New System.Drawing.Size(1166, 448)
         Me.TabPageSensorState.TabIndex = 0
         Me.TabPageSensorState.Text = "Sensor State"
         Me.TabPageSensorState.UseVisualStyleBackColor = True
@@ -143,7 +151,7 @@ Partial Class MainFormNew
         Me.DataGridView1.ScrollBars = System.Windows.Forms.ScrollBars.None
         Me.DataGridView1.ShowCellToolTips = False
         Me.DataGridView1.ShowEditingIcon = False
-        Me.DataGridView1.Size = New System.Drawing.Size(1160, 312)
+        Me.DataGridView1.Size = New System.Drawing.Size(1160, 442)
         Me.DataGridView1.TabIndex = 1
         '
         'DTG1_NameSensor
@@ -166,7 +174,7 @@ Partial Class MainFormNew
         Me.TabPageRecording.Location = New System.Drawing.Point(4, 29)
         Me.TabPageRecording.Name = "TabPageRecording"
         Me.TabPageRecording.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageRecording.Size = New System.Drawing.Size(1166, 317)
+        Me.TabPageRecording.Size = New System.Drawing.Size(1166, 448)
         Me.TabPageRecording.TabIndex = 1
         Me.TabPageRecording.Text = "Recording"
         Me.TabPageRecording.UseVisualStyleBackColor = True
@@ -179,7 +187,7 @@ Partial Class MainFormNew
         Me.DGVRecording.BackgroundColor = System.Drawing.SystemColors.ButtonFace
         Me.DGVRecording.BorderStyle = System.Windows.Forms.BorderStyle.None
         Me.DGVRecording.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DGVRecording.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.BatchId, Me.SensorId, Me.RunningDay, Me.SizeTire, Me.State, Me.CreatedAt, Me.UpdatedAt})
+        Me.DGVRecording.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.BatchId, Me.SensorId, Me.RunningDay, Me.SizeTire, Me.State, Me.CreatedAt, Me.UpdatedAt, Me.Delete})
         Me.DGVRecording.Dock = System.Windows.Forms.DockStyle.Fill
         Me.DGVRecording.Location = New System.Drawing.Point(3, 3)
         Me.DGVRecording.Name = "DGVRecording"
@@ -187,200 +195,8 @@ Partial Class MainFormNew
         Me.DGVRecording.RowHeadersVisible = False
         Me.DGVRecording.RowHeadersWidth = 51
         Me.DGVRecording.RowTemplate.Height = 24
-        Me.DGVRecording.Size = New System.Drawing.Size(1160, 311)
+        Me.DGVRecording.Size = New System.Drawing.Size(1160, 442)
         Me.DGVRecording.TabIndex = 0
-        '
-        'SplitContainer2
-        '
-        Me.SplitContainer2.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.SplitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel1
-        Me.SplitContainer2.IsSplitterFixed = True
-        Me.SplitContainer2.Location = New System.Drawing.Point(0, 0)
-        Me.SplitContainer2.Name = "SplitContainer2"
-        Me.SplitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal
-        '
-        'SplitContainer2.Panel1
-        '
-        Me.SplitContainer2.Panel1.Controls.Add(Me.ToolStrip1)
-        Me.SplitContainer2.Panel1.RightToLeft = System.Windows.Forms.RightToLeft.No
-        '
-        'SplitContainer2.Panel2
-        '
-        Me.SplitContainer2.Panel2.Controls.Add(Me.TextBoxOutputDebug)
-        Me.SplitContainer2.Panel2.Controls.Add(Me.TextBoxOutputAlert)
-        Me.SplitContainer2.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No
-        Me.SplitContainer2.Size = New System.Drawing.Size(1174, 125)
-        Me.SplitContainer2.SplitterDistance = 38
-        Me.SplitContainer2.TabIndex = 0
-        '
-        'ToolStrip1
-        '
-        Me.ToolStrip1.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.ToolStrip1.ImageScalingSize = New System.Drawing.Size(20, 20)
-        Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripButton1, Me.ToolStripButtonDebug, Me.ToolStripSeparator1, Me.ToolStripButtonAlert})
-        Me.ToolStrip1.Location = New System.Drawing.Point(0, 0)
-        Me.ToolStrip1.Name = "ToolStrip1"
-        Me.ToolStrip1.Padding = New System.Windows.Forms.Padding(0, 5, 4, 2)
-        Me.ToolStrip1.Size = New System.Drawing.Size(1174, 38)
-        Me.ToolStrip1.Stretch = True
-        Me.ToolStrip1.TabIndex = 1
-        Me.ToolStrip1.Text = "ToolStrip1"
-        '
-        'ToolStripButton1
-        '
-        Me.ToolStripButton1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
-        Me.ToolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
-        Me.ToolStripButton1.Image = Global.upcuaclient_vbnet.My.Resources.Resources.x_black_16
-        Me.ToolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.ToolStripButton1.Margin = New System.Windows.Forms.Padding(0, 1, 20, 2)
-        Me.ToolStripButton1.Name = "ToolStripButton1"
-        Me.ToolStripButton1.Size = New System.Drawing.Size(29, 28)
-        Me.ToolStripButton1.ToolTipText = "Close"
-        '
-        'ToolStripButtonDebug
-        '
-        Me.ToolStripButtonDebug.AutoSize = False
-        Me.ToolStripButtonDebug.BackColor = System.Drawing.SystemColors.ControlDark
-        Me.ToolStripButtonDebug.Checked = True
-        Me.ToolStripButtonDebug.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.ToolStripButtonDebug.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
-        Me.ToolStripButtonDebug.Image = CType(resources.GetObject("ToolStripButtonDebug.Image"), System.Drawing.Image)
-        Me.ToolStripButtonDebug.ImageTransparentColor = System.Drawing.Color.Transparent
-        Me.ToolStripButtonDebug.Name = "ToolStripButtonDebug"
-        Me.ToolStripButtonDebug.Padding = New System.Windows.Forms.Padding(4)
-        Me.ToolStripButtonDebug.Size = New System.Drawing.Size(80, 30)
-        Me.ToolStripButtonDebug.Text = "Debug"
-        '
-        'ToolStripSeparator1
-        '
-        Me.ToolStripSeparator1.Margin = New System.Windows.Forms.Padding(10, 0, 0, 0)
-        Me.ToolStripSeparator1.Name = "ToolStripSeparator1"
-        Me.ToolStripSeparator1.Size = New System.Drawing.Size(6, 31)
-        '
-        'ToolStripButtonAlert
-        '
-        Me.ToolStripButtonAlert.AutoSize = False
-        Me.ToolStripButtonAlert.BackColor = System.Drawing.SystemColors.ControlLight
-        Me.ToolStripButtonAlert.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
-        Me.ToolStripButtonAlert.Image = CType(resources.GetObject("ToolStripButtonAlert.Image"), System.Drawing.Image)
-        Me.ToolStripButtonAlert.ImageTransparentColor = System.Drawing.Color.Transparent
-        Me.ToolStripButtonAlert.Margin = New System.Windows.Forms.Padding(10, 1, 0, 2)
-        Me.ToolStripButtonAlert.Name = "ToolStripButtonAlert"
-        Me.ToolStripButtonAlert.Padding = New System.Windows.Forms.Padding(4)
-        Me.ToolStripButtonAlert.Size = New System.Drawing.Size(80, 30)
-        Me.ToolStripButtonAlert.Text = "Alert"
-        '
-        'TextBoxOutputDebug
-        '
-        Me.TextBoxOutputDebug.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.TextBoxOutputDebug.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.TextBoxOutputDebug.Location = New System.Drawing.Point(0, 0)
-        Me.TextBoxOutputDebug.Multiline = True
-        Me.TextBoxOutputDebug.Name = "TextBoxOutputDebug"
-        Me.TextBoxOutputDebug.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.TextBoxOutputDebug.Size = New System.Drawing.Size(1174, 83)
-        Me.TextBoxOutputDebug.TabIndex = 0
-        '
-        'TextBoxOutputAlert
-        '
-        Me.TextBoxOutputAlert.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.TextBoxOutputAlert.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.TextBoxOutputAlert.Location = New System.Drawing.Point(0, 0)
-        Me.TextBoxOutputAlert.Multiline = True
-        Me.TextBoxOutputAlert.Name = "TextBoxOutputAlert"
-        Me.TextBoxOutputAlert.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.TextBoxOutputAlert.Size = New System.Drawing.Size(1174, 83)
-        Me.TextBoxOutputAlert.TabIndex = 2
-        '
-        'MenuStrip1
-        '
-        Me.MenuStrip1.ImageScalingSize = New System.Drawing.Size(20, 20)
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.ViewToolStripMenuItem, Me.ToolsToolStripMenuItem})
-        Me.MenuStrip1.Location = New System.Drawing.Point(4, 4)
-        Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(1174, 30)
-        Me.MenuStrip1.TabIndex = 0
-        Me.MenuStrip1.Text = "MenuStrip1"
-        '
-        'FileToolStripMenuItem
-        '
-        Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ConfigManagerToolStripMenuItem, Me.ExitToolStripMenuItem})
-        Me.FileToolStripMenuItem.Name = "FileToolStripMenuItem"
-        Me.FileToolStripMenuItem.Size = New System.Drawing.Size(46, 24)
-        Me.FileToolStripMenuItem.Text = "File"
-        '
-        'ConfigManagerToolStripMenuItem
-        '
-        Me.ConfigManagerToolStripMenuItem.Name = "ConfigManagerToolStripMenuItem"
-        Me.ConfigManagerToolStripMenuItem.Size = New System.Drawing.Size(199, 26)
-        Me.ConfigManagerToolStripMenuItem.Text = "Config manager"
-        '
-        'ExitToolStripMenuItem
-        '
-        Me.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem"
-        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(199, 26)
-        Me.ExitToolStripMenuItem.Text = "Exit"
-        '
-        'ViewToolStripMenuItem
-        '
-        Me.ViewToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.LogToolStripMenuItem})
-        Me.ViewToolStripMenuItem.Name = "ViewToolStripMenuItem"
-        Me.ViewToolStripMenuItem.Size = New System.Drawing.Size(55, 24)
-        Me.ViewToolStripMenuItem.Text = "View"
-        '
-        'LogToolStripMenuItem
-        '
-        Me.LogToolStripMenuItem.Name = "LogToolStripMenuItem"
-        Me.LogToolStripMenuItem.Size = New System.Drawing.Size(117, 26)
-        Me.LogToolStripMenuItem.Text = "Log"
-        '
-        'ToolsToolStripMenuItem
-        '
-        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AddNewSensorToolStripMenuItem, Me.AddNewRecordingToolStripMenuItem})
-        Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
-        Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(58, 24)
-        Me.ToolsToolStripMenuItem.Text = "Tools"
-        '
-        'AddNewSensorToolStripMenuItem
-        '
-        Me.AddNewSensorToolStripMenuItem.Name = "AddNewSensorToolStripMenuItem"
-        Me.AddNewSensorToolStripMenuItem.Size = New System.Drawing.Size(226, 26)
-        Me.AddNewSensorToolStripMenuItem.Text = "Add New Sensor"
-        '
-        'AddNewRecordingToolStripMenuItem
-        '
-        Me.AddNewRecordingToolStripMenuItem.Name = "AddNewRecordingToolStripMenuItem"
-        Me.AddNewRecordingToolStripMenuItem.Size = New System.Drawing.Size(226, 26)
-        Me.AddNewRecordingToolStripMenuItem.Text = "Add New Recording"
-        '
-        'StatusStrip1
-        '
-        Me.StatusStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Visible
-        Me.StatusStrip1.ImageScalingSize = New System.Drawing.Size(20, 20)
-        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabelOPC, Me.ToolStripStatusLabelDB})
-        Me.StatusStrip1.Location = New System.Drawing.Point(4, 523)
-        Me.StatusStrip1.Name = "StatusStrip1"
-        Me.StatusStrip1.RightToLeft = System.Windows.Forms.RightToLeft.Yes
-        Me.StatusStrip1.Size = New System.Drawing.Size(1174, 26)
-        Me.StatusStrip1.TabIndex = 1
-        Me.StatusStrip1.Text = "StatusStrip1"
-        '
-        'ToolStripStatusLabelOPC
-        '
-        Me.ToolStripStatusLabelOPC.Image = Global.upcuaclient_vbnet.My.Resources.Resources.server_red_16
-        Me.ToolStripStatusLabelOPC.Margin = New System.Windows.Forms.Padding(0, 4, 50, 2)
-        Me.ToolStripStatusLabelOPC.Name = "ToolStripStatusLabelOPC"
-        Me.ToolStripStatusLabelOPC.Size = New System.Drawing.Size(161, 20)
-        Me.ToolStripStatusLabelOPC.Text = "OPC Not Connected"
-        '
-        'ToolStripStatusLabelDB
-        '
-        Me.ToolStripStatusLabelDB.Image = Global.upcuaclient_vbnet.My.Resources.Resources.database_red_16
-        Me.ToolStripStatusLabelDB.Margin = New System.Windows.Forms.Padding(0, 4, 50, 2)
-        Me.ToolStripStatusLabelDB.Name = "ToolStripStatusLabelDB"
-        Me.ToolStripStatusLabelDB.Padding = New System.Windows.Forms.Padding(6, 0, 6, 0)
-        Me.ToolStripStatusLabelDB.Size = New System.Drawing.Size(165, 20)
-        Me.ToolStripStatusLabelDB.Text = "DB Not Connected"
         '
         'BatchId
         '
@@ -430,6 +246,246 @@ Partial Class MainFormNew
         Me.UpdatedAt.MinimumWidth = 6
         Me.UpdatedAt.Name = "UpdatedAt"
         Me.UpdatedAt.ReadOnly = True
+        '
+        'Delete
+        '
+        Me.Delete.HeaderText = "Action"
+        Me.Delete.MinimumWidth = 6
+        Me.Delete.Name = "Delete"
+        Me.Delete.ReadOnly = True
+        Me.Delete.Resizable = System.Windows.Forms.DataGridViewTriState.[False]
+        Me.Delete.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable
+        Me.Delete.ToolTipText = "Delete Record"
+        '
+        'SplitContainer2
+        '
+        Me.SplitContainer2.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.SplitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel1
+        Me.SplitContainer2.IsSplitterFixed = True
+        Me.SplitContainer2.Location = New System.Drawing.Point(0, 0)
+        Me.SplitContainer2.Name = "SplitContainer2"
+        Me.SplitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal
+        '
+        'SplitContainer2.Panel1
+        '
+        Me.SplitContainer2.Panel1.Controls.Add(Me.ToolStrip1)
+        Me.SplitContainer2.Panel1.RightToLeft = System.Windows.Forms.RightToLeft.No
+        '
+        'SplitContainer2.Panel2
+        '
+        Me.SplitContainer2.Panel2.Controls.Add(Me.TextBoxOutputDebug)
+        Me.SplitContainer2.Panel2.Controls.Add(Me.TextBoxOutputAlert)
+        Me.SplitContainer2.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.SplitContainer2.Size = New System.Drawing.Size(150, 46)
+        Me.SplitContainer2.SplitterDistance = 25
+        Me.SplitContainer2.TabIndex = 0
+        '
+        'ToolStrip1
+        '
+        Me.ToolStrip1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.ToolStrip1.ImageScalingSize = New System.Drawing.Size(20, 20)
+        Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripButton1, Me.ToolStripButtonDebug, Me.ToolStripSeparator1, Me.ToolStripButtonAlert})
+        Me.ToolStrip1.Location = New System.Drawing.Point(0, 0)
+        Me.ToolStrip1.Name = "ToolStrip1"
+        Me.ToolStrip1.Padding = New System.Windows.Forms.Padding(0, 5, 4, 2)
+        Me.ToolStrip1.Size = New System.Drawing.Size(150, 25)
+        Me.ToolStrip1.Stretch = True
+        Me.ToolStrip1.TabIndex = 1
+        Me.ToolStrip1.Text = "ToolStrip1"
+        '
+        'ToolStripButton1
+        '
+        Me.ToolStripButton1.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.ToolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.ToolStripButton1.Image = Global.upcuaclient_vbnet.My.Resources.Resources.x_black_16
+        Me.ToolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.ToolStripButton1.Margin = New System.Windows.Forms.Padding(0, 1, 20, 2)
+        Me.ToolStripButton1.Name = "ToolStripButton1"
+        Me.ToolStripButton1.Size = New System.Drawing.Size(29, 15)
+        Me.ToolStripButton1.ToolTipText = "Close"
+        '
+        'ToolStripButtonDebug
+        '
+        Me.ToolStripButtonDebug.AutoSize = False
+        Me.ToolStripButtonDebug.BackColor = System.Drawing.SystemColors.ControlDark
+        Me.ToolStripButtonDebug.Checked = True
+        Me.ToolStripButtonDebug.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.ToolStripButtonDebug.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
+        Me.ToolStripButtonDebug.Image = CType(resources.GetObject("ToolStripButtonDebug.Image"), System.Drawing.Image)
+        Me.ToolStripButtonDebug.ImageTransparentColor = System.Drawing.Color.Transparent
+        Me.ToolStripButtonDebug.Name = "ToolStripButtonDebug"
+        Me.ToolStripButtonDebug.Padding = New System.Windows.Forms.Padding(4)
+        Me.ToolStripButtonDebug.Size = New System.Drawing.Size(80, 30)
+        Me.ToolStripButtonDebug.Text = "Debug"
+        '
+        'ToolStripSeparator1
+        '
+        Me.ToolStripSeparator1.Margin = New System.Windows.Forms.Padding(10, 0, 0, 0)
+        Me.ToolStripSeparator1.Name = "ToolStripSeparator1"
+        Me.ToolStripSeparator1.Size = New System.Drawing.Size(6, 31)
+        '
+        'ToolStripButtonAlert
+        '
+        Me.ToolStripButtonAlert.AutoSize = False
+        Me.ToolStripButtonAlert.BackColor = System.Drawing.SystemColors.ControlLight
+        Me.ToolStripButtonAlert.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
+        Me.ToolStripButtonAlert.Image = CType(resources.GetObject("ToolStripButtonAlert.Image"), System.Drawing.Image)
+        Me.ToolStripButtonAlert.ImageTransparentColor = System.Drawing.Color.Transparent
+        Me.ToolStripButtonAlert.Margin = New System.Windows.Forms.Padding(10, 1, 0, 2)
+        Me.ToolStripButtonAlert.Name = "ToolStripButtonAlert"
+        Me.ToolStripButtonAlert.Padding = New System.Windows.Forms.Padding(4)
+        Me.ToolStripButtonAlert.Size = New System.Drawing.Size(80, 30)
+        Me.ToolStripButtonAlert.Text = "Alert"
+        '
+        'TextBoxOutputDebug
+        '
+        Me.TextBoxOutputDebug.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.TextBoxOutputDebug.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TextBoxOutputDebug.Location = New System.Drawing.Point(0, 0)
+        Me.TextBoxOutputDebug.Multiline = True
+        Me.TextBoxOutputDebug.Name = "TextBoxOutputDebug"
+        Me.TextBoxOutputDebug.ScrollBars = System.Windows.Forms.ScrollBars.Both
+        Me.TextBoxOutputDebug.Size = New System.Drawing.Size(150, 25)
+        Me.TextBoxOutputDebug.TabIndex = 0
+        '
+        'TextBoxOutputAlert
+        '
+        Me.TextBoxOutputAlert.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.TextBoxOutputAlert.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.TextBoxOutputAlert.Location = New System.Drawing.Point(0, 0)
+        Me.TextBoxOutputAlert.Multiline = True
+        Me.TextBoxOutputAlert.Name = "TextBoxOutputAlert"
+        Me.TextBoxOutputAlert.ScrollBars = System.Windows.Forms.ScrollBars.Both
+        Me.TextBoxOutputAlert.Size = New System.Drawing.Size(150, 25)
+        Me.TextBoxOutputAlert.TabIndex = 2
+        '
+        'MenuStrip1
+        '
+        Me.MenuStrip1.ImageScalingSize = New System.Drawing.Size(20, 20)
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.ViewToolStripMenuItem, Me.ToolsToolStripMenuItem, Me.HelpToolStripMenuItem})
+        Me.MenuStrip1.Location = New System.Drawing.Point(4, 4)
+        Me.MenuStrip1.Name = "MenuStrip1"
+        Me.MenuStrip1.Size = New System.Drawing.Size(1174, 28)
+        Me.MenuStrip1.TabIndex = 0
+        Me.MenuStrip1.Text = "MenuStrip1"
+        '
+        'FileToolStripMenuItem
+        '
+        Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ConfigManagerToolStripMenuItem, Me.ImportToolStripMenuItem, Me.ExportToolStripMenuItem, Me.ExitToolStripMenuItem})
+        Me.FileToolStripMenuItem.Name = "FileToolStripMenuItem"
+        Me.FileToolStripMenuItem.Size = New System.Drawing.Size(46, 24)
+        Me.FileToolStripMenuItem.Text = "File"
+        '
+        'ConfigManagerToolStripMenuItem
+        '
+        Me.ConfigManagerToolStripMenuItem.Name = "ConfigManagerToolStripMenuItem"
+        Me.ConfigManagerToolStripMenuItem.Size = New System.Drawing.Size(199, 26)
+        Me.ConfigManagerToolStripMenuItem.Text = "Config manager"
+        '
+        'ImportToolStripMenuItem
+        '
+        Me.ImportToolStripMenuItem.Name = "ImportToolStripMenuItem"
+        Me.ImportToolStripMenuItem.Size = New System.Drawing.Size(199, 26)
+        Me.ImportToolStripMenuItem.Text = "Import"
+        Me.ImportToolStripMenuItem.ToolTipText = "Import setting"
+        '
+        'ExportToolStripMenuItem
+        '
+        Me.ExportToolStripMenuItem.Name = "ExportToolStripMenuItem"
+        Me.ExportToolStripMenuItem.Size = New System.Drawing.Size(199, 26)
+        Me.ExportToolStripMenuItem.Text = "Export"
+        '
+        'ExitToolStripMenuItem
+        '
+        Me.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem"
+        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(199, 26)
+        Me.ExitToolStripMenuItem.Text = "Exit"
+        '
+        'ViewToolStripMenuItem
+        '
+        Me.ViewToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.LogToolStripMenuItem})
+        Me.ViewToolStripMenuItem.Name = "ViewToolStripMenuItem"
+        Me.ViewToolStripMenuItem.Size = New System.Drawing.Size(55, 24)
+        Me.ViewToolStripMenuItem.Text = "View"
+        '
+        'LogToolStripMenuItem
+        '
+        Me.LogToolStripMenuItem.Name = "LogToolStripMenuItem"
+        Me.LogToolStripMenuItem.Size = New System.Drawing.Size(117, 26)
+        Me.LogToolStripMenuItem.Text = "Log"
+        '
+        'ToolsToolStripMenuItem
+        '
+        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AddNewSensorToolStripMenuItem, Me.AddNewRecordingToolStripMenuItem})
+        Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
+        Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(58, 24)
+        Me.ToolsToolStripMenuItem.Text = "Tools"
+        '
+        'AddNewSensorToolStripMenuItem
+        '
+        Me.AddNewSensorToolStripMenuItem.Name = "AddNewSensorToolStripMenuItem"
+        Me.AddNewSensorToolStripMenuItem.Size = New System.Drawing.Size(226, 26)
+        Me.AddNewSensorToolStripMenuItem.Text = "Add New Sensor"
+        '
+        'AddNewRecordingToolStripMenuItem
+        '
+        Me.AddNewRecordingToolStripMenuItem.Name = "AddNewRecordingToolStripMenuItem"
+        Me.AddNewRecordingToolStripMenuItem.Size = New System.Drawing.Size(226, 26)
+        Me.AddNewRecordingToolStripMenuItem.Text = "Add New Recording"
+        '
+        'HelpToolStripMenuItem
+        '
+        Me.HelpToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AboutAirLMToolStripMenuItem, Me.FeedbackToolStripMenuItem, Me.FeedbackToolStripMenuItem1})
+        Me.HelpToolStripMenuItem.Name = "HelpToolStripMenuItem"
+        Me.HelpToolStripMenuItem.Size = New System.Drawing.Size(55, 24)
+        Me.HelpToolStripMenuItem.Text = "Help"
+        '
+        'AboutAirLMToolStripMenuItem
+        '
+        Me.AboutAirLMToolStripMenuItem.Name = "AboutAirLMToolStripMenuItem"
+        Me.AboutAirLMToolStripMenuItem.Size = New System.Drawing.Size(176, 26)
+        Me.AboutAirLMToolStripMenuItem.Text = "About AirLM"
+        '
+        'FeedbackToolStripMenuItem
+        '
+        Me.FeedbackToolStripMenuItem.Name = "FeedbackToolStripMenuItem"
+        Me.FeedbackToolStripMenuItem.Size = New System.Drawing.Size(176, 26)
+        Me.FeedbackToolStripMenuItem.Text = "Report Issue"
+        '
+        'FeedbackToolStripMenuItem1
+        '
+        Me.FeedbackToolStripMenuItem1.Name = "FeedbackToolStripMenuItem1"
+        Me.FeedbackToolStripMenuItem1.Size = New System.Drawing.Size(176, 26)
+        Me.FeedbackToolStripMenuItem1.Text = "Feedback"
+        '
+        'StatusStrip1
+        '
+        Me.StatusStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Visible
+        Me.StatusStrip1.ImageScalingSize = New System.Drawing.Size(20, 20)
+        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabelOPC, Me.ToolStripStatusLabelDB})
+        Me.StatusStrip1.Location = New System.Drawing.Point(4, 523)
+        Me.StatusStrip1.Name = "StatusStrip1"
+        Me.StatusStrip1.RightToLeft = System.Windows.Forms.RightToLeft.Yes
+        Me.StatusStrip1.Size = New System.Drawing.Size(1174, 26)
+        Me.StatusStrip1.TabIndex = 1
+        Me.StatusStrip1.Text = "StatusStrip1"
+        '
+        'ToolStripStatusLabelOPC
+        '
+        Me.ToolStripStatusLabelOPC.Image = Global.upcuaclient_vbnet.My.Resources.Resources.server_red_16
+        Me.ToolStripStatusLabelOPC.Margin = New System.Windows.Forms.Padding(0, 4, 50, 2)
+        Me.ToolStripStatusLabelOPC.Name = "ToolStripStatusLabelOPC"
+        Me.ToolStripStatusLabelOPC.Size = New System.Drawing.Size(161, 20)
+        Me.ToolStripStatusLabelOPC.Text = "OPC Not Connected"
+        '
+        'ToolStripStatusLabelDB
+        '
+        Me.ToolStripStatusLabelDB.Image = Global.upcuaclient_vbnet.My.Resources.Resources.database_red_16
+        Me.ToolStripStatusLabelDB.Margin = New System.Windows.Forms.Padding(0, 4, 50, 2)
+        Me.ToolStripStatusLabelDB.Name = "ToolStripStatusLabelDB"
+        Me.ToolStripStatusLabelDB.Padding = New System.Windows.Forms.Padding(6, 0, 6, 0)
+        Me.ToolStripStatusLabelDB.Size = New System.Drawing.Size(165, 20)
+        Me.ToolStripStatusLabelDB.Text = "DB Not Connected"
         '
         'MainFormNew
         '
@@ -503,6 +559,12 @@ Partial Class MainFormNew
     Friend WithEvents SplitContainer2 As SplitContainer
     Friend WithEvents AddNewSensorToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents AddNewRecordingToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ImportToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ExportToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents HelpToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents AboutAirLMToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents FeedbackToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents FeedbackToolStripMenuItem1 As ToolStripMenuItem
     Friend WithEvents BatchId As DataGridViewTextBoxColumn
     Friend WithEvents SensorId As DataGridViewTextBoxColumn
     Friend WithEvents RunningDay As DataGridViewTextBoxColumn
@@ -510,4 +572,5 @@ Partial Class MainFormNew
     Friend WithEvents State As DataGridViewTextBoxColumn
     Friend WithEvents CreatedAt As DataGridViewTextBoxColumn
     Friend WithEvents UpdatedAt As DataGridViewTextBoxColumn
+    Friend WithEvents Delete As DataGridViewTextBoxColumn
 End Class
