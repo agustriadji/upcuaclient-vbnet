@@ -1,4 +1,5 @@
 ﻿Imports System
+Imports Opc.Ua
 Imports upcuaclient_vbnet.upcuaclient_vbnet
 
 Public Class AnalyticsManager2
@@ -9,13 +10,14 @@ Public Class AnalyticsManager2
     End Sub
 
     ' Map OPC sensor data to SQLite sensor_data structure
-    Public Function MapSensorData(nodeId As String, displayName As String, value As Double, status As String) As InterfaceSensorData
+    Public Function MapSensorData(nodeId As String, sensorType As String, value As Double, status As String, nodeText As String) As InterfaceSensorData
         ' Convert raw value to PSI
         Dim psiValue = ConvertToPSI(value)
-        
+
         Return New InterfaceSensorData With {
             .NodeId = nodeId,
-            .SensorType = GetSensorType(nodeId),
+            .NodeText = nodeText,
+            .SensorType = sensorType,
             .Value = psiValue,
             .DataType = "Float",
             .Status = status,
@@ -46,7 +48,7 @@ Public Class AnalyticsManager2
     End Function
 
     ' Generate alert - khusus untuk PressureGauge leaking detection
-    Public Function GenerateAlert(nodeId As String, value As Double) As InterfaceAlertData
+    Public Function GenerateAlert(nodeId As String, value As Double, nodeText As String) As InterfaceAlertData
         Dim sensorType = GetSensorType(nodeId)
 
         ' Alert hanya untuk PressureGauge
@@ -55,20 +57,23 @@ Public Class AnalyticsManager2
         End If
 
         ' Get threshold from settings
-        Dim threshold As Double = 0.0
+        Dim alertThreshold As Double = 0.2 ' Default fallback
         Try
-            threshold = Convert.ToDouble(My.Settings.thresholdPressureGauge)
-        Catch
-            threshold = 0.2 ' Default fallback
+            ' Use invariant culture to handle both "0.2" and "0,2" formats
+            Dim thresholdStr = My.Settings.thresholdPressureGauge.Replace(",", ".")
+            alertThreshold = Convert.ToDouble(thresholdStr, System.Globalization.CultureInfo.InvariantCulture)
+        Catch ex As Exception
+            alertThreshold = 0.2
         End Try
 
         ' PressureGauge: nilai > threshold = leaking
-        If value > threshold Then
+        If value > alertThreshold Then
             Return New InterfaceAlertData With {
                 .NodeId = nodeId,
+                .NodeText = nodeText,
                 .SensorType = sensorType,
-                .Message = $"LEAKING DETECTED: Pressure spike {value:F2} PSI (threshold: {threshold:F2})",
-                .Threshold = threshold,
+                .Message = $"LEAKING DETECTED: Pressure spike {value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} PSI (threshold: {alertThreshold.ToString(System.Globalization.CultureInfo.InvariantCulture)})",
+                .Threshold = alertThreshold,
                 .CurrentValue = value,
                 .Severity = "CRITICAL",
                 .Timestamp = DateTime.UtcNow
@@ -92,6 +97,26 @@ Public Class AnalyticsManager2
             .StartDate = DateTime.UtcNow,
             .EndDate = DateTime.UtcNow.AddHours(1) ' Default 1 hour session
         }
+    End Function
+
+    Private Function GetSensorDisplayName(nodeId As String) As String
+        Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
+        
+        For Each kvp In selectedNodeSensor
+            If TypeOf kvp.Value Is List(Of Dictionary(Of String, String)) Then
+                Dim sensorList = DirectCast(kvp.Value, List(Of Dictionary(Of String, String)))
+                For Each sensor In sensorList
+                    If sensor.ContainsKey("NodeId") AndAlso sensor("NodeId") = nodeId Then
+                        If sensor.ContainsKey("DisplayName") Then
+                            Return sensor("DisplayName")
+                        End If
+                    End If
+                Next
+            End If
+        Next
+        
+        ' Fallback to nodeId if display name not found
+        Return nodeId
     End Function
 
     Private Function GetSensorType(nodeId As String) As String

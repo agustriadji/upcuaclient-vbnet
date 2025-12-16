@@ -1,4 +1,4 @@
-﻿Imports Opc.Ua.Client
+Imports Opc.Ua.Client
 
 Namespace upcuaclient_vbnet
     Public Module OpcReader
@@ -12,13 +12,11 @@ Namespace upcuaclient_vbnet
         Try
             Dim value = session.ReadValue(nodeId).Value?.ToString()
             If String.IsNullOrEmpty(value) Then
-                Console.WriteLine($"⚠️ Node {nodeId} kosong atau null")
                 Return Nothing
             End If
 
             Dim parts = value.Split(" "c)
             If parts.Length <> 21 Then
-                Console.WriteLine($"⚠️ Panjang frame tidak sesuai (dapat {parts.Length}, harus 21)")
                 Return Nothing
             End If
 
@@ -29,7 +27,6 @@ Namespace upcuaclient_vbnet
 
             Return bytes
         Catch ex As Exception
-            Console.WriteLine($"⚠️ Gagal parsing node {nodeId}: {ex.Message}")
             Return Nothing
         End Try
     End Function

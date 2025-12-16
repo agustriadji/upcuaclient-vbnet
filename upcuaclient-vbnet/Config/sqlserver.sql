@@ -3,6 +3,7 @@
 CREATE TABLE sensor_data (
     id INT IDENTITY(1,1) PRIMARY KEY,
     node_id NVARCHAR(100) NOT NULL,
+    node_text NVARCHAR(100) NOT NULL,
     sensor_type NVARCHAR(50) NOT NULL,
     value FLOAT NOT NULL,
     data_type NVARCHAR(50) NOT NULL,
@@ -15,6 +16,7 @@ CREATE TABLE sensor_data (
 CREATE TABLE sensor_alerts (
     id INT IDENTITY(1,1) PRIMARY KEY,
     node_id NVARCHAR(100) NOT NULL,
+    node_text NVARCHAR(100) NOT NULL,
     sensor_type NVARCHAR(50) NOT NULL,
     message NVARCHAR(500) NOT NULL,
     threshold FLOAT NOT NULL,

@@ -2,6 +2,7 @@ Imports System.IO
 Imports System.Runtime.InteropServices
 Imports System.Threading
 Imports OfficeOpenXml
+Imports upcuaclient_vbnet
 
 Namespace upcuaclient_vbnet
     Module Main
@@ -14,7 +15,9 @@ Namespace upcuaclient_vbnet
         <STAThread()>
         Sub Main()
             ' Soft error handling - suppress all UI errors
-            'DisableConsole()
+            AppLogger.LogInfo("Application started successfully")
+            DisableConsole()
+
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException)
             AddHandler Application.ThreadException, Sub(s, e)
                                                         ' Ignore UI errors silently
@@ -28,23 +31,15 @@ Namespace upcuaclient_vbnet
             bgWorker.Start()
 
             ' Alokasi console untuk debugging
-            AllocConsole()
-            Console.WriteLine("🚀 Starting OPC UA Client...")
+            ' AllocConsole()
 
             Try
                 Dim context As New TrayAppContext()
                 Application.Run(context)
             Catch ex As Exception
-                Console.WriteLine($"❌ TrayAppContext Error: {ex.Message}")
-                Console.WriteLine($"🔍 Stack: {ex.StackTrace}")
-
                 ' Fallback: Run MainFormNew directly
                 Try
-                    'Console.WriteLine("🔄 Fallback: Starting MainFormNew directly...")
-                    'Dim mainForm As New MainFormNew()
-                    'Application.Run(mainForm)
                 Catch fallbackEx As Exception
-                    Console.WriteLine($"❌ Fallback failed: {fallbackEx.Message}")
                     MessageBox.Show($"Critical error starting application: {fallbackEx.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 End Try
 
@@ -60,7 +55,6 @@ Namespace upcuaclient_vbnet
                 End If
                 Application.Exit()
             Catch ex As Exception
-                Console.WriteLine("Error during exit: " & ex.Message)
                 Application.Exit()
             End Try
         End Sub

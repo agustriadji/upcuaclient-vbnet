@@ -91,44 +91,43 @@ Public Class DetailRecord
 
     Private Sub DetailRecord_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
+            ' Disable UI updates during initialization
+            Me.SuspendLayout()
+            
+            ' Quick setup without heavy operations
             SetupGraph()
             LoadSensorMetadata()
-            RefreshRawData()
+            
+            ' Set default ComboBox selection
+            If CMBGroupingGraph?.Items.Count > 0 Then
+                CMBGroupingGraph.SelectedIndex = 0
+                intervalAggregate = ""
+            End If
 
-            ' Set default ComboBox selection to raw (no aggregation)
-            Try
-                If CMBGroupingGraph IsNot Nothing AndAlso CMBGroupingGraph.Items.Count > 0 Then
-                    CMBGroupingGraph.SelectedIndex = 0
-                    intervalAggregate = ""
+            ' Set default tab
+            TabControlDetailRecord.SelectedTab = TabPageRecord
+            
+            ' Load data asynchronously
+            Task.Run(Sub()
+                RefreshRawData()
+                Me.Invoke(Sub()
                     rawData = rawDataRaw
                     gaugeDataProcessed = gaugeDataRaw
-                End If
-            Catch
-                ' Ignore ComboBox errors
-            End Try
-
-            If TabControlDetailRecord IsNot Nothing AndAlso TabPageRecord IsNot Nothing Then
-                TabControlDetailRecord.SelectedTab = TabPageRecord
-            End If
-
-            InitializeTimers()
-
-            ' Hanya start timer jika batch masih running
-            If recordMetadata IsNot Nothing AndAlso recordMetadata.Status.ToLower() <> "finished" Then
-                If refreshTimerWatch IsNot Nothing Then
-                    TimeManager.StartTimerWithInitialFetch(refreshTimerWatch, Sub() LoadSensorPressureTable())
-                End If
-            Else
-                ' Untuk finished batch, langsung load data tanpa timer
-                LoadSensorPressureTable()
-            End If
+                    InitializeTimers()
+                    
+                    ' Start timer only if batch is still running
+                    If recordMetadata?.Status.ToLower() <> "finished" Then
+                        TimeManager.StartTimerWithInitialFetch(refreshTimerWatch, Sub() LoadSensorPressureTable())
+                    Else
+                        LoadSensorPressureTable()
+                    End If
+                End Sub)
+            End Sub)
+            
         Catch ex As Exception
-            Console.WriteLine($"DetailRecord_Load Error: {ex.Message}")
-            Try
-                MessageBox.Show($"Error loading detail record: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Catch
-                ' Ignore message box errors
-            End Try
+            MessageBox.Show($"Error loading detail record: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        Finally
+            Me.ResumeLayout()
         End Try
     End Sub
 
@@ -246,75 +245,77 @@ Public Class DetailRecord
             Console.WriteLine($"LoadSensorPressureGraph Error: {ex.Message}")
         End Try
     End Sub
-    ' For DGV
+    ' For DGV - Show realtime data, not fixed values
     Private Sub LoadSensorPressureTable()
         Try
             If rawData Is Nothing OrElse rawData.Count = 0 Then Return
-            If DGVWatch Is Nothing OrElse DGVWatch.IsDisposed Then Return
+            If DGVWatch?.IsDisposed <> False Then Return
+            
             If DGVWatch.InvokeRequired Then
                 DGVWatch.Invoke(Sub() LoadSensorPressureTable())
                 Return
             End If
 
+            ' Check if data count changed to avoid unnecessary updates
+            Dim newDataCount = rawData.Count
+            If DGVWatch.Rows.Count = newDataCount Then Return
+
             DGVWatch.SuspendLayout()
+            DGVWatch.Rows.Clear()
+            DGVWatch.RowHeadersVisible = False
 
-            ' Get StartPressure
             Dim startPressure = TextBoxStartPressure.Text
-
-            ' Sort data DESC (newest first)
             Dim sortedTireData = rawData.OrderByDescending(Function(d)
                                                                Dim dt As DateTime
                                                                Return If(DateTime.TryParse(d.Timestamp, dt), dt, DateTime.MinValue)
-                                                           End Function).ToList()
+                                                           End Function).Take(100).ToList() ' Limit to 100 rows for performance
 
-            ' Check if we need to refresh
-            Dim currentRowCount = DGVWatch.Rows.Count
-            Dim newDataCount = sortedTireData.Count
-
-            If newDataCount <> currentRowCount Then
-                ' Refresh all data
-                DGVWatch.Rows.Clear()
-                DGVWatch.RowHeadersVisible = False
-                For Each DL In sortedTireData
-                    Dim currentPressure = DL.Pressure.ToString("F2")
-                    Dim currentTimestamp = DL.Timestamp
-
-                    Dim matchingGauge = gaugeDataProcessed?.FirstOrDefault(Function(g) g.Timestamp = DL.Timestamp)
-                    Dim currentLeakPressure = If(matchingGauge?.Pressure, 0).ToString("F2")
-
-                    DGVWatch.Rows.Add(startPressure, currentPressure, currentLeakPressure, currentTimestamp)
-                Next
-            End If
+            For Each DL In sortedTireData
+                Dim currentPressure = DL.Pressure.ToString("F2")
+                Dim matchingGauge = gaugeDataProcessed?.FirstOrDefault(Function(g) g.Timestamp = DL.Timestamp)
+                Dim leakPressure = If(matchingGauge?.Pressure, 0).ToString("F2")
+                DGVWatch.Rows.Add(startPressure, currentPressure, leakPressure, DL.Timestamp)
+            Next
+            
         Catch ex As Exception
-            Console.WriteLine($"LoadSensorPressureTable Error: {ex.Message}")
+            AppLogger.LogError($"LoadSensorPressureTable Error: {ex.Message}", "DetailRecord")
         Finally
-            Try
-                If DGVWatch IsNot Nothing AndAlso Not DGVWatch.IsDisposed Then
-                    DGVWatch.ResumeLayout()
-                End If
-            Catch
-                ' Ignore layout errors
-            End Try
+            DGVWatch?.ResumeLayout()
         End Try
     End Sub
     Private Sub RefreshRawData()
         If recordMetadata Is Nothing OrElse String.IsNullOrEmpty(recordMetadata.BatchId) Then Return
 
-        ' Deteksi sumber data berdasarkan status batch
-        If recordMetadata.Status.ToLower() = "finished" Then
-            ' Ambil data dari SQL Server untuk batch yang sudah finished
-            LoadDataFromSQLServer()
-        Else
-            ' Ambil data dari SQLite untuk batch yang masih running
-            LoadDataFromSQLite()
-        End If
+        Try
+            ' Optimize connection string only once
+            If Not My.Settings.hostDB.Contains("Integrated Security") Then
+                My.Settings.hostDB += ";Integrated Security=true;TrustServerCertificate=true"
+                My.Settings.Save()
+            End If
 
-        ' Apply existing aggregation logic
-        rawData = If(String.IsNullOrEmpty(intervalAggregate), rawDataRaw, AggregatePressureData(rawDataRaw, intervalAggregate))
-        gaugeDataProcessed = If(String.IsNullOrEmpty(intervalAggregate), gaugeDataRaw, AggregatePressureData(gaugeDataRaw, intervalAggregate))
+            ' Load data based on batch status
+            If recordMetadata.Status.ToLower() = "finished" Then
+                LoadDataFromSQLServer()
+            Else
+                LoadDataFromSQLite()
+            End If
 
-        ' Update running days and start pressure after data is loaded
-        UpdateRunningDaysAndStartPressure()
+            ' Apply aggregation if needed
+            If Not String.IsNullOrEmpty(intervalAggregate) Then
+                rawData = AggregatePressureData(rawDataRaw, intervalAggregate)
+                gaugeDataProcessed = AggregatePressureData(gaugeDataRaw, intervalAggregate)
+            End If
+
+            ' Update UI on main thread
+            If Me.InvokeRequired Then
+                Me.Invoke(Sub() UpdateRunningDaysAndStartPressure())
+            Else
+                UpdateRunningDaysAndStartPressure()
+            End If
+            
+        Catch ex As Exception
+            AppLogger.LogError($"RefreshRawData Error: {ex.Message}", "DetailRecord")
+        End Try
     End Sub
 
     Private Sub LoadDataFromSQLite()
@@ -337,21 +338,29 @@ Public Class DetailRecord
             ' Convert ke format existing
             ConvertSensorDataToInterfaceRecords(tireSensorData, gaugeSensorData)
 
-            ' Console.WriteLine($"📊 Loaded {rawDataRaw.Count} tire records and {gaugeDataRaw.Count} gauge records from SQL Server")
         Catch ex As Exception
-            ' Console.WriteLine($"❌ Error loading from SQL Server: {ex.Message}")
+            AppLogger.LogError($"Error loading from SQL Server: {ex.Message}", "DetailRecord")
             ' Fallback ke SQLite jika SQL Server gagal
             LoadDataFromSQLite()
         End Try
     End Sub
 
+
     Private Function GetSensorDataFromSQLServer(nodeId As String) As List(Of InterfaceSensorData)
         Dim sensorDataList As New List(Of InterfaceSensorData)
         Try
-            Dim connectionString = $"Server={My.Settings.hostDB.Split(";"c)(0).Split("="c)(1)};Database={My.Settings.hostDB.Split(";"c)(1).Split("="c)(1)};Integrated Security=true;TrustServerCertificate=true;"
+            Dim connectionString = My.Settings.hostDB
+            If connectionString.Contains("Integrated Security=false") Then
+                connectionString = connectionString.Replace("Integrated Security=false", "Integrated Security=true")
+            End If
+            If Not connectionString.Contains("TrustServerCertificate") Then
+                connectionString += ";TrustServerCertificate=true"
+            End If
+
             Using conn As New System.Data.SqlClient.SqlConnection(connectionString)
                 conn.Open()
-                Dim query = "SELECT node_id, sensor_type, value, timestamp FROM sensor_data WHERE node_id = @node_id AND (batch_id = @batch_id OR batch_id IS NULL) ORDER BY timestamp"
+                
+                Dim query = "SELECT node_id, sensor_type, value, timestamp FROM sensor_data WHERE node_id = @node_id AND batch_id = @batch_id ORDER BY timestamp"
                 Using cmd As New System.Data.SqlClient.SqlCommand(query, conn)
                     cmd.Parameters.AddWithValue("@node_id", nodeId)
                     cmd.Parameters.AddWithValue("@batch_id", recordMetadata.BatchId)
@@ -368,7 +377,7 @@ Public Class DetailRecord
                 End Using
             End Using
         Catch ex As Exception
-            ' Console.WriteLine($"❌ Error querying SQL Server for {nodeId}: {ex.Message}")
+            AppLogger.LogError($"Error querying SQL Server for {nodeId}: {ex.Message}", "DetailRecord")
         End Try
         Return sensorDataList
     End Function
@@ -532,8 +541,8 @@ Public Class DetailRecord
             ' 1. Update record_metadata status
             UpdateRecordMetadataStatus()
 
-            ' 2. Update sensor status to Idle
-            UpdateSensorStatusToIdle()
+            ' 2. Update sensor status to ready
+            UpdateSensorStatusToReady()
 
             ' 3. Export data to SQL Server
             ExportDataToSQLServer()
@@ -571,18 +580,18 @@ Public Class DetailRecord
     Private Sub UpdateRecordMetadataStatus()
         recordMetadata.Status = "Finished"
         recordMetadata.SyncStatus = "Finished"
-        recordMetadata.EndDate = DateTime.Now
+        recordMetadata.EndDate = DateTime.UtcNow
         sqlite.InsertOrUpdateRecordMetadata(recordMetadata)
     End Sub
 
-    Private Sub UpdateSensorStatusToIdle()
+    Private Sub UpdateSensorStatusToReady()
         Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
 
         ' Update PressureTire status
         If selectedNodeSensor.ContainsKey("PressureTire") Then
             For Each sensor In selectedNodeSensor("PressureTire")
                 If sensor("NodeId") = recordMetadata.PressureTireId Then
-                    sensor("NodeStatus") = "Idle"
+                    sensor("NodeStatus") = "ready"
                 End If
             Next
         End If
@@ -591,7 +600,7 @@ Public Class DetailRecord
         If selectedNodeSensor.ContainsKey("PressureGauge") Then
             For Each sensor In selectedNodeSensor("PressureGauge")
                 If sensor("NodeId") = recordMetadata.PressureGaugeId Then
-                    sensor("NodeStatus") = "Idle"
+                    sensor("NodeStatus") = "ready"
                 End If
             Next
         End If
@@ -601,17 +610,16 @@ Public Class DetailRecord
 
     Private Sub ExportDataToSQLServer()
         Try
-            Console.WriteLine($"🔄 Starting export to SQL Server for batch: {recordMetadata.BatchId}")
-            Console.WriteLine($"🔍 SQL Server connection state: {My.Settings.stateConnectionDB}")
-            Console.WriteLine($"🔍 Node IDs - Tire: {recordMetadata.PressureTireId}, Gauge: {recordMetadata.PressureGaugeId}")
+
+            Dim dbPath = SQLiteManager.GetDatabasePath()
 
             ' Check SQL Server connection status from settings
             If Not My.Settings.stateConnectionDB Then
                 Console.WriteLine($"❌ SQL Server not connected - skipping export and cleanup")
+                MessageBox.Show("SQL Server not connected. Export skipped.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Return
             End If
 
-            Console.WriteLine($"✅ SQL Server connection OK - proceeding with export")
             Dim sqlServerManager As New SQLServerManager()
             Dim success = sqlServerManager.ExportRecordData(recordMetadata.BatchId)
             Console.WriteLine($"🔍 Export result: {success}")
@@ -628,10 +636,12 @@ Public Class DetailRecord
                 End If
             Else
                 Console.WriteLine($"⚠️ Export failed for {recordMetadata.BatchId} - keeping sensor_data")
+                MessageBox.Show($"Export failed for batch {recordMetadata.BatchId}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
         Catch ex As Exception
             Console.WriteLine($"❌ Export error: {ex.Message}")
             Console.WriteLine($"🔍 Export error details: {ex.ToString()}")
+            MessageBox.Show($"Export error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
@@ -708,7 +718,7 @@ Public Class DetailRecord
     Private Sub ExportToCSV(filePath As String)
         Using writer As New IO.StreamWriter(filePath)
             ' Write header
-            writer.WriteLine("BatchId,StartPressure,CurrentPressure,PressureTire,PressureGauge,Timestamp")
+            writer.WriteLine("BatchId,StartPressure,CurrentPressure,LeakPressure,PressureTire,PressureGauge,Timestamp")
 
             ' Get sensor names in format [key_object].nodeText
             Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
@@ -717,19 +727,24 @@ Public Class DetailRecord
             Dim pressureTireName = $"PressureTire.{tireNodeText}"
             Dim pressureGaugeName = $"PressureGauge.{gaugeNodeText}"
 
-            ' Write data (same as DGV display)
+            ' Get fixed values (same as DGV display)
             Dim startPressure = TextBoxStartPressure.Text
+
+            ' Get CurrentPressure (last data from pressureTire)
+            Dim sortedTireDataAsc = rawData.OrderBy(Function(d) DateTime.Parse(d.Timestamp)).ToList()
+            Dim currentPressure = If(sortedTireDataAsc.Count > 0, sortedTireDataAsc.Last().Pressure.ToString("F2"), "0.00")
+
+            ' Get LeakPressure (last data from pressureGauge)
+            Dim sortedGaugeDataAsc = If(gaugeDataProcessed IsNot Nothing AndAlso gaugeDataProcessed.Count > 0,
+                                       gaugeDataProcessed.OrderBy(Function(g) DateTime.Parse(g.Timestamp)).ToList(),
+                                       New List(Of InterfacePressureRecords)())
+            Dim leakPressure = If(sortedGaugeDataAsc.Count > 0, sortedGaugeDataAsc.Last().Pressure.ToString("F2"), "0.00")
+
             Dim sortedTireData = rawData.OrderByDescending(Function(d) DateTime.Parse(d.Timestamp)).ToList()
 
             For Each DL In sortedTireData
-                Dim currentPressure = DL.Pressure.ToString("F2")
                 Dim currentTimestamp = DateTime.Parse(DL.Timestamp).ToString("yyyy-MM-dd HH:mm")
-
-                ' Find matching gauge data
-                Dim matchingGauge = gaugeDataProcessed?.FirstOrDefault(Function(g) Math.Abs((DateTime.Parse(DL.Timestamp) - DateTime.Parse(g.Timestamp)).TotalMinutes) < 1)
-                Dim currentLeakPressure = If(matchingGauge?.Pressure, 0).ToString("F2")
-
-                writer.WriteLine($"{recordMetadata.BatchId},{startPressure},{currentPressure},{pressureTireName},{pressureGaugeName},{currentTimestamp}")
+                writer.WriteLine($"{recordMetadata.BatchId},{startPressure},{currentPressure},{leakPressure},{pressureTireName},{pressureGaugeName},{currentTimestamp}")
             Next
         End Using
     End Sub
@@ -855,10 +870,10 @@ Public Class DetailRecord
             Case "not-start"
                 BTNStart.Enabled = True
                 BTNStart.Text = "Start"
-                BTNEndRecording.Enabled = False
+                BTNEndRecording.Enabled = True
             Case "recording"
                 BTNStart.Enabled = True
-                BTNStart.Text = "Stop"
+                BTNStart.Text = "Pause"
                 BTNEndRecording.Enabled = True
             Case "finished"
                 BTNStart.Enabled = False
@@ -872,7 +887,7 @@ Public Class DetailRecord
 
         If recordMetadata.Status.ToLower() = "recording" Then
             ' Stop recording - update to Not-Start
-            Dim result = MessageBox.Show($"Stop recording for batch {recordMetadata.BatchId}?", "Confirm Stop Recording", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+            Dim result = MessageBox.Show($"Pause recording for batch {recordMetadata.BatchId}?", "Confirm Pause Recording", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
             If result = DialogResult.Yes Then
                 StopRecordingProcess()
             End If
@@ -953,10 +968,10 @@ Public Class DetailRecord
             ' 4. Stop timer
             refreshTimerWatch.Stop()
 
-            MessageBox.Show("Recording stopped successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            MessageBox.Show("Recording pause successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
         Catch ex As Exception
-            MessageBox.Show($"Error stopping recording: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            MessageBox.Show($"Error pause recording: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 

@@ -34,6 +34,9 @@ Partial Class FormConfigManager
         Me.ButtonSelectObjectOpc = New System.Windows.Forms.Button()
         Me.ComboBoxSelectObjectOpc = New System.Windows.Forms.ComboBox()
         Me.DGVSelectedNodeOpc = New System.Windows.Forms.DataGridView()
+        Me.NodeText = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.NodeId = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.NodeType = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.LabelExampleHostOpc = New System.Windows.Forms.Label()
         Me.LabelMessageStateNamespaceOpc = New System.Windows.Forms.Label()
         Me.ButtonTestNamespaceOpc = New System.Windows.Forms.Button()
@@ -52,9 +55,7 @@ Partial Class FormConfigManager
         Me.TextBoxHostDB = New System.Windows.Forms.TextBox()
         Me.ButtonSaveForm = New System.Windows.Forms.Button()
         Me.ButtonCancelForm = New System.Windows.Forms.Button()
-        Me.NodeText = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.NodeId = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.NodeType = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.ButtonClear = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.NumericUpDownInterval, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.GroupBox2.SuspendLayout()
@@ -198,6 +199,27 @@ Partial Class FormConfigManager
         Me.DGVSelectedNodeOpc.ShowCellToolTips = False
         Me.DGVSelectedNodeOpc.Size = New System.Drawing.Size(770, 80)
         Me.DGVSelectedNodeOpc.TabIndex = 20
+        '
+        'NodeText
+        '
+        Me.NodeText.HeaderText = "Name"
+        Me.NodeText.MinimumWidth = 6
+        Me.NodeText.Name = "NodeText"
+        Me.NodeText.ReadOnly = True
+        '
+        'NodeId
+        '
+        Me.NodeId.HeaderText = "Node ID"
+        Me.NodeId.MinimumWidth = 6
+        Me.NodeId.Name = "NodeId"
+        Me.NodeId.ReadOnly = True
+        '
+        'NodeType
+        '
+        Me.NodeType.HeaderText = "Type"
+        Me.NodeType.MinimumWidth = 6
+        Me.NodeType.Name = "NodeType"
+        Me.NodeType.ReadOnly = True
         '
         'LabelExampleHostOpc
         '
@@ -394,32 +416,23 @@ Partial Class FormConfigManager
         Me.ButtonCancelForm.Text = "Cancel"
         Me.ButtonCancelForm.UseVisualStyleBackColor = True
         '
-        'NodeText
+        'ButtonClear
         '
-        Me.NodeText.HeaderText = "Name"
-        Me.NodeText.MinimumWidth = 6
-        Me.NodeText.Name = "NodeText"
-        Me.NodeText.ReadOnly = True
-        '
-        'NodeId
-        '
-        Me.NodeId.HeaderText = "Node ID"
-        Me.NodeId.MinimumWidth = 6
-        Me.NodeId.Name = "NodeId"
-        Me.NodeId.ReadOnly = True
-        '
-        'NodeType
-        '
-        Me.NodeType.HeaderText = "Type"
-        Me.NodeType.MinimumWidth = 6
-        Me.NodeType.Name = "NodeType"
-        Me.NodeType.ReadOnly = True
+        Me.ButtonClear.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.ButtonClear.Location = New System.Drawing.Point(527, 458)
+        Me.ButtonClear.Name = "ButtonClear"
+        Me.ButtonClear.Padding = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.ButtonClear.Size = New System.Drawing.Size(80, 35)
+        Me.ButtonClear.TabIndex = 5
+        Me.ButtonClear.Text = "Clear"
+        Me.ButtonClear.UseVisualStyleBackColor = True
         '
         'FormConfigManager
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(800, 498)
+        Me.Controls.Add(Me.ButtonClear)
         Me.Controls.Add(Me.ButtonCancelForm)
         Me.Controls.Add(Me.ButtonSaveForm)
         Me.Controls.Add(Me.GroupBox3)
@@ -477,4 +490,5 @@ Partial Class FormConfigManager
     Friend WithEvents NodeText As DataGridViewTextBoxColumn
     Friend WithEvents NodeId As DataGridViewTextBoxColumn
     Friend WithEvents NodeType As DataGridViewTextBoxColumn
+    Friend WithEvents ButtonClear As Button
 End Class

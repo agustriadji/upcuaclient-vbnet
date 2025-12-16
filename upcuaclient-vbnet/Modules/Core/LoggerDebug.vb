@@ -64,4 +64,22 @@ Public Class LoggerDebug
         'End Try
     End Function
     
+    ' Helper untuk mendapatkan level icon
+    Public Shared Function GetLevelIcon(level As LogLevel) As String
+        Select Case level
+            Case LogLevel.Debug
+                Return "DEBUG"
+            Case LogLevel.Info
+                Return "INFO"
+            Case LogLevel.Warning
+                Return "WARN"
+            Case LogLevel.Error
+                Return "ERROR"
+            Case LogLevel.Success
+                Return "OK"
+            Case Else
+                Return "LOG"
+        End Select
+    End Function
+    
 End Class

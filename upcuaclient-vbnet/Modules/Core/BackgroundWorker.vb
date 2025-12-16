@@ -32,167 +32,144 @@ Namespace upcuaclient_vbnet
         End Property
 
         Public Sub Start()
-            Console.WriteLine("🔄 BackgroundWorkerManager.Start() called")
-
             ' Check if worker is already running
             If worker.IsBusy Then
-                Console.WriteLine("⚠️ BackgroundWorker is already running")
                 Return
             End If
 
             ' Initialize settings defaults
             SettingsManager.InitializeDefaults()
-            Console.WriteLine($"✅ Settings loaded: endpoint={My.Settings.hostOpc}, interval={My.Settings.intervalRefreshTimer}")
             worker.RunWorkerAsync()
         End Sub
 
         Private Async Sub ProcessSensorData()
             Try
-                ' 1. Get running sensors dari selectedNodeSensor dengan NodeStatus = "running"
-                Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
-                Dim runningSensors As New List(Of Dictionary(Of String, String))
+                ' 1. Get active recording batches
+                Dim sqlite As New SQLiteManager()
+                Dim activeBatches = sqlite.QueryBatchRange(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Where(Function(b) b.Status.ToLower() = "recording").ToList()
 
-                For Each kvp In selectedNodeSensor
-                    Dim sensorList = kvp.Value
-                    For Each sensor In sensorList
-                        If sensor.ContainsKey("NodeStatus") AndAlso sensor("NodeStatus").ToLower() = "running" Then
-                            runningSensors.Add(sensor)
-                        End If
-                    Next
-                Next
-
-                If runningSensors.Count = 0 Then
-                    Console.WriteLine("ℹ️ No running sensors found in selectedNodeSensor")
-                    Return ' Exit ProcessSensorData but continue main loop
-                End If
-
-                Console.WriteLine($"🔍 Processing {runningSensors.Count} running sensors...")
-
-                ' 1.5. Check auto end recording for running sensors
-                CheckAutoEndRecording(runningSensors)
-
-                ' 2. Get selected root objects dari selectedNodeIdOpc
-                Dim selectedRootObjects = SettingsManager.GetSelectedNodeIdOpc()
-                If selectedRootObjects.Count = 0 Then
-                    Console.WriteLine("⚠️ No selected root objects found in selectedNodeIdOpc")
+                If activeBatches.Count = 0 Then
                     Return
                 End If
 
-                ' 3. Initialize processors
+                ' 2. Check auto end recording for active batches
+                CheckAutoEndRecording(activeBatches)
+
+                ' 3. Get selected root objects dari selectedNodeIdOpc
+                Dim selectedRootObjects = SettingsManager.GetSelectedNodeIdOpc()
+                If selectedRootObjects.Count = 0 Then
+                    Return
+                End If
+
+                ' 4. Initialize processors
                 Dim dataProcessor As New InterfaceData()
                 Dim analytics2 As New AnalyticsManager2()
 
-                ' 4. Process each running sensor (avoid nested loop with root objects)
-                Dim processedSensors As New HashSet(Of String)
+                ' 5. Process each active batch - ensure both sensors are saved
+                For Each batch In activeBatches
+                    Try
 
-                For Each runningSensor In runningSensors
-                    Dim sensorNodeText = runningSensor("NodeText")
-                    Dim sensorNodeId = runningSensor("NodeId")
+                        ' Read all sensor data from OPC - use NodeId as key
+                        Dim allSensorData As New Dictionary(Of String, Double)
+                        For Each rootObj In selectedRootObjects
+                            Dim rootSensorData = Await ReadChildSensors(rootObj("NodeId").ToString())
+                            For Each kvp In rootSensorData
+                                allSensorData(kvp.Key) = kvp.Value
+                            Next
+                        Next
 
-                    ' Skip if already processed in this cycle
-                    If processedSensors.Contains(sensorNodeId) Then
-                        Console.WriteLine($"⚠️ Skipping duplicate sensor {sensorNodeText}")
-                        Continue For
-                    End If
+                        ' Get sensor info from selectedNodeSensor
+                        Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
 
-                    ' Find parent root object for this sensor
-                    Dim parentFound = False
-                    For Each rootObj In selectedRootObjects
-                        Dim rootNodeId = rootObj("NodeId").ToString()
-                        Dim rootNodeText = rootObj("NodeText").ToString()
+                        ' Process PressureTire sensor - use NodeId directly
+                        If allSensorData.ContainsKey(batch.PressureTireId) Then
+                            Dim tirePressure = allSensorData(batch.PressureTireId)
+                            Dim TireNodeText = GetNodeTextFromId(selectedNodeSensor, "PressureTire", batch.PressureTireId)
+                            Dim tireSensorData = analytics2.MapSensorData(batch.PressureTireId, "pressureTire", tirePressure, "Good", TireNodeText)
+                            dataProcessor.ProcessSensorData(tireSensorData)
+                        End If
 
-                        ' Read child sensors from this root
-                        Dim allChildSensorData = Await ReadChildSensors(rootNodeId)
+                        ' Process PressureGauge sensor - use NodeId directly
+                        If allSensorData.ContainsKey(batch.PressureGaugeId) Then
+                            Dim gaugePressure = allSensorData(batch.PressureGaugeId)
 
-                        ' Check if this running sensor exists under this root
-                        If allChildSensorData.ContainsKey(sensorNodeText) Then
-                            Dim pressure = allChildSensorData(sensorNodeText)
+                            ' Get NodeText for gauge sensor
+                            Dim gaugeNodeText = GetNodeTextFromId(selectedNodeSensor, "PressureGauge", batch.PressureGaugeId)
 
-                            ' Process data
-                            Dim sensorData = analytics2.MapSensorData(sensorNodeId, sensorNodeText, pressure, "Good")
-                            Dim alert = analytics2.GenerateAlert(sensorNodeId, pressure)
+                            Dim gaugeSensorData = analytics2.MapSensorData(batch.PressureGaugeId, "pressureGauge", gaugePressure, "Good", gaugeNodeText)
+                            dataProcessor.ProcessSensorData(gaugeSensorData)
 
-                            dataProcessor.ProcessSensorData(sensorData)
+                            ' Generate alert for PressureGauge if value > threshold
+                            Dim alert = analytics2.GenerateAlert(batch.PressureGaugeId, gaugePressure, gaugeNodeText)
                             If alert IsNot Nothing Then
-                                Console.WriteLine($"🚨 Alert: {alert.Message}")
                                 dataProcessor.ProcessAlert(alert)
                             End If
-
-                            Console.WriteLine($"💾 Processed {sensorNodeText}: {pressure} PSI")
-                            processedSensors.Add(sensorNodeId)
-                            parentFound = True
-                            Exit For
                         End If
-                    Next
 
-                    If Not parentFound Then
-                        Console.WriteLine($"⚠️ No parent root found for sensor {sensorNodeText}")
-                    End If
+                    Catch batchEx As Exception
+                        ' Log critical errors only
+                        LoggerDebug.LogError($"Error processing batch {batch.BatchId}: {batchEx.Message}")
+                    End Try
                 Next
 
             Catch ex As Exception
-                Console.WriteLine($"⚠️ Process sensor data error: {ex.Message}")
+                LoggerDebug.LogError($"Process sensor data error: {ex.Message}")
             End Try
         End Sub
 
-        Private Sub CheckAutoEndRecording(runningSensors As List(Of Dictionary(Of String, String)))
+        Private Function GetNodeTextFromId(selectedNodeSensor As Dictionary(Of String, List(Of Dictionary(Of String, String))), sensorType As String, nodeId As String) As String
+            If selectedNodeSensor.ContainsKey(sensorType) Then
+                For Each sensor In selectedNodeSensor(sensorType)
+                    If sensor("NodeId") = nodeId Then
+                        Return sensor("NodeText")
+                    End If
+                Next
+            End If
+            Return String.Empty
+        End Function
+
+        Private Sub CheckAutoEndRecording(activeBatches As List(Of InterfaceRecordMetadata))
             Try
                 ' Reload settings to detect manual file changes
                 SettingsManager.ReloadSettings()
-                
+
                 ' Debug: Show current time and endRecording settings
                 Dim currentTimeUtc = DateTime.UtcNow
                 Dim endRecordingJson = My.Settings.endRecording
-                Console.WriteLine($"🔍 CheckAutoEndRecording - Current UTC: {currentTimeUtc:yyyy-MM-dd HH:mm:ss}")
-                Console.WriteLine($"🔍 EndRecording JSON: {endRecordingJson}")
 
                 ' Get expired end recordings from settings
                 Dim expiredRecordings = SettingsManager.GetExpiredEndRecordings()
-                Console.WriteLine($"🔍 Found {expiredRecordings.Count} expired recordings")
 
                 If expiredRecordings.Count > 0 Then
-                    Console.WriteLine($"⏰ Found {expiredRecordings.Count} expired auto end recordings")
-
                     For Each expiredRecording In expiredRecordings
-                        Console.WriteLine($"🔍 Checking expired recording: {JsonConvert.SerializeObject(expiredRecording)}")
 
-                        ' Find matching running sensor
-                        Dim matchingSensor = runningSensors.FirstOrDefault(Function(s) s("NodeId") = expiredRecording("pressureTire"))
-                        If matchingSensor IsNot Nothing Then
-                            Console.WriteLine($"⏰ Auto end recording triggered for {matchingSensor("NodeText")} at {expiredRecording("end_date")}")
-                            ProcessAutoEndRecording(matchingSensor, expiredRecording)
-                        Else
-                            Console.WriteLine($"⚠️ No matching running sensor found for {expiredRecording("pressureTire")}")
+                        ' Find matching active batch
+                        Dim matchingBatch = activeBatches.FirstOrDefault(Function(b) b.PressureTireId = expiredRecording("pressureTire"))
+                        If matchingBatch IsNot Nothing Then
+                            ProcessAutoEndRecording(matchingBatch, expiredRecording)
                         End If
                     Next
-                Else
-                    Console.WriteLine($"ℹ️ No expired auto end recordings found")
                 End If
 
             Catch ex As Exception
-                Console.WriteLine($"⚠️ CheckAutoEndRecording Error: {ex.Message}")
+                LoggerDebug.LogError($"CheckAutoEndRecording Error: {ex.Message}")
             End Try
         End Sub
 
-        Private Sub ProcessAutoEndRecording(sensor As Dictionary(Of String, String), expiredRecording As Dictionary(Of String, String))
+        Private Sub ProcessAutoEndRecording(batch As InterfaceRecordMetadata, expiredRecording As Dictionary(Of String, String))
             Try
-                Dim nodeText = sensor("NodeText")
-                Dim tireNodeId = sensor("NodeId")
-                Dim gaugeNodeId = expiredRecording("pressureGauge")
-
-                Console.WriteLine($"🔄 Processing auto end recording for {nodeText}")
 
                 ' 1. Remove expired recording from endRecording array
-                SettingsManager.RemoveEndRecording(tireNodeId)
+                SettingsManager.RemoveEndRecording(batch.PressureTireId)
 
-                ' 2. Update sensor status to Idle
+                ' 2. Update sensor status to ready
                 Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
 
                 ' Update PressureTire status
                 If selectedNodeSensor.ContainsKey("PressureTire") Then
                     For Each tireSensor In selectedNodeSensor("PressureTire")
-                        If tireSensor("NodeId") = tireNodeId Then
-                            tireSensor("NodeStatus") = "Idle"
+                        If tireSensor("NodeId") = batch.PressureTireId Then
+                            tireSensor("NodeStatus") = "ready"
                         End If
                     Next
                 End If
@@ -200,8 +177,8 @@ Namespace upcuaclient_vbnet
                 ' Update PressureGauge status
                 If selectedNodeSensor.ContainsKey("PressureGauge") Then
                     For Each gaugeSensor In selectedNodeSensor("PressureGauge")
-                        If gaugeSensor("NodeId") = gaugeNodeId Then
-                            gaugeSensor("NodeStatus") = "Idle"
+                        If gaugeSensor("NodeId") = batch.PressureGaugeId Then
+                            gaugeSensor("NodeStatus") = "ready"
                             Exit For
                         End If
                     Next
@@ -209,93 +186,66 @@ Namespace upcuaclient_vbnet
 
                 SettingsManager.SetSelectedNodeSensor(selectedNodeSensor)
 
-                ' 3. Call end recording function (similar to DetailRecord.vb)
-                EndRecordingForSensor(tireNodeId)
-
-                Console.WriteLine($"✅ Auto end recording completed for {nodeText}")
+                ' 3. Call end recording function
+                EndRecordingForBatch(batch)
 
             Catch ex As Exception
-                Console.WriteLine($"⚠️ ProcessAutoEndRecording Error: {ex.Message}")
+                LoggerDebug.LogError($"ProcessAutoEndRecording Error: {ex.Message}")
             End Try
         End Sub
 
-        Private Sub EndRecordingForSensor(tireNodeId As String)
+        Private Sub EndRecordingForBatch(batch As InterfaceRecordMetadata)
             Try
-                ' Find active batch for this sensor
+                ' Update batch status to Finished
+                batch.Status = "Finished"
+                batch.SyncStatus = "Finished"
+                batch.EndDate = DateTime.UtcNow
+
                 Dim sqlite As New SQLiteManager()
-                Dim batches = sqlite.QueryBatchRange(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow)
+                sqlite.InsertOrUpdateRecordMetadata(batch)
 
-                For Each batch In batches
-                    If batch.PressureTireId = tireNodeId AndAlso batch.Status.ToLower() = "recording" Then
-                        ' Update batch status to Finished
-                        batch.Status = "Finished"
-                        batch.SyncStatus = "Finished"
-                        batch.EndDate = DateTime.UtcNow
-
-                        Console.WriteLine($"🔄 Ending batch {batch.BatchId} - Status: {batch.Status}, EndDate: {batch.EndDate:yyyy-MM-dd HH:mm:ss} UTC")
-
-                        sqlite.InsertOrUpdateRecordMetadata(batch)
-
-                        ' Export to SQL Server if connected
-                        If My.Settings.stateConnectionDB Then
-                            Try
-                                Dim sqlServerManager As New SQLServerManager()
-                                sqlServerManager.ExportRecordData(batch.BatchId)
-                            Catch
-                                ' Ignore SQL Server export errors
-                            End Try
-                        End If
-
-                        Console.WriteLine($"✅ Batch {batch.BatchId} ended automatically")
-                        Exit For
-                    End If
-                Next
+                ' Export to SQL Server if connected
+                If My.Settings.stateConnectionDB Then
+                    Try
+                        Dim sqlServerManager As New SQLServerManager()
+                        sqlServerManager.ExportRecordData(batch.BatchId)
+                    Catch
+                        ' Ignore SQL Server export errors
+                    End Try
+                End If
 
             Catch ex As Exception
-                Console.WriteLine($"⚠️ EndRecordingForSensor Error: {ex.Message}")
+                LoggerDebug.LogError($"EndRecordingForBatch Error: {ex.Message}")
             End Try
         End Sub
 
         Private Async Function CheckHealthConnections() As Task
             Try
-                Console.WriteLine("🔍 BackgroundWorker checking connections health...")
 
                 ' 1. Check OPC Connection
                 Dim opcHealthy As Boolean = False
                 Try
                     ' Check if session is still valid first
                     If OpcConnection.Session Is Nothing Then
-                        Console.WriteLine("❌ OPC Session is null, trying to reconnect...")
                         opcHealthy = Await OpcConnection.InitializeAsync()
-                        Console.WriteLine($"🔄 OPC Reconnect result: {opcHealthy}")
                     ElseIf Not OpcConnection.Session.Connected Then
-                        Console.WriteLine("❌ OPC Session not connected, trying to reconnect...")
                         opcHealthy = Await OpcConnection.InitializeAsync()
-                        Console.WriteLine($"🔄 OPC Reconnect result: {opcHealthy}")
                     Else
-                        Console.WriteLine("🔍 OPC Session appears connected, testing...")
                         opcHealthy = Await OpcConnection.CheckHealthServer()
-                        Console.WriteLine($"📡 OPC Health result: {opcHealthy}")
 
                         ' If health check failed but session exists, try to reconnect
                         If Not opcHealthy Then
-                            Console.WriteLine("❌ OPC Health check failed, trying to reconnect...")
                             Try
                                 Await OpcConnection.Disconnect()
                                 opcHealthy = Await OpcConnection.InitializeAsync()
-                                Console.WriteLine($"🔄 OPC Force reconnect result: {opcHealthy}")
                             Catch reconnectEx As Exception
-                                Console.WriteLine($"❌ OPC Force reconnect failed: {reconnectEx.Message}")
                                 opcHealthy = False
                             End Try
                         End If
                     End If
                 Catch ex As Exception
-                    Console.WriteLine($"❌ OPC Health check exception: {ex.Message}")
                     opcHealthy = False
                 End Try
-
-                Console.WriteLine($"🔧 Setting OPC connection to: {opcHealthy}")
                 If opcHealthy Then
                     LoggerDebug.LogSuccess("OPC connection OK")
                 Else
@@ -306,11 +256,9 @@ Namespace upcuaclient_vbnet
                 ' 2. Check SQL Server Database only
                 Dim sqlServerHealthy As Boolean = False
                 Try
-                    Console.WriteLine("🔍 Testing SQL Server connection...")
                     sqlServerHealthy = Await SqlServerConnection.CheckHealth()
 
                     If Not sqlServerHealthy Then
-                        Console.WriteLine("❌ SQL Server disconnected, trying to reconnect...")
                         ' Try to reinitialize SQL Server connection
                         Try
                             Dim parts = My.Settings.hostDB.Split(";"c)
@@ -327,20 +275,13 @@ Namespace upcuaclient_vbnet
 
                             SqlServerConnection.SetConnectionString(server, database)
                             sqlServerHealthy = Await SqlServerConnection.CheckHealth()
-                            Console.WriteLine($"🔄 SQL Server Reconnect result: {sqlServerHealthy}")
                         Catch reconnectEx As Exception
-                            Console.WriteLine($"❌ SQL Server reconnect failed: {reconnectEx.Message}")
                             sqlServerHealthy = False
                         End Try
                     End If
-
-                    Console.WriteLine($"📊 SQL Server Health: {If(sqlServerHealthy, "✅ Connected", "❌ Disconnected")}")
                 Catch ex As Exception
-                    Console.WriteLine($"📊 SQL Server Health: ❌ Error - {ex.GetType().Name}: {ex.Message}")
                     sqlServerHealthy = False
                 End Try
-
-                Console.WriteLine($"🔧 Setting DB connection to: {sqlServerHealthy}")
                 If sqlServerHealthy Then
                     LoggerDebug.LogSuccess("DB connection OK")
                 Else
@@ -349,7 +290,6 @@ Namespace upcuaclient_vbnet
                 SettingsManager.SetConnectionDB(sqlServerHealthy)
 
             Catch ex As Exception
-                Console.WriteLine($"⚠️ Health check error: {ex.Message}")
                 SettingsManager.SetConnectionOPC(False)
                 SettingsManager.SetConnectionDB(False)
             End Try
@@ -360,41 +300,96 @@ Namespace upcuaclient_vbnet
             Try
                 If Not OpcConnection.IsConnected Then Return sensors
 
-                Dim browser = New Browser(OpcConnection.Session) With {
-                    .BrowseDirection = BrowseDirection.Forward,
-                    .NodeClassMask = NodeClass.Variable
-                }
+                ' Get all sensors from settings (both PressureTire and PressureGauge)
+                Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
+                Dim allSensors As New List(Of Dictionary(Of String, String))
 
-                Dim nodeId = Opc.Ua.NodeId.Parse(parentNodeId)
-                Dim childRefs = Await browser.BrowseAsync(nodeId)
+                ' Collect all sensors from both PressureTire and PressureGauge
+                For Each kvp In selectedNodeSensor
+                    For Each sensor In kvp.Value
+                        allSensors.Add(sensor)
+                    Next
+                Next
 
-                For Each childRef As ReferenceDescription In childRefs
-                    If childRef.NodeClass = NodeClass.Variable Then
+                If allSensors.Count = 0 Then
+                    Console.WriteLine("ℹ️ No sensors found in settings")
+                    Return sensors
+                End If
+
+                ' Detect NodeId format from first sensor
+                Dim firstSensorNodeId = allSensors(0)("NodeId")
+                Dim isDirectFormat = IsDirectNodeIdFormat(firstSensorNodeId)
+
+                Console.WriteLine($"🔍 Detected NodeId format: {If(isDirectFormat, "Direct", "Hierarchical")} (sample: {firstSensorNodeId})")
+
+                If isDirectFormat Then
+                    ' Direct format: read directly from NodeId - use NodeId as key
+                    For Each sensor In allSensors
                         Try
-                            Dim childNodeId = ExpandedNodeId.ToNodeId(childRef.NodeId, OpcConnection.Session.NamespaceUris)
-                            Dim value = Await OpcConnection.Session.ReadValueAsync(childNodeId)
-                            'Console.WriteLine($"NodeId: {childNodeId}")
-                            'Console.WriteLine($"Raw Value: {}")
-                            'Console.WriteLine($"Data Type: {value.Value?.GetType()}")
-                            'Console.WriteLine($"Status Code: {value.StatusCode}")
-                            'Console.WriteLine($"Server Timestamp: {value.ServerTimestamp}")
-                            'Console.WriteLine($"Source Timestamp: {value.SourceTimestamp}")
-                            'Console.WriteLine("===============================================")
+                            Dim nodeId = sensor("NodeId")
+                            Dim nodeText = sensor("NodeText")
 
+                            Dim value = Await OpcConnection.Session.ReadValueAsync(Opc.Ua.NodeId.Parse(nodeId))
 
                             If StatusCode.IsGood(value.StatusCode) AndAlso value.Value IsNot Nothing Then
-                                Dim pressure = value.Value
-                                sensors.Add(childRef.DisplayName.Text, pressure)
+                                Dim pressure As Double = Convert.ToDouble(value.Value)
+                                sensors.Add(nodeId, pressure) ' Use NodeId as key
+                                Console.WriteLine($"✅ Direct read {nodeText} ({nodeId}): {pressure} PSI")
+                            Else
+                                Console.WriteLine($"⚠️ Failed to read {nodeText} from {nodeId}: {value.StatusCode}")
                             End If
                         Catch ex As Exception
-                            Console.WriteLine($"⚠️ Read child sensor error: {ex.Message}")
+                            Console.WriteLine($"⚠️ Direct read error for {sensor("NodeText")}: {ex.Message}")
                         End Try
-                    End If
-                Next
+                    Next
+                Else
+                    ' Hierarchical format: try direct read first, then browse if needed - use NodeId as key
+                    For Each sensor In allSensors
+                        Try
+                            Dim nodeId = sensor("NodeId")
+                            Dim nodeText = sensor("NodeText")
+
+                            ' Try direct read from hierarchical NodeId first
+                            Dim value = Await OpcConnection.Session.ReadValueAsync(Opc.Ua.NodeId.Parse(nodeId))
+
+                            If StatusCode.IsGood(value.StatusCode) AndAlso value.Value IsNot Nothing Then
+                                Dim pressure As Double = Convert.ToDouble(value.Value)
+                                sensors.Add(nodeId, pressure) ' Use NodeId as key
+                                Console.WriteLine($"✅ Hierarchical direct read {nodeText} ({nodeId}): {pressure} PSI")
+                            Else
+                                Console.WriteLine($"⚠️ Failed to read {nodeText} from {nodeId}: {value.StatusCode}")
+                            End If
+                        Catch ex As Exception
+                            Console.WriteLine($"⚠️ Hierarchical read error for {sensor("NodeText")}: {ex.Message}")
+                        End Try
+                    Next
+                End If
+
             Catch ex As Exception
-                Console.WriteLine($"⚠️ Browse child sensors error: {ex.Message}")
+                Console.WriteLine($"⚠️ ReadChildSensors error: {ex.Message}")
             End Try
             Return sensors
+        End Function
+        
+        Private Function IsDirectNodeIdFormat(nodeId As String) As Boolean
+            ' Direct format examples: ns=2;s=DB3.DBD120, ns=2;s=DB3.DBD60
+            ' Hierarchical format examples: ns=2;s=PLC.S7-1200.PressureTire.Sensor 1
+            
+            If String.IsNullOrEmpty(nodeId) Then Return False
+            
+            ' Check if it contains typical direct patterns
+            If nodeId.Contains("DB") AndAlso nodeId.Contains("DBD") Then
+                Return True ' DB3.DBD120 pattern
+            End If
+            
+            ' Check if it contains hierarchical patterns
+            If nodeId.Contains("PLC.") AndAlso nodeId.Contains("Pressure") Then
+                Return False ' PLC.S7-1200.PressureTire pattern
+            End If
+            
+            ' Default: assume direct if short, hierarchical if long with multiple dots
+            Dim dotCount = nodeId.Count(Function(c) c = "."c)
+            Return dotCount <= 1 ' Direct if 1 or fewer dots, hierarchical if more
         End Function
 
 
@@ -421,7 +416,7 @@ Namespace upcuaclient_vbnet
                     Try
                         ProcessSensorData()
                     Catch sensorEx As Exception
-                        Console.WriteLine($"⚠️ ProcessSensorData error: {sensorEx.Message}")
+                        ' Log critical errors only
                     End Try
 
                     cycleCount += 1
@@ -439,13 +434,11 @@ Namespace upcuaclient_vbnet
                 End Try
             Loop
 
-            Console.WriteLine("🛑 BackgroundWorker stopped")
         End Sub
 
         Public Sub [Stop]()
             Try
                 If worker.IsBusy Then
-                    Console.WriteLine("🛑 Stopping BackgroundWorker...")
                     worker.CancelAsync()
 
                     ' Wait for worker to finish (with timeout)
@@ -454,15 +447,9 @@ Namespace upcuaclient_vbnet
                         Threading.Thread.Sleep(100)
                         timeout += 1
                     End While
-
-                    If worker.IsBusy Then
-                        Console.WriteLine("⚠️ BackgroundWorker did not stop gracefully")
-                    Else
-                        Console.WriteLine("✅ BackgroundWorker stopped successfully")
-                    End If
                 End If
             Catch ex As Exception
-                Console.WriteLine($"⚠️ Stop BackgroundWorker error: {ex.Message}")
+                ' Ignore stop errors
             End Try
         End Sub
 

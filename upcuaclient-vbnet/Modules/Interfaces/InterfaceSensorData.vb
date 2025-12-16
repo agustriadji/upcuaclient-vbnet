@@ -1,5 +1,8 @@
-﻿Public Class InterfaceSensorData
+﻿Imports BitFaster.Caching
+
+Public Class InterfaceSensorData
     Property NodeId As String ' NodeId of pressureTire or pressureGauge sensor
+    Property NodeText As String = String.Empty ' Optional NodeText - default empty string
     Property SensorType As String ' e.g., "SensorPressureTireMetadata" or "SensorPressureGaugeMetadata"
     Property Value As Double
     Property DataType As String

@@ -284,7 +284,7 @@ Partial Class DetailRecord
         '
         Me.Panel1.BackColor = System.Drawing.Color.Transparent
         Me.Panel1.Controls.Add(Me.CMBGroupingGraph)
-        Me.Panel1.Location = New System.Drawing.Point(210, 2)
+        Me.Panel1.Location = New System.Drawing.Point(148, -5)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(159, 38)
         Me.Panel1.TabIndex = 2
@@ -332,9 +332,13 @@ Partial Class DetailRecord
         Me.DGVWatch.AllowUserToResizeRows = False
         Me.DGVWatch.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.DGVWatch.BackgroundColor = System.Drawing.SystemColors.ButtonFace
+        Me.DGVWatch.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.DGVWatch.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SunkenHorizontal
+        Me.DGVWatch.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Sunken
         Me.DGVWatch.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.DGVWatch.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.StartPressure, Me.Pressure, Me.LeakPressure, Me.Timestamp})
         Me.DGVWatch.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.DGVWatch.GridColor = System.Drawing.SystemColors.ButtonFace
         Me.DGVWatch.Location = New System.Drawing.Point(3, 3)
         Me.DGVWatch.MultiSelect = False
         Me.DGVWatch.Name = "DGVWatch"
@@ -377,6 +381,7 @@ Partial Class DetailRecord
         Me.LeakPressure.MinimumWidth = 6
         Me.LeakPressure.Name = "LeakPressure"
         Me.LeakPressure.ReadOnly = True
+        Me.LeakPressure.Visible = False
         '
         'Timestamp
         '
@@ -518,10 +523,6 @@ Partial Class DetailRecord
     Friend WithEvents TabControlDetailRecord As TabControl
     Friend WithEvents TabPageRecord As TabPage
     Friend WithEvents DGVWatch As DataGridView
-    Friend WithEvents StartPressure As DataGridViewTextBoxColumn
-    Friend WithEvents Pressure As DataGridViewTextBoxColumn
-    Friend WithEvents LeakPressure As DataGridViewTextBoxColumn
-    Friend WithEvents Timestamp As DataGridViewTextBoxColumn
     Friend WithEvents TabPageGraph As TabPage
     Friend WithEvents PanelBottom As Panel
     Friend WithEvents Panel1 As Panel
@@ -530,4 +531,8 @@ Partial Class DetailRecord
     Friend WithEvents CartesianChart2 As LiveCharts.WinForms.CartesianChart
     Friend WithEvents Label1 As Label
     Friend WithEvents BTNStart As Button
+    Friend WithEvents StartPressure As DataGridViewTextBoxColumn
+    Friend WithEvents Pressure As DataGridViewTextBoxColumn
+    Friend WithEvents LeakPressure As DataGridViewTextBoxColumn
+    Friend WithEvents Timestamp As DataGridViewTextBoxColumn
 End Class

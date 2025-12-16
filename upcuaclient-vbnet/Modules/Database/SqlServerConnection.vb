@@ -35,21 +35,25 @@ Public Class SqlServerConnection
             Using connection As New SqlConnection(masterConnString)
                 Await connection.OpenAsync()
 
+                ' Drop database if exists (to recreate clean)
                 Dim checkSql = $"SELECT COUNT(*) FROM sys.databases WHERE name = '{database}'"
                 Using checkCmd As New SqlCommand(checkSql, connection)
                     Dim exists = CInt(Await checkCmd.ExecuteScalarAsync()) > 0
-
                     If Not exists Then
+                        ' Create new database
                         Dim createSql = $"CREATE DATABASE [{database}]"
                         Using createCmd As New SqlCommand(createSql, connection)
                             Await createCmd.ExecuteNonQueryAsync()
                         End Using
+                    Else
+                        Console.WriteLine($"📋 Database {database} already exists")
                     End If
                 End Using
             End Using
 
             Return True
-        Catch
+        Catch ex As Exception
+            Console.WriteLine($"❌ CreateDatabase error: {ex.Message}")
             Return False
         End Try
     End Function
@@ -64,10 +68,10 @@ Public Class SqlServerConnection
                 Dim checkTableSql = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'record_metadata'"
                 Using checkCmd As New SqlCommand(checkTableSql, connection)
                     Dim tableExists = CInt(Await checkCmd.ExecuteScalarAsync()) > 0
-                    Console.WriteLine($"📋 record_metadata table exists: {tableExists}")
+
 
                     If tableExists Then
-                        Console.WriteLine($"✅ Tables exist, running migrations only")
+
                         ' Run database migrations for existing tables
                         Await RunDatabaseMigrations(connection)
                         Return True
@@ -75,13 +79,14 @@ Public Class SqlServerConnection
                 End Using
 
                 ' Create tables manually in correct order
-                Console.WriteLine($"📋 Creating tables manually...")
+
 
                 ' Create sensor_data table
                 Dim createSensorData = "
                 CREATE TABLE sensor_data (
                     id INT IDENTITY(1,1) PRIMARY KEY,
                     node_id NVARCHAR(100) NOT NULL,
+                    node_text NVARCHAR(200) NULL,
                     sensor_type NVARCHAR(50) NOT NULL,
                     value FLOAT NOT NULL,
                     data_type NVARCHAR(50) NOT NULL,
@@ -96,6 +101,7 @@ Public Class SqlServerConnection
                 CREATE TABLE sensor_alerts (
                     id INT IDENTITY(1,1) PRIMARY KEY,
                     node_id NVARCHAR(100) NOT NULL,
+                    node_text NVARCHAR(200) NULL,
                     sensor_type NVARCHAR(50) NOT NULL,
                     message NVARCHAR(500) NOT NULL,
                     threshold FLOAT NOT NULL,
@@ -139,7 +145,7 @@ Public Class SqlServerConnection
                         Using command As New SqlCommand(tables(i), connection)
                             Await command.ExecuteNonQueryAsync()
                         End Using
-                        Console.WriteLine($"✅ Table {tableNames(i)} created successfully")
+
                     Catch ex As SqlException
                         If ex.Message.Contains("already exists") OrElse ex.Message.Contains("There is already an object") Then
                             Console.WriteLine($"⚠️ Table {tableNames(i)} already exists")
@@ -156,7 +162,6 @@ Public Class SqlServerConnection
                 ' Verify table creation
                 Using verifyCmd As New SqlCommand(checkTableSql, connection)
                     Dim tableCreated = CInt(Await verifyCmd.ExecuteScalarAsync()) > 0
-                    Console.WriteLine($"✅ Schema execution completed. record_metadata table exists: {tableCreated}")
                     Return tableCreated
                 End Using
             End Using
@@ -185,7 +190,6 @@ Public Class SqlServerConnection
                     Dim alterQuery = "ALTER TABLE record_metadata ADD end_recording_date DATETIME2 NULL"
                     Using alterCmd As New SqlCommand(alterQuery, connection)
                         Await alterCmd.ExecuteNonQueryAsync()
-                        Console.WriteLine($"✅ Added end_recording_date column to record_metadata table")
                     End Using
                 End If
             End Using
@@ -206,7 +210,47 @@ Public Class SqlServerConnection
                     Dim alterBatchQuery = "ALTER TABLE sensor_data ADD batch_id NVARCHAR(50) NULL"
                     Using alterBatchCmd As New SqlCommand(alterBatchQuery, connection)
                         Await alterBatchCmd.ExecuteNonQueryAsync()
-                        Console.WriteLine($"✅ Added batch_id column to sensor_data table")
+
+                    End Using
+                End If
+            End Using
+            
+            ' Check if node_text column exists in sensor_data table
+            Dim checkNodeTextQuery = "
+                SELECT COUNT(*) 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'sensor_data' 
+                AND COLUMN_NAME = 'node_text'
+            "
+            
+            Using checkNodeTextCmd As New SqlCommand(checkNodeTextQuery, connection)
+                Dim nodeTextExists = CInt(Await checkNodeTextCmd.ExecuteScalarAsync()) > 0
+                
+                If Not nodeTextExists Then
+                    Dim alterNodeTextQuery = "ALTER TABLE sensor_data ADD node_text NVARCHAR(200) NULL"
+                    Using alterNodeTextCmd As New SqlCommand(alterNodeTextQuery, connection)
+                        Await alterNodeTextCmd.ExecuteNonQueryAsync()
+
+                    End Using
+                End If
+            End Using
+            
+            ' Check if node_text column exists in sensor_alerts table
+            Dim checkAlertsNodeTextQuery = "
+                SELECT COUNT(*) 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'sensor_alerts' 
+                AND COLUMN_NAME = 'node_text'
+            "
+            
+            Using checkAlertsNodeTextCmd As New SqlCommand(checkAlertsNodeTextQuery, connection)
+                Dim alertsNodeTextExists = CInt(Await checkAlertsNodeTextCmd.ExecuteScalarAsync()) > 0
+                
+                If Not alertsNodeTextExists Then
+                    Dim alterAlertsNodeTextQuery = "ALTER TABLE sensor_alerts ADD node_text NVARCHAR(200) NULL"
+                    Using alterAlertsNodeTextCmd As New SqlCommand(alterAlertsNodeTextQuery, connection)
+                        Await alterAlertsNodeTextCmd.ExecuteNonQueryAsync()
+
                     End Using
                 End If
             End Using

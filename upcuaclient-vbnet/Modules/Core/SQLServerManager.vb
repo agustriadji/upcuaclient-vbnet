@@ -105,7 +105,8 @@ Public Class SQLServerManager
     Private Function ExportSensorData(recordMetadata As InterfaceRecordMetadata) As Boolean
         Try
             Dim sqlite As New SQLiteManager()
-            Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={IO.Path.Combine(Application.StartupPath, "../../data/sensor.db")};Version=3;")
+            Dim dbPath = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "data", "sensor.db")
+            Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={dbPath};Version=3;")
                 sqliteConn.Open()
 
                 Dim query = "SELECT * FROM sensor_data WHERE node_id IN (@tire_id, @gauge_id)"
@@ -120,13 +121,14 @@ Public Class SQLServerManager
                             While reader.Read()
                                 Dim insertQuery = "
                                     INSERT INTO sensor_data 
-                                    (node_id, sensor_type, value, data_type, status, sync_status, batch_id, timestamp)
+                                    (node_id, node_text, sensor_type, value, data_type, status, sync_status, batch_id, timestamp)
                                     VALUES 
-                                    (@node_id, @sensor_type, @value, @data_type, @status, @sync_status, @batch_id, @timestamp)
+                                    (@node_id,@node_text, @sensor_type, @value, @data_type, @status, @sync_status, @batch_id, @timestamp)
                                 "
 
                                 Using insertCmd As New SqlCommand(insertQuery, sqlConn)
                                     insertCmd.Parameters.AddWithValue("@node_id", reader("node_id").ToString())
+                                    insertCmd.Parameters.AddWithValue("@node_text", reader("node_text").ToString())
                                     insertCmd.Parameters.AddWithValue("@sensor_type", reader("sensor_type").ToString())
                                     insertCmd.Parameters.AddWithValue("@value", Convert.ToDouble(reader("value")))
                                     insertCmd.Parameters.AddWithValue("@data_type", reader("data_type").ToString())
@@ -151,7 +153,8 @@ Public Class SQLServerManager
 
     Private Function ExportSensorAlerts(pressureTireId As String, pressureGaugeId As String) As Boolean
         Try
-            Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={IO.Path.Combine(Application.StartupPath, "../../data/sensor.db")};Version=3;")
+            Dim dbPath = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "data", "sensor.db")
+            Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={dbPath};Version=3;")
                 sqliteConn.Open()
 
                 Dim query = "SELECT * FROM sensor_alerts WHERE node_id IN (@tire_id, @gauge_id)"
@@ -166,13 +169,14 @@ Public Class SQLServerManager
                             While reader.Read()
                                 Dim insertQuery = "
                                     INSERT INTO sensor_alerts 
-                                    (node_id, sensor_type, message, threshold, current_value, severity, timestamp)
+                                    (node_id, node_text, sensor_type, message, threshold, current_value, severity, timestamp)
                                     VALUES 
-                                    (@node_id, @sensor_type, @message, @threshold, @current_value, @severity, @timestamp)
+                                    (@node_id, @node_text, @sensor_type, @message, @threshold, @current_value, @severity, @timestamp)
                                 "
 
                                 Using insertCmd As New SqlCommand(insertQuery, sqlConn)
                                     insertCmd.Parameters.AddWithValue("@node_id", reader("node_id").ToString())
+                                    insertCmd.Parameters.AddWithValue("@node_text", reader("node_text").ToString())
                                     insertCmd.Parameters.AddWithValue("@sensor_type", reader("sensor_type").ToString())
                                     insertCmd.Parameters.AddWithValue("@message", reader("message").ToString())
                                     insertCmd.Parameters.AddWithValue("@threshold", Convert.ToDouble(reader("threshold")))

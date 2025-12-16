@@ -9,7 +9,6 @@
             timer.Stop()
             action.Invoke(Nothing, EventArgs.Empty) ' Fetch awal langsung
             timer.Start()                           ' Timer mulai
-            Console.WriteLine("⏱️ Timer started with initial fetch.")
         Catch ex As Exception
             Console.WriteLine($"⚠️ Gagal start timer: {ex.Message}")
         End Try

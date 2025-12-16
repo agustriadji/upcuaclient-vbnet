@@ -66,7 +66,7 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>24.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\24.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
@@ -261,11 +261,16 @@
     <Compile Include="Main.vb" />
     <Compile Include="Modules\Core\AnalyticsManager.vb" />
     <Compile Include="Modules\Core\AnalyticsManager2.vb" />
+    <Compile Include="Modules\Core\AppPaths.vb" />
     <Compile Include="Modules\Core\ConnectionMonitor.vb" />
     <Compile Include="Modules\Core\ConsoleRedirect.vb" />
     <Compile Include="Modules\Core\DataViewManager.vb" />
+    <Compile Include="Modules\Core\DebugLoggerControl.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Modules\Core\FormStyler.vb" />
     <Compile Include="Modules\Core\Helper.vb" />
+    <Compile Include="Modules\Core\Logger.vb" />
     <Compile Include="Modules\Core\LoggerDebug.vb" />
     <Compile Include="Modules\Core\SettingsManager.vb" />
     <Compile Include="Modules\Core\SQLiteManager.vb" />
@@ -337,6 +342,9 @@
     <EmbeddedResource Include="Forms\MainFormNew.resx">
       <DependentUpon>MainFormNew.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Modules\Core\DebugLoggerControl.resx">
+      <DependentUpon>DebugLoggerControl.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
@@ -365,11 +373,10 @@
     <Folder Include="Assets\Models\" />
     <Folder Include="Exports\" />
     <Folder Include="Modules\Charts\" />
-    <Folder Include="Temp\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="16.ico" />
-    <Content Include="24.ico" />
+    <Content Include="Assets\16.ico" />
+    <Content Include="Assets\24.ico" />
     <Content Include="Assets\Common\alert-triangle-yellow-16.png" />
     <Content Include="Assets\Common\alert-triangle-yellow-32.png" />
     <Content Include="Assets\Common\play-circle-16.png" />

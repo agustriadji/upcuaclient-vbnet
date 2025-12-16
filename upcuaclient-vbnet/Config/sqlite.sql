@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS sensor_data (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     node_id TEXT NOT NULL, -- node_id pressureTire | pressureGauge
+    node_text TEXT NOT NULL, -- node_text pressureTire | pressureGauge
     sensor_type TEXT NOT NULL, -- pressureTire | pressureGauge
     value REAL NOT NULL,
     data_type TEXT NOT NULL,
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS sensor_data (
 CREATE TABLE IF NOT EXISTS sensor_alerts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     node_id TEXT NOT NULL, -- node_id pressureTire | pressureGauge
+    node_text TEXT NOT NULL, -- node_text pressureTire | pressureGauge
     sensor_type TEXT NOT NULL, -- pressureTire | pressureGauge
     message TEXT NOT NULL,
     threshold REAL NOT NULL,

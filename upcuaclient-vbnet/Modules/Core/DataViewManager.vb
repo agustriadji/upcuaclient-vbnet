@@ -1,4 +1,4 @@
-﻿Imports Microsoft.Extensions.Logging.Abstractions
+Imports Microsoft.Extensions.Logging.Abstractions
 Imports upcuaclient_vbnet.upcuaclient_vbnet
 
 Public Class DataViewManager

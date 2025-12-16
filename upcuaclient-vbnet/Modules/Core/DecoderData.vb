@@ -7,12 +7,10 @@ Namespace upcuaclient_vbnet
         ''' <returns>List SensorResult jika valid, Nothing jika frame invalid</returns>
         Public Function DecodeModbusFrame(data() As Byte) As List(Of SensorResult)
             If data Is Nothing OrElse data.Length < 21 Then
-                Console.WriteLine("Invalid Modbus frame length")
                 Return Nothing
             End If
 
             If data(0) <> &H1 OrElse data(1) <> &H3 OrElse data(2) <> &H10 Then
-                Console.WriteLine("Invalid Modbus frame header")
                 Return Nothing
             End If
 
@@ -43,10 +41,6 @@ Namespace upcuaclient_vbnet
                 End If
             Next
 
-            Console.WriteLine($"📊 Decoded {results.Count} sensors data")
-            For Each result In results
-                Console.WriteLine($"   Sensor {result.SensorId}: {result.Pressure:F2} bar - {result.Status}")
-            Next
 
             Return results
         End Function

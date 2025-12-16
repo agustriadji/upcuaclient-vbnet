@@ -1,7 +1,5 @@
 Imports System.IO
-Imports System.Windows.Media.Media3D
 Imports Newtonsoft.Json
-Imports Org.BouncyCastle.Math.EC.ECCurve
 Imports upcuaclient_vbnet.upcuaclient_vbnet
 
 Public Class MainFormNew
@@ -16,7 +14,7 @@ Public Class MainFormNew
     Sub InitializeTimers()
         ' Use My.Settings instead of config file
         SettingsManager.InitializeDefaults()
-        refreshTimerTabPageRecording.Interval = My.Settings.intervalRefreshMain
+        refreshTimerTabPageRecording.Interval = My.Settings.intervalTime
         refreshTimerTabPageSensor.Interval = My.Settings.intervalRefreshMain
 
 
@@ -105,7 +103,6 @@ Public Class MainFormNew
             InitializeDebugPanel()
             InitializeAlertSystem()
         Catch ex As Exception
-            Console.WriteLine($"Stack: {ex.StackTrace}")
             Try
                 MessageBox.Show($"Error loading form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Catch
@@ -115,8 +112,16 @@ Public Class MainFormNew
     End Sub
 
     Private Sub RefreshDataTabPageSensor(sender As Object, e As EventArgs)
+        Dim currentFirstDisplayedScrollingRowIndex = -1
         Try
             If DataGridView1 Is Nothing Then Return
+
+            ' Save current scroll position
+            If DataGridView1.FirstDisplayedScrollingRowIndex >= 0 Then
+                currentFirstDisplayedScrollingRowIndex = DataGridView1.FirstDisplayedScrollingRowIndex
+            End If
+
+            DataGridView1.SuspendLayout()
             DataGridView1.Rows.Clear()
             Dim count As Integer = 1
 
@@ -130,7 +135,7 @@ Public Class MainFormNew
                 Dim tireSensors = selectedNodeSensor("PressureTire")
                 For Each sensor In tireSensors
                     If sensor.ContainsKey("NodeActive") AndAlso sensor("NodeActive").ToLower() = "true" Then
-                        Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "idle")
+                        Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "ready")
                         Try
                             Dim idx = DataGridView1.Rows.Add(count.ToString(), "PressureTire." + sensor("NodeText"), status)
                             If idx >= 0 AndAlso idx < DataGridView1.Rows.Count Then
@@ -140,10 +145,8 @@ Public Class MainFormNew
                                     Select Case status.ToLower()
                                         Case "running"
                                             statusCell.Style.BackColor = Color.LightGreen
-                                        Case "idle"
+                                        Case "ready"
                                             statusCell.Style.BackColor = Color.LightYellow
-                                        Case "offline"
-                                            statusCell.Style.BackColor = Color.LightGray
                                     End Select
                                 End If
                             End If
@@ -160,7 +163,7 @@ Public Class MainFormNew
                 Dim gaugeSensors = selectedNodeSensor("PressureGauge")
                 For Each sensor In gaugeSensors
                     If sensor.ContainsKey("NodeActive") AndAlso sensor("NodeActive").ToLower() = "true" Then
-                        Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "idle")
+                        Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "ready")
                         Try
                             Dim idx = DataGridView1.Rows.Add(count.ToString(), "PressureGauge." + sensor("NodeText"), status)
                             If idx >= 0 AndAlso idx < DataGridView1.Rows.Count Then
@@ -170,10 +173,8 @@ Public Class MainFormNew
                                     Select Case status.ToLower()
                                         Case "running"
                                             statusCell.Style.BackColor = Color.LightGreen
-                                        Case "idle"
+                                        Case "ready"
                                             statusCell.Style.BackColor = Color.LightYellow
-                                        Case "offline"
-                                            statusCell.Style.BackColor = Color.LightGray
                                     End Select
                                 End If
                             End If
@@ -187,11 +188,25 @@ Public Class MainFormNew
 
             'Console.WriteLine($"✅ Displayed {count - 1} active sensors")
         Catch ex As Exception
-            Console.WriteLine($"Gagal refresh data: {ex.Message}")
+            ' Log critical errors only
+        Finally
+            Try
+                If DataGridView1 IsNot Nothing AndAlso Not DataGridView1.IsDisposed Then
+                    DataGridView1.ResumeLayout()
+
+                    ' Restore scroll position
+                    If currentFirstDisplayedScrollingRowIndex >= 0 AndAlso currentFirstDisplayedScrollingRowIndex < DataGridView1.Rows.Count Then
+                        DataGridView1.FirstDisplayedScrollingRowIndex = currentFirstDisplayedScrollingRowIndex
+                    End If
+                End If
+            Catch
+                ' Ignore layout errors
+            End Try
         End Try
     End Sub
 
     Private Sub RefreshDataTabPageRecording(sender As Object, e As EventArgs)
+        Dim currentFirstDisplayedScrollingRowIndex = -1
         Try
             If isDialogOpen OrElse isDeleting Then Return
             If DGVRecording Is Nothing OrElse DGVRecording.IsDisposed Then Return
@@ -199,6 +214,11 @@ Public Class MainFormNew
             If DGVRecording.InvokeRequired Then
                 DGVRecording.Invoke(Sub() RefreshDataTabPageRecording(sender, e))
                 Return
+            End If
+
+            ' Save current scroll position
+            If DGVRecording.FirstDisplayedScrollingRowIndex >= 0 Then
+                currentFirstDisplayedScrollingRowIndex = DGVRecording.FirstDisplayedScrollingRowIndex
             End If
 
             DGVRecording.SuspendLayout()
@@ -241,10 +261,8 @@ Public Class MainFormNew
                 Select Case record.Status.ToLower()
                     Case "recording"
                         statusCell.Style.BackColor = Color.LightGreen
-                    Case "idle"
+                    Case "ready"
                         statusCell.Style.BackColor = Color.LightYellow
-                    Case "offline"
-                        statusCell.Style.BackColor = Color.LightGray
                 End Select
 
                 ' Show Delete button only for Finished status
@@ -261,11 +279,16 @@ Public Class MainFormNew
                 count += 1
             Next
         Catch ex As Exception
-            Console.WriteLine($"Gagal refresh data RefreshDataTabPageRecording: {ex.Message}")
+            ' Log critical errors only
         Finally
             Try
                 If DGVRecording IsNot Nothing AndAlso Not DGVRecording.IsDisposed Then
                     DGVRecording.ResumeLayout()
+
+                    ' Restore scroll position
+                    If currentFirstDisplayedScrollingRowIndex >= 0 AndAlso currentFirstDisplayedScrollingRowIndex < DGVRecording.Rows.Count Then
+                        DGVRecording.FirstDisplayedScrollingRowIndex = currentFirstDisplayedScrollingRowIndex
+                    End If
                 End If
             Catch
                 ' Ignore layout errors
@@ -347,7 +370,7 @@ Public Class MainFormNew
             End If
 
             Dim timestamp = DateTime.Now.ToString("HH:mm:ss")
-            Dim levelIcon = GetLevelIcon(level)
+            Dim levelIcon = LoggerDebug.GetLevelIcon(level)
             Dim logEntry = $"[{timestamp}] {levelIcon} [{source}] {message}{Environment.NewLine}"
 
             TextBoxOutputDebug.AppendText(logEntry)
@@ -359,22 +382,7 @@ Public Class MainFormNew
         End Try
     End Sub
 
-    Private Function GetLevelIcon(level As LoggerDebug.LogLevel) As String
-        Select Case level
-            Case LoggerDebug.LogLevel.Debug
-                Return "DEBUG"
-            Case LoggerDebug.LogLevel.Info
-                Return "INFO"
-            Case LoggerDebug.LogLevel.Warning
-                Return "WARN"
-            Case LoggerDebug.LogLevel.Error
-                Return "ERROR"
-            Case LoggerDebug.LogLevel.Success
-                Return "OK"
-            Case Else
-                Return "LOG"
-        End Select
-    End Function
+
 
     Private Function GetNodeTextFromId(selectedNodeSensor As Dictionary(Of String, List(Of Dictionary(Of String, String))), sensorType As String, nodeId As String) As String
         Try
@@ -477,7 +485,7 @@ Public Class MainFormNew
             LoadAlertsFromDatabase()
 
         Catch ex As Exception
-            Console.WriteLine($"Alert check error: {ex.Message}")
+            ' Log critical errors only
         End Try
     End Sub
 
@@ -492,7 +500,7 @@ Public Class MainFormNew
 
                 ' Optimized query - only get new alerts since last check
                 Dim query As String = "
-                    SELECT sa.id, sa.timestamp, COALESCE(mt.batch_id, 'N/A') as batch_id, 
+                    SELECT sa.id, sa.node_text, sa.timestamp, COALESCE(mt.batch_id, 'N/A') as batch_id, 
                            sa.node_id, sa.message, sa.current_value, sa.severity
                     FROM sensor_alerts sa 
                     LEFT JOIN record_metadata mt ON (mt.pressure_gauge_id = sa.node_id OR mt.pressure_tire_id = sa.node_id)
@@ -512,7 +520,7 @@ Public Class MainFormNew
 
                             Dim timestamp = DateTime.Parse(reader("timestamp").ToString()).ToString("HH:mm:ss")
                             Dim severityIcon = GetSeverityIcon(reader("severity").ToString())
-                            Dim alertEntry = $"[{timestamp}] {severityIcon} [{reader("batch_id")}] {reader("node_id")} - {reader("message")} (Value: {reader("current_value")})"
+                            Dim alertEntry = $"[{timestamp}] {severityIcon} [{reader("batch_id")}] {reader("node_text")} - {reader("message")} (Value: {reader("current_value")})"
 
                             newAlerts.Add(alertEntry)
                         End While
@@ -525,7 +533,7 @@ Public Class MainFormNew
                 End Using
             End Using
         Catch ex As Exception
-            Console.WriteLine($"LoadAlertsFromDatabase error: {ex.Message}")
+            ' Log critical errors only
         End Try
     End Sub
 
@@ -548,7 +556,7 @@ Public Class MainFormNew
                 ToolStripButtonAlert.BackColor = Color.Orange
             End If
         Catch ex As Exception
-            Console.WriteLine($"UpdateAlertDisplay error: {ex.Message}")
+            ' Log critical errors only
         End Try
     End Sub
 
@@ -586,91 +594,95 @@ Public Class MainFormNew
                 ToolStripButtonAlert.BackColor = Color.Orange
             End If
         Catch ex As Exception
-            Console.WriteLine($"Alert: {message}")
+            ' Fallback to console if UI update fails
         End Try
     End Sub
 
     Private Sub DGVRecording_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVRecording.CellClick
         Try
-            If isDeleting Then Return
-            If DGVRecording Is Nothing OrElse DGVRecording.IsDisposed Then Return
-            If e Is Nothing OrElse e.RowIndex < 0 Then Return
-            If DGVRecording.Rows Is Nothing OrElse e.RowIndex >= DGVRecording.Rows.Count Then Return
+            If isDeleting OrElse isDialogOpen Then Return
+            If e Is Nothing OrElse e.RowIndex < 0 OrElse e.RowIndex >= DGVRecording.Rows.Count Then Return
 
             Dim row = DGVRecording.Rows(e.RowIndex)
             If row Is Nothing OrElse row.IsNewRow Then Return
 
             ' Check if Delete button clicked
             If e.ColumnIndex = DGVRecording.Columns("Delete").Index Then
-                Dim deleteValue = row.Cells("Delete").Value?.ToString()
-                If String.IsNullOrEmpty(deleteValue) OrElse deleteValue <> "Delete" Then Return
-
-                Dim batchId = row.Cells("BatchId").Value?.ToString()
-                If String.IsNullOrEmpty(batchId) Then Return
-
-                isDeleting = True
-                refreshTimerTabPageRecording.Stop()
-
-                Dim result = MessageBox.Show($"Delete record {batchId}?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
-                If result = DialogResult.Yes Then
-                    Try
-                        Dim sqlite As New SQLiteManager()
-                        sqlite.DeleteRecordMetadata(batchId)
-                        RefreshDataTabPageRecording(Nothing, Nothing)
-                        MessageBox.Show("Record deleted successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                    Catch ex As Exception
-                        MessageBox.Show($"Delete failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                    End Try
-                End If
-
-                isDeleting = False
-                refreshTimerTabPageRecording.Start()
+                HandleDeleteClick(row)
                 Return
             End If
 
-            ' Prevent double-click for detail view
-            If isDialogOpen Then Return
+            ' Handle detail view click with debounce
             Dim now = DateTime.Now
-            If (now - lastClickTime).TotalMilliseconds < 500 Then Return
+            If (now - lastClickTime).TotalMilliseconds < 1000 Then Return ' 1 second debounce
             lastClickTime = now
 
             Dim batchIdDetail = row.Cells("BatchId").Value?.ToString()
             If String.IsNullOrEmpty(batchIdDetail) Then Return
 
-            isDialogOpen = True
-            DGVRecording.Enabled = False
-
-            Try
-                If refreshTimerTabPageRecording IsNot Nothing Then refreshTimerTabPageRecording.Stop()
-                If refreshTimerTabPageSensor IsNot Nothing Then refreshTimerTabPageSensor.Stop()
-                If connectionIndicatorTimer IsNot Nothing Then connectionIndicatorTimer.Stop()
-
-                Using detailForm As New DetailRecord(batchIdDetail)
-                    detailForm.ShowDialog()
-                End Using
-
-                If TabControlMain IsNot Nothing AndAlso TabControlMain.SelectedTab Is TabPageRecording Then
-                    If refreshTimerTabPageRecording IsNot Nothing Then refreshTimerTabPageRecording.Start()
-                ElseIf TabControlMain IsNot Nothing AndAlso TabControlMain.SelectedTab Is TabPageSensorState Then
-                    If refreshTimerTabPageSensor IsNot Nothing Then refreshTimerTabPageSensor.Start()
-                End If
-                If connectionIndicatorTimer IsNot Nothing Then connectionIndicatorTimer.Start()
-            Finally
-                isDialogOpen = False
-                If DGVRecording IsNot Nothing AndAlso Not DGVRecording.IsDisposed Then
-                    DGVRecording.Enabled = True
-                End If
-            End Try
+            OpenDetailRecord(batchIdDetail)
 
         Catch ex As Exception
             isDialogOpen = False
-            Try
-                If DGVRecording IsNot Nothing AndAlso Not DGVRecording.IsDisposed Then DGVRecording.Enabled = True
-                If refreshTimerTabPageRecording IsNot Nothing Then refreshTimerTabPageRecording.Start()
-                If connectionIndicatorTimer IsNot Nothing Then connectionIndicatorTimer.Start()
-            Catch
-            End Try
+            RestoreTimers()
         End Try
+    End Sub
+
+    Private Sub HandleDeleteClick(row As DataGridViewRow)
+        Dim deleteValue = row.Cells("Delete").Value?.ToString()
+        If String.IsNullOrEmpty(deleteValue) OrElse deleteValue <> "Delete" Then Return
+
+        Dim batchId = row.Cells("BatchId").Value?.ToString()
+        If String.IsNullOrEmpty(batchId) Then Return
+
+        isDeleting = True
+        StopAllTimers()
+
+        Dim result = MessageBox.Show($"Delete record {batchId}?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        If result = DialogResult.Yes Then
+            Try
+                Dim sqlite As New SQLiteManager()
+                sqlite.DeleteRecordMetadata(batchId)
+                RefreshDataTabPageRecording(Nothing, Nothing)
+                MessageBox.Show("Record deleted successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Catch ex As Exception
+                MessageBox.Show($"Delete failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        End If
+
+        isDeleting = False
+        RestoreTimers()
+    End Sub
+
+    Private Sub OpenDetailRecord(batchId As String)
+        isDialogOpen = True
+        DGVRecording.Enabled = False
+        StopAllTimers()
+
+        Try
+            Using detailForm As New DetailRecord(batchId)
+                detailForm.ShowDialog()
+            End Using
+        Finally
+            isDialogOpen = False
+            DGVRecording.Enabled = True
+            RestoreTimers()
+        End Try
+    End Sub
+
+    Private Sub StopAllTimers()
+        refreshTimerTabPageRecording?.Stop()
+        refreshTimerTabPageSensor?.Stop()
+        connectionIndicatorTimer?.Stop()
+    End Sub
+
+    Private Sub RestoreTimers()
+        If TabControlMain?.SelectedTab Is TabPageRecording Then
+            refreshTimerTabPageRecording?.Start()
+        ElseIf TabControlMain?.SelectedTab Is TabPageSensorState Then
+            refreshTimerTabPageSensor?.Start()
+        End If
+        connectionIndicatorTimer?.Start()
     End Sub
 
     Private Sub MenuStrip1_ItemClicked(sender As Object, e As ToolStripItemClickedEventArgs) Handles MenuStrip1.ItemClicked
@@ -773,6 +785,10 @@ Public Class MainFormNew
         Catch
             ' Ignore painting errors
         End Try
+    End Sub
+
+    Private Sub ButtonRefresh_Click(sender As Object, e As EventArgs) Handles ButtonRefresh.Click
+        RefreshDataTabPageRecording(Nothing, Nothing)
     End Sub
 
 End Class

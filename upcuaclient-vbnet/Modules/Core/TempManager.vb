@@ -25,7 +25,6 @@ Namespace upcuaclient_vbnet
                 Dim json = JsonConvert.SerializeObject(stateData, Formatting.Indented)
                 File.WriteAllText(stateFile, json)
 
-                Console.WriteLine($"📝 State updated: sensor{sensorId}, sync_attempt: {syncAttempt}")
 
             Catch ex As Exception
                 Console.WriteLine($"⚠️ State update error: {ex.Message}")
@@ -66,7 +65,6 @@ Namespace upcuaclient_vbnet
                 Dim updatedJson = JsonConvert.SerializeObject(alertData, Formatting.Indented)
                 File.WriteAllText(alertFile, updatedJson)
 
-                Console.WriteLine($"🚨 Alert added: [{level}] {message}")
 
             Catch ex As Exception
                 Console.WriteLine($"⚠️ Alert save error: {ex.Message}")

@@ -1,5 +1,6 @@
 ﻿Public Class InterfaceAlertData
     Property NodeId As String ' NodeId of pressureTire or pressureGauge sensor
+    Property NodeText As String ' NodeText of pressureTire or pressureGauge sensor
     Property SensorType As String ' e.g., "SensorPressureTireMetadata" or "SensorPressureGaugeMetadata"
     Property Message As String
     Property Threshold As Double   ' the threshold that triggered the alert

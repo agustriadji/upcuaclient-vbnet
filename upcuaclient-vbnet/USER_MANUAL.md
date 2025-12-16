@@ -233,3 +233,40 @@ For technical support or issues:
 
 **Version**: 1.0  
 **Last Updated**: December 2024
+
+
+--- use log
+
+' Contoh penggunaan Logger
+
+' 1. Log informasi biasa
+Logger.LogInfo("Application started successfully")
+Logger.LogInfo("User logged in", "Authentication")
+
+' 2. Log error dengan source
+Logger.LogError("Database connection failed", "SQLServer")
+Logger.LogError($"Invalid parameter: {paramValue}", "Validation")
+
+' 3. Log warning
+Logger.LogWarning("Low disk space detected")
+Logger.LogWarning("Connection timeout, retrying...", "Network")
+
+' 4. Log debug (untuk development)
+Logger.LogDebug($"Processing batch: {batchId}")
+Logger.LogDebug($"Query executed: {sqlQuery}", "Database")
+
+' 5. Dalam try-catch
+Try
+    ' Some operation
+    Logger.LogInfo("Operation completed successfully")
+Catch ex As Exception
+    Logger.LogError($"Operation failed: {ex.Message}", "OperationName")
+End Try
+
+' 6. Dengan variabel
+Dim recordCount = 150
+Logger.LogInfo($"Retrieved {recordCount} records from database", "DataAccess")
+
+' 7. Tanpa source (optional)
+Logger.LogInfo("System ready")
+Logger.LogError("Critical error occurred")

@@ -39,7 +39,6 @@ Public Class FormConfigManager
             Dim activeRecordings = sqlite.QueryBatchRange(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow)
             Dim recordingBatches = activeRecordings.Where(Function(r) r.Status.ToLower() = "recording").ToList()
 
-            Console.WriteLine($"📊 Found {recordingBatches.Count} active recordings to force stop")
 
             For Each batch In recordingBatches
                 ' Update status to Force Stop
@@ -53,7 +52,6 @@ Public Class FormConfigManager
                     Try
                         Dim sqlServerManager As New SQLServerManager()
                         sqlServerManager.ExportRecordData(batch.BatchId)
-                        Console.WriteLine($"✅ Exported force stopped batch: {batch.BatchId}")
                     Catch exportEx As Exception
                         Console.WriteLine($"⚠️ Export failed for {batch.BatchId}: {exportEx.Message}")
                     End Try
@@ -123,7 +121,6 @@ Public Class FormConfigManager
         If dgvTempData.Count > 0 Then
             ' Use temporary data (currently being edited)
             nodesToDisplay = dgvTempData
-            Console.WriteLine($"📋 Using temporary DGV data: {dgvTempData.Count} nodes")
         Else
             ' Load from settings and convert to temp format
             Dim selectedNodes = SettingsManager.GetSelectedNodeIdOpc()
@@ -136,7 +133,6 @@ Public Class FormConfigManager
                 })
             Next
             dgvTempData = nodesToDisplay ' Store in temp for future edits
-            Console.WriteLine($"📋 Loaded from settings: {nodesToDisplay.Count} nodes")
         End If
         ' LoggerDebug.LogInfo($"LoadNodesIntoGrid: Found {selectedNodes.Count} selected nodes")
 
@@ -173,11 +169,6 @@ Public Class FormConfigManager
                 Dim isFirstTimeSetup = (selectedNodeIdOpcTemp = "[]")
                 Dim hasExistingNodes = (selectedNodeIdOpcTemp <> "[]")
 
-                Console.WriteLine($"🔍 hostOpcChanged: {hostOpcChanged}")
-                Console.WriteLine($"🔍 isFirstTimeSetup: {isFirstTimeSetup}")
-                Console.WriteLine($"🔍 hasExistingNodes: {hasExistingNodes}")
-                Console.WriteLine($"🔍 selectedNodeIdOpcTemp: {selectedNodeIdOpcTemp}")
-
                 If isFirstTimeSetup Then
                     ' First-time setup - no warning needed
                     Console.WriteLine("🎆 First-time OPC setup - no warning needed")
@@ -193,8 +184,27 @@ Public Class FormConfigManager
                         Return
                     End If
 
+                    ' Clear sensor settings and force disconnect/reconnect OPC
+                    My.Settings.selectedNodeSensor = "{}"
+                    My.Settings.endRecording = "[]"
+
                     ' Force stop all recordings and reset OPC settings (synchronous)
                     ForceStopAllRecordingsSync()
+
+                    ' Force disconnect and reconnect OPC session with new host
+                    Try
+                        Await OpcConnection.Disconnect()
+                        Console.WriteLine("✅ OPC session disconnected for host change")
+
+                        ' Update host setting before reconnect
+                        My.Settings.hostOpc = TextBoxHostOpc.Text
+                        My.Settings.Save()
+
+                        ' Reconnect with new host
+                        Dim reconnected = Await OpcConnection.InitializeAsync()
+                    Catch ex As Exception
+                        Console.WriteLine($"⚠️ OPC reconnect error: {ex.Message}")
+                    End Try
 
                     ' After force stop, save the new settings from form
                     SaveNewOpcSettings()
@@ -204,14 +214,13 @@ Public Class FormConfigManager
                         Await DiscoverAndSaveObjects()
                         PopulateObjectsComboBoxFromSettings()
                     Catch ex As Exception
-                        Console.WriteLine($"⚠️ Auto-discover failed: {ex.Message}")
                         ComboBoxSelectObjectOpc.Items.Clear()
                     End Try
                 End If
             End If
 
             ' Update settings with form values
-            My.Settings.intervalTime = CInt(NumericUpDownInterval.Value) * 60000 ' Convert minutes to ms
+            My.Settings.intervalRefreshTimer = CInt(NumericUpDownInterval.Value) * 60000 ' Convert minutes to ms
             My.Settings.thresholdPressureGauge = TextBoxThresholdPressureGauge.Text
             My.Settings.hostOpc = TextBoxHostOpc.Text
             My.Settings.namespaceOpc = TextBoxNamespaceOpc.Text
@@ -231,7 +240,6 @@ Public Class FormConfigManager
                             {"NodeType", child("NodeType")}
                         })
                     Next
-                    Console.WriteLine($"📋 Found {childNodes.Count} child nodes for {tempNode("NodeText")}")
                 Catch ex As Exception
                     Console.WriteLine($"⚠️ Failed to browse children for {tempNode("NodeText")}: {ex.Message}")
                 End Try
@@ -244,13 +252,12 @@ Public Class FormConfigManager
                 })
             Next
             SettingsManager.SetSelectedNodeIdOpc(selectedNodes)
-            Console.WriteLine($"💾 Saved {selectedNodes.Count} nodes to settings")
 
             ' Save all settings
             SettingsManager.SaveAll()
 
             MessageBox.Show("Configuration saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            ' LoggerDebug.LogInfo("Configuration saved successfully!")
+            LoggerDebug.LogInfo("Configuration saved successfully!")
             Me.DialogResult = DialogResult.OK
             Me.Close()
         Catch ex As Exception
@@ -267,7 +274,6 @@ Public Class FormConfigManager
             Dim activeRecordings = sqlite.QueryBatchRange(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow)
             Dim recordingBatches = activeRecordings.Where(Function(r) r.Status.ToLower() = "recording").ToList()
 
-            Console.WriteLine($"📊 Found {recordingBatches.Count} active recordings to force stop")
 
             For Each batch In recordingBatches
                 ' Update status to Force Stop
@@ -283,15 +289,11 @@ Public Class FormConfigManager
                             Dim sqlServerManager As New SQLServerManager()
                             Dim exportSuccess = sqlServerManager.ExportRecordData(batch.BatchId)
                             If exportSuccess Then
-                                Console.WriteLine($"✅ Exported force stopped batch: {batch.BatchId}")
                                 ' Clean up sensor_data after successful export
                                 sqlite.DeleteSensorDataByNodeIds(batch.PressureTireId, batch.PressureGaugeId)
-                                Console.WriteLine($"🧹 Cleaned sensor_data for nodes: {batch.PressureTireId}, {batch.PressureGaugeId}")
                             Else
-                                Console.WriteLine($"⚠️ Export failed for {batch.BatchId} - keeping sensor_data")
                             End If
                         Else
-                            Console.WriteLine($"⚠️ Invalid node IDs for {batch.BatchId} - skipping export")
                         End If
                     Catch exportEx As Exception
                         Console.WriteLine($"⚠️ Export failed for {batch.BatchId}: {exportEx.Message}")
@@ -349,7 +351,6 @@ Public Class FormConfigManager
             SettingsManager.SetSelectedNodeIdOpc(selectedNodes)
             My.Settings.Save()
 
-            Console.WriteLine($"✅ Saved new OPC settings after force stop: {selectedNodes.Count} nodes")
         Catch ex As Exception
             Console.WriteLine($"⚠️ SaveNewOpcSettings Error: {ex.Message}")
         End Try
@@ -545,7 +546,6 @@ Public Class FormConfigManager
                 ' Remove from temporary data
                 For Each nodeIdToDelete In nodeIdsToDelete
                     dgvTempData.RemoveAll(Function(node) node("NodeId") = nodeIdToDelete)
-                    Console.WriteLine($"🗑️ Removed from temp data: {nodeIdToDelete}")
                 Next
 
                 ' Clear grid and reload only if there's remaining data
@@ -553,7 +553,6 @@ Public Class FormConfigManager
                 If dgvTempData.Count > 0 Then
                     LoadNodesIntoGrid()
                 End If
-                Console.WriteLine($"✅ Deleted {nodeIdsToDelete.Count} objects - Remaining: {dgvTempData.Count}")
             End If
         Catch ex As Exception
             Console.WriteLine($"⚠️ Failed to delete objects: {ex.Message}")
@@ -754,4 +753,139 @@ Public Class FormConfigManager
             ' LoggerDebug.LogError($"Namespace test error: {ex.Message}")
         End Try
     End Function
+
+    Private Sub ButtonClear_Click(sender As Object, e As EventArgs) Handles ButtonClear.Click
+        Try
+            ' Confirm action
+            Dim result = MessageBox.Show("This will reset all settings to default and force end any active recordings. Continue?",
+                                       "Confirm Clear Settings", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
+            If result <> DialogResult.Yes Then Return
+
+            ' 1. Force end all active recordings
+            ForceEndAllActiveRecordings()
+
+            ' 2. Reset My.Settings to default values
+            ResetSettingsToDefault()
+
+            ' 3. Clear UI controls
+            ClearUIControls()
+
+            MessageBox.Show("Settings cleared and reset to default values.", "Clear Complete",
+                          MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+        Catch ex As Exception
+            MessageBox.Show($"Error clearing settings: {ex.Message}", "Error",
+                          MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub ForceEndAllActiveRecordings()
+        Try
+            Dim sqlite As New SQLiteManager()
+            Dim activeBatches = sqlite.QueryBatchRange(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Where(Function(b) b.Status.ToLower() = "recording").ToList()
+
+            For Each batch In activeBatches
+                batch.Status = "Finished"
+                batch.SyncStatus = "Finished"
+                batch.EndDate = DateTime.UtcNow
+                sqlite.InsertOrUpdateRecordMetadata(batch)
+
+                ' Export data to SQL Server if connected (including sensor_alerts)
+                If My.Settings.stateConnectionDB Then
+                    Try
+                        Dim sqlServerManager As New SQLServerManager()
+                        Dim exportSuccess = sqlServerManager.ExportRecordData(batch.BatchId)
+                        If exportSuccess Then
+
+                            ' Clean up SQLite data after successful export
+                            Try
+                                Dim deleteDataSuccess = sqlite.DeleteSensorDataByNodeIds(batch.PressureTireId, batch.PressureGaugeId)
+                                Dim deleteAlertsSuccess = sqlite.DeleteSensorAlertsByNodeIds(batch.PressureTireId, batch.PressureGaugeId)
+                                If deleteDataSuccess And deleteAlertsSuccess Then
+                                    Console.WriteLine($"🧹 Cleaned up SQLite data and alerts for batch {batch.BatchId}")
+                                Else
+                                    Console.WriteLine($"⚠️ Partial cleanup for batch {batch.BatchId} - Data: {deleteDataSuccess}, Alerts: {deleteAlertsSuccess}")
+                                End If
+                            Catch cleanupEx As Exception
+                                Console.WriteLine($"⚠️ Cleanup error for batch {batch.BatchId}: {cleanupEx.Message}")
+                            End Try
+                        Else
+                            Console.WriteLine($"⚠️ Failed to export batch {batch.BatchId}")
+                        End If
+                    Catch exportEx As Exception
+                        Console.WriteLine($"⚠️ Export error for batch {batch.BatchId}: {exportEx.Message}")
+                    End Try
+                End If
+
+                Console.WriteLine($"🔄 Force ended batch: {batch.BatchId}")
+            Next
+
+            ' Update sensor status to ready
+            Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
+            For Each kvp In selectedNodeSensor
+                For Each sensor In kvp.Value
+                    sensor("NodeStatus") = "ready"
+                Next
+            Next
+            SettingsManager.SetSelectedNodeSensor(selectedNodeSensor)
+
+        Catch ex As Exception
+            Console.WriteLine($"⚠️ ForceEndAllActiveRecordings Error: {ex.Message}")
+        End Try
+    End Sub
+
+    Private Sub ResetSettingsToDefault()
+        ' Reset all My.Settings to default values
+        My.Settings.hostOpc = "opc.tcp://localhost:4840"
+        My.Settings.namespaceOpc = "2"
+        My.Settings.hostDB = "Server=localhost\SQLEXPRESS;Database=OpcUaClient;Integrated Security=true;TrustServerCertificate=true;"
+        My.Settings.intervalRefreshTimer = 5000
+        My.Settings.intervalTime = 3000
+        My.Settings.thresholdPressureGauge = "0.2"
+        My.Settings.selectedNodeIdOpc = ""
+        My.Settings.selectedNodeSensor = ""
+        My.Settings.endRecording = ""
+        My.Settings.stateConnectionOPC = False
+        My.Settings.stateConnectionDB = False
+        My.Settings.Save()
+    End Sub
+
+    Private Sub ClearUIControls()
+        ' Clear text boxes
+        TextBoxHostOpc.Text = My.Settings.hostOpc
+        TextBoxNamespaceOpc.Text = My.Settings.namespaceOpc
+        TextBoxHostDB.Text = My.Settings.hostDB
+        TextBoxThresholdPressureGauge.Text = My.Settings.thresholdPressureGauge
+
+        ' Set NumericUpDown value within its range (convert ms to minutes)
+        Dim intervalValueMs = My.Settings.intervalRefreshTimer
+        Dim intervalValueMinutes = intervalValueMs \ 60000 ' Convert ms to minutes
+        If intervalValueMinutes < NumericUpDownInterval.Minimum Then
+            NumericUpDownInterval.Value = NumericUpDownInterval.Minimum
+        ElseIf intervalValueMinutes > NumericUpDownInterval.Maximum Then
+            NumericUpDownInterval.Value = NumericUpDownInterval.Maximum
+        Else
+            NumericUpDownInterval.Value = intervalValueMinutes
+        End If
+
+        ' Clear DataGridViews
+        DGVSelectedNodeOpc.Rows.Clear()
+
+        ' Try to clear sensor DataGridView if it exists
+        Try
+            If Me.Controls.ContainsKey("DGVSelectedNodeSensor") Then
+                DirectCast(Me.Controls("DGVSelectedNodeSensor"), DataGridView).Rows.Clear()
+            End If
+        Catch
+            ' Ignore if control doesn't exist
+        End Try
+
+        ' Reset status labels
+        LabelMessageStateHostOpc.Text = "Not tested"
+        LabelMessageStateHostOpc.BackColor = Color.LightGray
+        LabelMessageStateHostDB.Text = "Not tested"
+        LabelMessageStateHostDB.BackColor = Color.LightGray
+        LabelMessageStateNamespaceOpc.Text = "Not tested"
+        LabelMessageStateNamespaceOpc.BackColor = Color.LightGray
+    End Sub
 End Class

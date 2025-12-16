@@ -27,12 +27,10 @@ Public Class OpcConnection
         Try
             SettingsManager.InitializeDefaults()
             If String.IsNullOrEmpty(My.Settings.hostOpc) Then
-                Console.WriteLine("❌ Endpoint OPC tidak ditemukan di settings.")
                 Return False
             End If
             Return Await ConnectAsync(My.Settings.hostOpc)
         Catch ex As Exception
-            Console.WriteLine($"❌ Gagal inisialisasi OPC: {ex.Message}")
             Return False
         End Try
     End Function
@@ -49,10 +47,8 @@ Public Class OpcConnection
             _session = Await Session.Create(appConfig, configuredEndpoint, False, "VB OPC UA Client", 60000, Nothing, Nothing)
             AddHandler _session.KeepAlive, AddressOf OnKeepAlive
 
-            Console.WriteLine($"✅ Connected to OPC UA at {endpointUrl}")
             Return True
         Catch ex As Exception
-            Console.WriteLine($"❌ OPC UA connection failed: {ex.Message}")
             Return False
         End Try
     End Function
@@ -95,7 +91,6 @@ Public Class OpcConnection
     ' === Event KeepAlive (cek koneksi otomatis) ===
     Private Shared Sub OnKeepAlive(sender As Session, e As KeepAliveEventArgs)
         If e.Status IsNot Nothing AndAlso ServiceResult.IsBad(e.Status) Then
-            Console.WriteLine($"⚠️ Koneksi OPC terputus: {e.Status}")
             StartReconnect()
         End If
     End Sub
@@ -105,11 +100,9 @@ Public Class OpcConnection
         SyncLock _lock
             If _reconnectTimer Is Nothing Then
                 _reconnectTimer = New Timer(Async Sub(state)
-                                                Console.WriteLine("🔁 Mencoba reconnect ke OPC...")
                                                 If Await ConnectAsync(My.Settings.hostOpc) Then
                                                     _reconnectTimer.Dispose()
                                                     _reconnectTimer = Nothing
-                                                    Console.WriteLine("✅ Reconnected successfully.")
                                                 End If
                                             End Sub, Nothing, 5000, Timeout.Infinite)
             End If
@@ -120,14 +113,12 @@ Public Class OpcConnection
     Public Shared Async Function ReadNodeValue(nodeId As String) As Task(Of String)
         Try
             If Not IsConnected Then
-                Console.WriteLine("⚠️ Session tidak aktif, mencoba reconnect...")
                 If Not Await ConnectAsync(My.Settings.hostOpc) Then Return Nothing
             End If
 
             Dim value = (Await _session.ReadValueAsync(nodeId)).Value
             Return value?.ToString()
         Catch ex As Exception
-            Console.WriteLine($"⚠️ Gagal membaca node {nodeId}: {ex.Message}")
             Return Nothing
         End Try
     End Function
@@ -180,11 +171,8 @@ Public Class OpcConnection
     Public Shared Async Function BrowseNodes() As Task
         Try
             If Not IsConnected Then
-                ' Console.WriteLine("⚠️ Session tidak aktif")
                 Return
             End If
-
-            ' Console.WriteLine("🔍 Browsing OPC UA nodes...")
 
             Dim browser = New Browser(_session) With {
                     .BrowseDirection = BrowseDirection.Forward,
@@ -194,15 +182,10 @@ Public Class OpcConnection
             ' Browse root Objects folder
             Dim rootRefs = Await browser.BrowseAsync(ObjectIds.ObjectsFolder)
             For Each rootRef As ReferenceDescription In rootRefs
-                'rootRef.NodeId
-                'rootRef.NodeClass
-                'rootRef.DisplayName
-                ' Console.WriteLine($"📁 Root: {rootRef.DisplayName} [{rootRef.NodeClass}]")
 
                 ' Focus on PressureGauge and PressureTire nodes
                 If rootRef.DisplayName.Text.Contains("Pressure") Then
                     Dim nodeId = ExpandedNodeId.ToNodeId(rootRef.NodeId, _session.NamespaceUris)
-                    'Console.WriteLine($"🎯 Found {rootRef.DisplayName}: {nodeId}")
 
                     ' Browse sensors
                     Dim sensorRefs = Await browser.BrowseAsync(nodeId)
@@ -211,13 +194,8 @@ Public Class OpcConnection
                             Try
                                 Dim sensorNodeId = ExpandedNodeId.ToNodeId(sensorRef.NodeId, _session.NamespaceUris)
                                 Dim value = Await _session.ReadValueAsync(sensorNodeId)
-                                'If StatusCode.IsGood(value.StatusCode) Then
-                                '    'Console.WriteLine($"  🔧 {sensorRef.DisplayName}: {value.Value} PSI [{value.StatusCode}]")
-                                'Else
-                                '    'Console.WriteLine($"  ⚠️ {sensorRef.DisplayName}: {value.StatusCode}")
-                                'End If
                             Catch ex As Exception
-                                ' Console.WriteLine($"  ⚠️ {sensorRef.DisplayName}: Read error - {ex.Message}")
+                                ' Skip problematic sensors
                             End Try
                         End If
                     Next
@@ -225,7 +203,7 @@ Public Class OpcConnection
             Next
 
         Catch ex As Exception
-            ' Console.WriteLine($"⚠️ Browse error: {ex.Message}")
+            ' Ignore browse errors
         End Try
     End Function
 
@@ -246,7 +224,6 @@ Public Class OpcConnection
 
             Return True
         Catch ex As Exception
-            ' Console.WriteLine($"❌ Test connection failed: {ex.Message}")
             Return False
         End Try
     End Function
@@ -254,21 +231,16 @@ Public Class OpcConnection
     ' === Test connection with detailed logging ===
     Public Shared Async Function TestConnectionWithDetails(endpointUrl As String) As Task(Of Boolean)
         Try
-            'Console.WriteLine($"🔍 Testing connection to: {endpointUrl}")
 
             Dim appConfig = Await BuildApplicationConfigurationAsync()
-            'Console.WriteLine("✅ Application configuration built")
 
             Dim useSecurity = False
             Dim selectedEndpoint = Await CoreClientUtils.SelectEndpointAsync(appConfig, endpointUrl, useSecurity)
-            ' Console.WriteLine($"✅ Endpoint selected: {selectedEndpoint.EndpointUrl}")
 
             Dim endpointConfig = EndpointConfiguration.Create(appConfig)
             Dim configuredEndpoint = New ConfiguredEndpoint(Nothing, selectedEndpoint, endpointConfig)
-            ' Console.WriteLine("✅ Endpoint configured")
 
             Dim testSession = Await Session.Create(appConfig, configuredEndpoint, False, "Test Session", 30000, Nothing, Nothing)
-            ' Console.WriteLine($"✅ Session created: {testSession.SessionName}")
 
             'Dim Avaliable = Await GetAvailableObjects(endpointUrl)
 
@@ -279,12 +251,9 @@ Public Class OpcConnection
 
             Await testSession.CloseAsync()
             testSession.Dispose()
-            'Console.WriteLine("✅ Test session closed successfully")
 
             Return True
         Catch ex As Exception
-            ' Console.WriteLine($"❌ Test connection failed: {ex.Message}")
-            ' Console.WriteLine($"❌ Stack trace: {ex.StackTrace}")
             Return False
         End Try
     End Function
@@ -294,7 +263,6 @@ Public Class OpcConnection
         Dim testSession As Session = Nothing
         Dim foundPaths As New List(Of String)
         Try
-            ' Console.WriteLine($"🔍 Deep searching for object: {objectName}")
 
             ' Create test session
             Dim appConfig = Await BuildApplicationConfigurationAsync()
@@ -304,8 +272,6 @@ Public Class OpcConnection
             Dim configuredEndpoint = New ConfiguredEndpoint(Nothing, selectedEndpoint, endpointConfig)
             testSession = Await Session.Create(appConfig, configuredEndpoint, False, "Deep Search Session", 30000, Nothing, Nothing)
 
-            ' Console.WriteLine("✅ Deep search session created")
-
             Dim browser = New Browser(testSession) With {
                 .BrowseDirection = BrowseDirection.Forward,
                 .NodeClassMask = NodeClass.Object Or NodeClass.Variable
@@ -314,11 +280,9 @@ Public Class OpcConnection
             ' Start recursive search from Objects folder
             Await SearchRecursive(browser, ObjectIds.ObjectsFolder, objectName, foundPaths, testSession.NamespaceUris, "Objects", 0)
 
-            ' Console.WriteLine($"✅ Search completed. Found {foundPaths.Count} matches for '{objectName}'")
             Return foundPaths
 
         Catch ex As Exception
-            Console.WriteLine($"❌ Deep search failed: {ex.Message}")
             Return foundPaths
         Finally
             If testSession IsNot Nothing Then
@@ -341,26 +305,18 @@ Public Class OpcConnection
                 Dim childNodeId = ExpandedNodeId.ToNodeId(ref.NodeId, namespaceUris)
                 Dim childPath = $"{currentPath}/{ref.DisplayName}"
 
-                ' Console.WriteLine($"{New String(" "c, depth * 2)}📝 {ref.DisplayName} [{childNodeId}] - {ref.NodeClass}")
-
                 ' Check if this matches our search
                 If ref.DisplayName.Text.ToLower().Contains(searchName.ToLower()) Then
                     Dim fullPath = $"Path: {childPath} | NodeId: {childNodeId} | Class: {ref.NodeClass}"
                     foundPaths.Add(fullPath)
-                    ' Console.WriteLine($"✅ FOUND MATCH: {fullPath}")
 
                     ' If it's a variable, try to read its value
                     If ref.NodeClass = NodeClass.Variable Then
                         Try
                             Dim session = browser.Session
                             Dim value = Await session.ReadValueAsync(childNodeId)
-                            'If StatusCode.IsGood(value.StatusCode) Then
-                            '    Console.WriteLine($"  → Value: {value.Value} [{value.StatusCode}]")
-                            'Else
-                            '    Console.WriteLine($"  → Status: {value.StatusCode}")
-                            'End If
                         Catch readEx As Exception
-                            Console.WriteLine($"  → Read error: {readEx.Message}")
+                            ' Ignore read errors
                         End Try
                     End If
                 End If
@@ -370,12 +326,12 @@ Public Class OpcConnection
                     Try
                         Await SearchRecursive(browser, childNodeId, searchName, foundPaths, namespaceUris, childPath, depth + 1)
                     Catch recursiveEx As Exception
-                        Console.WriteLine($"{New String(" "c, depth * 2)}⚠️ Cannot browse {ref.DisplayName}: {recursiveEx.Message}")
+                        ' Ignore recursive browse errors
                     End Try
                 End If
             Next
         Catch ex As Exception
-            Console.WriteLine($"Search error at depth {depth}: {ex.Message}")
+            ' Ignore search errors
         End Try
     End Function
 
@@ -384,7 +340,6 @@ Public Class OpcConnection
         Dim testSession As Session = Nothing
         Dim objects As New List(Of Dictionary(Of String, String))
         Try
-            'Console.WriteLine("🔍 Getting available objects...")
 
             ' Create test session
             Dim appConfig = Await BuildApplicationConfigurationAsync()
@@ -393,8 +348,6 @@ Public Class OpcConnection
             Dim endpointConfig = EndpointConfiguration.Create(appConfig)
             Dim configuredEndpoint = New ConfiguredEndpoint(Nothing, selectedEndpoint, endpointConfig)
             testSession = Await Session.Create(appConfig, configuredEndpoint, False, "Objects Session", 30000, Nothing, Nothing)
-
-            ' Console.WriteLine("✅ Objects session created")
 
             Dim browser = New Browser(testSession) With {
                 .BrowseDirection = BrowseDirection.Forward,
@@ -424,22 +377,45 @@ Public Class OpcConnection
                         pathParts.Add(parts(i))
                     Next
                     browsePath = String.Join(".", pathParts)
-                    Console.WriteLine($"🔍 Detected path in endpoint: {browsePath}")
                 End If
             End If
             
             Dim objectsRefs As ReferenceDescriptionCollection
             
             If Not String.IsNullOrEmpty(browsePath) Then
-                ' Try to browse from specific NodeId based on path
+                ' Handle nested paths like PLC.S7-1200
                 Try
-                    Dim targetNodeId = NodeId.Parse($"ns=2;s={browsePath}")
-                    Console.WriteLine($"🔍 Browsing from specific node: {targetNodeId}")
-                    objectsRefs = Await browser.BrowseAsync(targetNodeId)
-                    Console.WriteLine($"🔍 Found {objectsRefs.Count} objects in {browsePath}")
+                    Dim pathParts = browsePath.Split("."c)
+                    Dim currentNodeId As NodeId = ObjectIds.ObjectsFolder
+                    
+                    ' Navigate through each part of the path
+                    For Each pathPart In pathParts
+                        Dim currentRefs = Await browser.BrowseAsync(currentNodeId)
+                        Dim foundNode As NodeId = Nothing
+                        
+                        ' Find the matching object in current level
+                        For Each currentRef As ReferenceDescription In currentRefs
+                            If currentRef.DisplayName.Text.ToLower() = pathPart.ToLower() Then
+                                foundNode = ExpandedNodeId.ToNodeId(currentRef.NodeId, testSession.NamespaceUris)
+                                Exit For
+                            End If
+                        Next
+                        
+                        If foundNode IsNot Nothing Then
+                            currentNodeId = foundNode
+                        Else
+                            currentNodeId = Nothing
+                            Exit For
+                        End If
+                    Next
+                    
+                    If currentNodeId IsNot Nothing AndAlso Not currentNodeId.Equals(ObjectIds.ObjectsFolder) Then
+                        ' Browse the final target node
+                        objectsRefs = Await browser.BrowseAsync(currentNodeId)
+                    Else
+                        objectsRefs = Nothing
+                    End If
                 Catch pathEx As Exception
-                    Console.WriteLine($"⚠️ Cannot browse path {browsePath}: {pathEx.Message}")
-                    Console.WriteLine($"🔍 Falling back to root Objects folder")
                     objectsRefs = Nothing
                 End Try
 
@@ -450,7 +426,6 @@ Public Class OpcConnection
             Else
                 ' Browse Objects folder for all objects
                 objectsRefs = Await browser.BrowseAsync(ObjectIds.ObjectsFolder)
-                Console.WriteLine($"🔍 GetAvailableObjects - Found {objectsRefs.Count} root objects")
             End If
             
             For Each objRef As ReferenceDescription In objectsRefs
@@ -461,13 +436,11 @@ Public Class OpcConnection
                     {"NodeType", objRef.NodeClass.ToString()}
                 }
                 objects.Add(objectInfo)
-                Console.WriteLine($"✅ Found object: {objRef.DisplayName} [{objRef.NodeId}] - {objRef.NodeClass}")
             Next
 
             Return objects
 
         Catch ex As Exception
-            Console.WriteLine($"❌ Get objects failed: {ex.Message}")
             Return objects
         Finally
             If testSession IsNot Nothing Then
@@ -773,13 +746,12 @@ Public Class OpcConnection
 
     ' === Disconnect manual ===
     Public Shared Async Function Disconnect() As Task
-            Try
-                If IsConnected Then
-                    Await _session.CloseAsync()
-                    Console.WriteLine("🔌 OPC UA disconnected.")
-                End If
-            Catch ex As Exception
-                Console.WriteLine($"⚠️ Disconnect error: {ex.Message}")
-            End Try
+        Try
+            If Not IsConnected Then
+                Await _session.CloseAsync()
+            End If
+        Catch ex As Exception
+            ' Ignore disconnect errors
+        End Try
         End Function
 End Class

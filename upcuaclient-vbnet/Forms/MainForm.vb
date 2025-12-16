@@ -66,7 +66,7 @@ Public Class MainForm
                 End Select
             Next
         Catch ex As Exception
-            Console.WriteLine("Gagal refresh data: " & ex.Message)
+            ' Log critical errors only
         End Try
     End Sub
 

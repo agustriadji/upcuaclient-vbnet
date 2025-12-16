@@ -58,11 +58,8 @@ Namespace upcuaclient_vbnet
                 ' Save back to file
                 Dim updatedJson = JsonConvert.SerializeObject(dict, Formatting.Indented)
                 File.WriteAllText(metadataPath, updatedJson)
-
-                Console.WriteLine($"📊 Metadata updated for {sensorKey}")
-
             Catch ex As Exception
-                Console.WriteLine($"⚠️ Metadata save error: {ex.Message}")
+                ' Log critical errors only
             End Try
         End Sub
 
@@ -89,11 +86,9 @@ Namespace upcuaclient_vbnet
                         If tempList IsNot Nothing Then
                             analyticsDataPressure = tempList
                         Else
-                            Console.WriteLine($"⚠️ File empty: {filePath}")
                             Return ' ⛔ Skip
                         End If
                     Catch ex As Exception
-                        Console.WriteLine($"⚠️ File corrupt: {filePath} → {ex.Message}")
                         Return ' ⛔ Skip
                     End Try
                 End If
@@ -108,11 +103,8 @@ Namespace upcuaclient_vbnet
                 ' Save back to file
                 Dim updatedJson = JsonConvert.SerializeObject(analyticsDataPressure, Formatting.Indented)
                 File.WriteAllText(filePath, updatedJson)
-
-                Console.WriteLine($"📊 Analytics Pressure saved: {fileName}")
-
             Catch ex As Exception
-                Console.WriteLine($"⚠️ Analytics Pressure save error: {ex.Message}")
+                ' Log critical errors only
             End Try
         End Sub
 
@@ -124,15 +116,13 @@ Namespace upcuaclient_vbnet
                 ' Delete old files if exists
                 If Directory.Exists(sensorFolder) Then
                     Directory.Delete(sensorFolder, True)
-                    Console.WriteLine($"🗑️ Deleted old analytics for sensor{sensorId}")
                 End If
 
                 ' Create new folder
                 Directory.CreateDirectory(sensorFolder)
-                Console.WriteLine($"📁 Created new analytics folder for sensor{sensorId}")
 
             Catch ex As Exception
-                Console.WriteLine($"⚠️ New record error: {ex.Message}")
+                ' Log critical errors only
             End Try
         End Sub
     End Class

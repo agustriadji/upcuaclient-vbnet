@@ -8,6 +8,10 @@ Public Class SQLiteManager
     Private dbPath As String = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "data", "sensor.db")
     Private schemaPath As String = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "Config", "sqlite.sql")
 
+    Public Shared Function GetDatabasePath() As String
+        Return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "data", "sensor.db")
+    End Function
+
     Public Sub New()
         ' Auto-initialize database on creation
         InitDatabase()
@@ -42,6 +46,7 @@ Public Class SQLiteManager
             CREATE TABLE IF NOT EXISTS sensor_data (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 node_id TEXT NOT NULL,
+                node_text TEXT NOT NULL,
                 sensor_type TEXT NOT NULL,
                 value REAL NOT NULL,
                 data_type TEXT NOT NULL,
@@ -52,6 +57,7 @@ Public Class SQLiteManager
             CREATE TABLE IF NOT EXISTS sensor_alerts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 node_id TEXT NOT NULL,
+                node_text TEXT NOT NULL,
                 sensor_type TEXT NOT NULL,
                 message TEXT NOT NULL,
                 threshold REAL NOT NULL,
@@ -190,14 +196,15 @@ Public Class SQLiteManager
                 conn.Open()
                 Dim query As String = "
                     INSERT INTO sensor_data 
-                    (node_id, sensor_type, value, data_type, status, sync_status, timestamp) 
+                    (node_id, node_text, sensor_type, value, data_type, status, sync_status, timestamp) 
                     VALUES 
-                    (@node_id, @sensor_type, @value, @data_type, @status, @sync_status, @timestamp)
+                    (@node_id,@node_text, @sensor_type, @value, @data_type, @status, @sync_status, @timestamp)
                 "
 
                 Using transaction = conn.BeginTransaction()
                     Using cmd As New SQLiteCommand(query, conn, transaction)
                         cmd.Parameters.AddWithValue("@node_id", data.NodeId)
+                        cmd.Parameters.AddWithValue("@node_text", data.NodeText)
                         cmd.Parameters.AddWithValue("@sensor_type", data.SensorType)
                         cmd.Parameters.AddWithValue("@value", data.Value)
                         cmd.Parameters.AddWithValue("@data_type", data.DataType)
@@ -225,13 +232,14 @@ Public Class SQLiteManager
                 conn.Open()
                 Dim query As String = "
                 INSERT INTO sensor_alerts 
-                (node_id, sensor_type, message, threshold, current_value, severity, timestamp) 
+                (node_id, node_text, sensor_type, message, threshold, current_value, severity, timestamp) 
                 VALUES 
-                (@node_id, @sensor_type, @message, @threshold, @current_value, @severity, @timestamp)
+                (@node_id,@node_text, @sensor_type, @message, @threshold, @current_value, @severity, @timestamp)
             "
 
                 Using cmd As New SQLiteCommand(query, conn)
                     cmd.Parameters.AddWithValue("@node_id", alert.NodeId)
+                    cmd.Parameters.AddWithValue("@node_text", alert.NodeText)
                     cmd.Parameters.AddWithValue("@sensor_type", alert.SensorType)
                     cmd.Parameters.AddWithValue("@message", alert.Message)
                     cmd.Parameters.AddWithValue("@threshold", alert.Threshold)
@@ -429,7 +437,9 @@ Public Class SQLiteManager
                 SELECT rm.*,
                        CASE 
                            WHEN rm.status = 'Recording' THEN 
-                               COALESCE(MAX(sd.timestamp), rm.end_date)
+                               COALESCE(MAX(sd.timestamp), rm.start_date)
+                           WHEN rm.status = 'Not-Start' THEN 
+                               COALESCE(MAX(sd.timestamp), rm.start_date)
                            ELSE rm.end_date
                        END as actual_end_date
                 FROM record_metadata rm
@@ -629,6 +639,25 @@ Public Class SQLiteManager
             Return True
         Catch ex As Exception
             Console.WriteLine($"❌ DeleteSensorDataByNodeIds Error: {ex.Message}")
+            Return False
+        End Try
+    End Function
+
+    Public Function DeleteSensorAlertsByNodeIds(pressureTireId As String, pressureGaugeId As String) As Boolean
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+                Dim query = "DELETE FROM sensor_alerts WHERE node_id IN (@tire_id, @gauge_id)"
+                Using cmd As New SQLiteCommand(query, conn)
+                    cmd.Parameters.AddWithValue("@tire_id", pressureTireId)
+                    cmd.Parameters.AddWithValue("@gauge_id", pressureGaugeId)
+                    Dim deletedRows = cmd.ExecuteNonQuery()
+                    Console.WriteLine($"🗑️ Deleted {deletedRows} sensor_alerts rows for nodes: {pressureTireId}, {pressureGaugeId}")
+                End Using
+            End Using
+            Return True
+        Catch ex As Exception
+            Console.WriteLine($"❌ DeleteSensorAlertsByNodeIds Error: {ex.Message}")
             Return False
         End Try
     End Function

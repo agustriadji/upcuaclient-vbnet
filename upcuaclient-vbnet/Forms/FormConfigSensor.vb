@@ -131,15 +131,33 @@ Public Class FormConfigSensor
                 Dim objectName = LabelSelectedObjects.Text
                 Dim sensors As New List(Of Dictionary(Of String, String))
 
+                ' Get existing sensor config to preserve status
+                Dim existingConfig = SettingsManager.GetSelectedNodeSensor()
+
                 For Each row As DataGridViewRow In DGVNodeSensor.Rows
                     If Not row.IsNewRow Then
                         Dim isActive = CBool(row.Cells("NodeActive").Value)
                         If isActive Then
+                            Dim nodeId = row.Cells("NodeId").Value.ToString()
+                            Dim currentStatus = "ready"
+
+                            ' Preserve existing status if sensor is already configured
+                            If existingConfig.ContainsKey(objectName) Then
+                                Dim existingSensor = existingConfig(objectName).FirstOrDefault(Function(s) s("NodeId") = nodeId)
+                                If existingSensor IsNot Nothing AndAlso existingSensor.ContainsKey("NodeStatus") Then
+                                    Dim existingStatus = existingSensor("NodeStatus").ToLower()
+                                    ' Preserve running, no-start, or recording status
+                                    If existingStatus = "running" OrElse existingStatus = "no-start" OrElse existingStatus = "recording" Then
+                                        currentStatus = existingSensor("NodeStatus")
+                                    End If
+                                End If
+                            End If
+
                             sensors.Add(New Dictionary(Of String, String) From {
                                 {"NodeText", row.Cells("NodeText").Value.ToString()},
-                                {"NodeId", row.Cells("NodeId").Value.ToString()},
+                                {"NodeId", nodeId},
                                 {"NodeType", row.Cells("NodeType").Value.ToString()},
-                                {"NodeStatus", "ready"},
+                                {"NodeStatus", currentStatus},
                                 {"NodeActive", "True"}
                             })
                         End If
@@ -207,26 +225,29 @@ Public Class FormConfigSensor
                     DGVNodeSensor.Rows(rowIndex).Cells("NodeId").Value = childNode("NodeId")
                     DGVNodeSensor.Rows(rowIndex).Cells("NodeType").Value = childNode("NodeType")
 
-                    ' Use default values from childNode or check active sensors
+                    ' Get actual status from active sensors
                     Dim isActive As Boolean = False
-                    Dim status As String = "Idle"
+                    Dim status As String = "idle"
 
-                    If activeSensors.Count > 0 Then
-                        ' Only check if there are active sensors
-                        isActive = activeSensors.Any(Function(s) s("NodeId").ToString() = childNode("NodeId"))
-                        status = If(isActive, "Running", "Idle")
-                    Else
-                        ' Use defaults from childNode if available
-                        If childNode.ContainsKey("NodeActive") Then
-                            Boolean.TryParse(childNode("NodeActive"), isActive)
-                        End If
-                        If childNode.ContainsKey("NodeStatus") Then
-                            status = childNode("NodeStatus")
+                    Dim existingSensor = activeSensors.FirstOrDefault(Function(s) s("NodeId") = childNode("NodeId"))
+                    If existingSensor IsNot Nothing Then
+                        Boolean.TryParse(existingSensor("NodeActive"), isActive)
+                        If existingSensor.ContainsKey("NodeStatus") Then
+                            status = existingSensor("NodeStatus")
+                        Else
+                            status = If(isActive, "ready", "idle")
                         End If
                     End If
 
                     DGVNodeSensor.Rows(rowIndex).Cells("NodeStatus").Value = status
                     DGVNodeSensor.Rows(rowIndex).Cells("NodeActive").Value = isActive
+
+                    ' Disable NodeActive cell only if sensor has active status
+                    Dim lowerStatus = status.ToLower()
+                    If lowerStatus = "running" OrElse lowerStatus = "recording" OrElse lowerStatus = "no-start" Then
+                        DGVNodeSensor.Rows(rowIndex).Cells("NodeActive").ReadOnly = True
+                        DGVNodeSensor.Rows(rowIndex).DefaultCellStyle.BackColor = Color.LightGray
+                    End If
 
                     ' LoggerDebug.LogInfo($"  Set {childNode("NodeText")}: NodeActive = {isActive}, NodeStatus = {status}")
                 Next
