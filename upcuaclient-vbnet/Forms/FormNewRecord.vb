@@ -39,12 +39,13 @@ Public Class FormNewRecord
 
             Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
 
-            ' Populate PressureTire sensors (NodeActive = true AND NodeStatus = idle)
+            ' Populate PressureTire sensors (NodeActive = true AND NodeStatus = ready)
             If selectedNodeSensor.ContainsKey("PressureTire") Then
                 Dim tireSensors = selectedNodeSensor("PressureTire")
                 For Each sensor In tireSensors
                     If sensor.ContainsKey("NodeActive") AndAlso sensor.ContainsKey("NodeStatus") Then
-                        If sensor("NodeActive").ToLower() = "true" AndAlso sensor("NodeStatus").ToLower() = "idle" Then
+                        Dim status = sensor("NodeStatus").ToLower()
+                        If sensor("NodeActive").ToLower() = "true" AndAlso status = "ready" Then
                             ComboBoxSensorTire.Items.Add(New With {
                                 .Display = $"{sensor("NodeText")} [{sensor("NodeId")}]",
                                 .NodeId = sensor("NodeId"),
@@ -55,12 +56,13 @@ Public Class FormNewRecord
                 Next
             End If
 
-            ' Populate PressureGauge sensors (NodeActive = true AND NodeStatus = idle)
+            ' Populate PressureGauge sensors (NodeActive = true AND NodeStatus = ready)
             If selectedNodeSensor.ContainsKey("PressureGauge") Then
                 Dim guageSensors = selectedNodeSensor("PressureGauge")
                 For Each sensor In guageSensors
                     If sensor.ContainsKey("NodeActive") AndAlso sensor.ContainsKey("NodeStatus") Then
-                        If sensor("NodeActive").ToLower() = "true" AndAlso sensor("NodeStatus").ToLower() = "idle" Then
+                        Dim status = sensor("NodeStatus").ToLower()
+                        If sensor("NodeActive").ToLower() = "true" AndAlso status = "ready" Then
                             ComboBoxSensorGuage.Items.Add(New With {
                                 .Display = $"{sensor("NodeText")} [{sensor("NodeId")}]",
                                 .NodeId = sensor("NodeId"),

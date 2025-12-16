@@ -30,6 +30,7 @@ Partial Class MainFormNew
         Me.DTG1_NameSensor = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.DTG1_StatusSensor = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.TabPageRecording = New System.Windows.Forms.TabPage()
+        Me.ButtonRefresh = New System.Windows.Forms.Button()
         Me.DGVRecording = New System.Windows.Forms.DataGridView()
         Me.BatchId = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.SensorId = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -65,6 +66,7 @@ Partial Class MainFormNew
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.ToolStripStatusLabelOPC = New System.Windows.Forms.ToolStripStatusLabel()
         Me.ToolStripStatusLabelDB = New System.Windows.Forms.ToolStripStatusLabel()
+        Me.SplitContainer3 = New System.Windows.Forms.SplitContainer()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainer1.Panel1.SuspendLayout()
         Me.SplitContainer1.Panel2.SuspendLayout()
@@ -81,12 +83,16 @@ Partial Class MainFormNew
         Me.ToolStrip1.SuspendLayout()
         Me.MenuStrip1.SuspendLayout()
         Me.StatusStrip1.SuspendLayout()
+        CType(Me.SplitContainer3, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.SplitContainer3.Panel1.SuspendLayout()
+        Me.SplitContainer3.Panel2.SuspendLayout()
+        Me.SplitContainer3.SuspendLayout()
         Me.SuspendLayout()
         '
         'SplitContainer1
         '
         Me.SplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.SplitContainer1.Location = New System.Drawing.Point(4, 32)
+        Me.SplitContainer1.Location = New System.Drawing.Point(4, 34)
         Me.SplitContainer1.Name = "SplitContainer1"
         Me.SplitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal
         '
@@ -101,7 +107,7 @@ Partial Class MainFormNew
         Me.SplitContainer1.Panel2.Controls.Add(Me.SplitContainer2)
         Me.SplitContainer1.Panel2.RightToLeft = System.Windows.Forms.RightToLeft.No
         Me.SplitContainer1.Panel2Collapsed = True
-        Me.SplitContainer1.Size = New System.Drawing.Size(1174, 491)
+        Me.SplitContainer1.Size = New System.Drawing.Size(1174, 489)
         Me.SplitContainer1.SplitterDistance = 361
         Me.SplitContainer1.TabIndex = 2
         '
@@ -115,7 +121,7 @@ Partial Class MainFormNew
         Me.TabControlMain.Margin = New System.Windows.Forms.Padding(0)
         Me.TabControlMain.Name = "TabControlMain"
         Me.TabControlMain.SelectedIndex = 0
-        Me.TabControlMain.Size = New System.Drawing.Size(1174, 481)
+        Me.TabControlMain.Size = New System.Drawing.Size(1174, 479)
         Me.TabControlMain.TabIndex = 1
         '
         'TabPageSensorState
@@ -134,10 +140,14 @@ Partial Class MainFormNew
         '
         Me.DataGridView1.AllowUserToAddRows = False
         Me.DataGridView1.AllowUserToDeleteRows = False
+        Me.DataGridView1.AllowUserToResizeColumns = False
+        Me.DataGridView1.AllowUserToResizeRows = False
         Me.DataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.DataGridView1.BackgroundColor = System.Drawing.SystemColors.ButtonFace
-        Me.DataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.DataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.DataGridView1.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SunkenHorizontal
         Me.DataGridView1.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.Disable
+        Me.DataGridView1.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Sunken
         Me.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.DataGridView1.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.DTG1_NameSensor, Me.DTG1_StatusSensor})
         Me.DataGridView1.Dock = System.Windows.Forms.DockStyle.Fill
@@ -148,7 +158,6 @@ Partial Class MainFormNew
         Me.DataGridView1.RowHeadersVisible = False
         Me.DataGridView1.RowHeadersWidth = 51
         Me.DataGridView1.RowTemplate.Height = 24
-        Me.DataGridView1.ScrollBars = System.Windows.Forms.ScrollBars.None
         Me.DataGridView1.ShowCellToolTips = False
         Me.DataGridView1.ShowEditingIcon = False
         Me.DataGridView1.Size = New System.Drawing.Size(1160, 442)
@@ -170,14 +179,23 @@ Partial Class MainFormNew
         '
         'TabPageRecording
         '
-        Me.TabPageRecording.Controls.Add(Me.DGVRecording)
+        Me.TabPageRecording.Controls.Add(Me.SplitContainer3)
         Me.TabPageRecording.Location = New System.Drawing.Point(4, 29)
         Me.TabPageRecording.Name = "TabPageRecording"
         Me.TabPageRecording.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageRecording.Size = New System.Drawing.Size(1166, 448)
+        Me.TabPageRecording.Size = New System.Drawing.Size(1166, 446)
         Me.TabPageRecording.TabIndex = 1
         Me.TabPageRecording.Text = "Recording"
         Me.TabPageRecording.UseVisualStyleBackColor = True
+        '
+        'ButtonRefresh
+        '
+        Me.ButtonRefresh.Image = CType(resources.GetObject("ButtonRefresh.Image"), System.Drawing.Image)
+        Me.ButtonRefresh.Location = New System.Drawing.Point(3, 7)
+        Me.ButtonRefresh.Name = "ButtonRefresh"
+        Me.ButtonRefresh.Size = New System.Drawing.Size(40, 40)
+        Me.ButtonRefresh.TabIndex = 1
+        Me.ButtonRefresh.UseVisualStyleBackColor = True
         '
         'DGVRecording
         '
@@ -185,17 +203,21 @@ Partial Class MainFormNew
         Me.DGVRecording.AllowUserToDeleteRows = False
         Me.DGVRecording.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.DGVRecording.BackgroundColor = System.Drawing.SystemColors.ButtonFace
-        Me.DGVRecording.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.DGVRecording.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.DGVRecording.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SunkenHorizontal
+        Me.DGVRecording.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Sunken
         Me.DGVRecording.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.DGVRecording.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.BatchId, Me.SensorId, Me.RunningDay, Me.SizeTire, Me.State, Me.CreatedAt, Me.UpdatedAt, Me.Delete})
         Me.DGVRecording.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.DGVRecording.Location = New System.Drawing.Point(3, 3)
+        Me.DGVRecording.GridColor = System.Drawing.SystemColors.ButtonFace
+        Me.DGVRecording.Location = New System.Drawing.Point(0, 0)
         Me.DGVRecording.Name = "DGVRecording"
         Me.DGVRecording.ReadOnly = True
+        Me.DGVRecording.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.[Single]
         Me.DGVRecording.RowHeadersVisible = False
         Me.DGVRecording.RowHeadersWidth = 51
         Me.DGVRecording.RowTemplate.Height = 24
-        Me.DGVRecording.Size = New System.Drawing.Size(1160, 442)
+        Me.DGVRecording.Size = New System.Drawing.Size(1160, 383)
         Me.DGVRecording.TabIndex = 0
         '
         'BatchId
@@ -365,7 +387,7 @@ Partial Class MainFormNew
         Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.ViewToolStripMenuItem, Me.ToolsToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(4, 4)
         Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(1174, 28)
+        Me.MenuStrip1.Size = New System.Drawing.Size(1174, 30)
         Me.MenuStrip1.TabIndex = 0
         Me.MenuStrip1.Text = "MenuStrip1"
         '
@@ -451,6 +473,7 @@ Partial Class MainFormNew
         Me.FeedbackToolStripMenuItem.Name = "FeedbackToolStripMenuItem"
         Me.FeedbackToolStripMenuItem.Size = New System.Drawing.Size(176, 26)
         Me.FeedbackToolStripMenuItem.Text = "Report Issue"
+        Me.FeedbackToolStripMenuItem.Visible = False
         '
         'FeedbackToolStripMenuItem1
         '
@@ -486,6 +509,25 @@ Partial Class MainFormNew
         Me.ToolStripStatusLabelDB.Padding = New System.Windows.Forms.Padding(6, 0, 6, 0)
         Me.ToolStripStatusLabelDB.Size = New System.Drawing.Size(165, 20)
         Me.ToolStripStatusLabelDB.Text = "DB Not Connected"
+        '
+        'SplitContainer3
+        '
+        Me.SplitContainer3.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.SplitContainer3.FixedPanel = System.Windows.Forms.FixedPanel.Panel1
+        Me.SplitContainer3.Location = New System.Drawing.Point(3, 3)
+        Me.SplitContainer3.Name = "SplitContainer3"
+        Me.SplitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal
+        '
+        'SplitContainer3.Panel1
+        '
+        Me.SplitContainer3.Panel1.Controls.Add(Me.ButtonRefresh)
+        '
+        'SplitContainer3.Panel2
+        '
+        Me.SplitContainer3.Panel2.Controls.Add(Me.DGVRecording)
+        Me.SplitContainer3.Size = New System.Drawing.Size(1160, 440)
+        Me.SplitContainer3.SplitterDistance = 53
+        Me.SplitContainer3.TabIndex = 2
         '
         'MainFormNew
         '
@@ -526,6 +568,10 @@ Partial Class MainFormNew
         Me.MenuStrip1.PerformLayout()
         Me.StatusStrip1.ResumeLayout(False)
         Me.StatusStrip1.PerformLayout()
+        Me.SplitContainer3.Panel1.ResumeLayout(False)
+        Me.SplitContainer3.Panel2.ResumeLayout(False)
+        CType(Me.SplitContainer3, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.SplitContainer3.ResumeLayout(False)
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -573,4 +619,6 @@ Partial Class MainFormNew
     Friend WithEvents CreatedAt As DataGridViewTextBoxColumn
     Friend WithEvents UpdatedAt As DataGridViewTextBoxColumn
     Friend WithEvents Delete As DataGridViewTextBoxColumn
+    Friend WithEvents ButtonRefresh As Button
+    Friend WithEvents SplitContainer3 As SplitContainer
 End Class

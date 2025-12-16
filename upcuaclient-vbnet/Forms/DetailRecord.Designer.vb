@@ -22,7 +22,7 @@ Partial Class DetailRecord
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle3 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.TextBoxStartPressure = New System.Windows.Forms.TextBox()
@@ -284,7 +284,7 @@ Partial Class DetailRecord
         '
         Me.Panel1.BackColor = System.Drawing.Color.Transparent
         Me.Panel1.Controls.Add(Me.CMBGroupingGraph)
-        Me.Panel1.Location = New System.Drawing.Point(210, 2)
+        Me.Panel1.Location = New System.Drawing.Point(148, -5)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(159, 38)
         Me.Panel1.TabIndex = 2
@@ -332,21 +332,25 @@ Partial Class DetailRecord
         Me.DGVWatch.AllowUserToResizeRows = False
         Me.DGVWatch.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
         Me.DGVWatch.BackgroundColor = System.Drawing.SystemColors.ButtonFace
+        Me.DGVWatch.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.DGVWatch.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SunkenHorizontal
+        Me.DGVWatch.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Sunken
         Me.DGVWatch.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.DGVWatch.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.StartPressure, Me.Pressure, Me.LeakPressure, Me.Timestamp})
         Me.DGVWatch.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.DGVWatch.GridColor = System.Drawing.SystemColors.ButtonFace
         Me.DGVWatch.Location = New System.Drawing.Point(3, 3)
         Me.DGVWatch.MultiSelect = False
         Me.DGVWatch.Name = "DGVWatch"
         Me.DGVWatch.ReadOnly = True
-        DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle1.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        DataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
-        DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle1
+        DataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle3.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        DataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.ButtonHighlight
+        DataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.DGVWatch.RowHeadersDefaultCellStyle = DataGridViewCellStyle3
         Me.DGVWatch.RowHeadersVisible = False
         Me.DGVWatch.RowHeadersWidth = 51
         Me.DGVWatch.RowTemplate.Height = 24

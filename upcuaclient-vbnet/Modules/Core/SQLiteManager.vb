@@ -429,7 +429,9 @@ Public Class SQLiteManager
                 SELECT rm.*,
                        CASE 
                            WHEN rm.status = 'Recording' THEN 
-                               COALESCE(MAX(sd.timestamp), rm.end_date)
+                               COALESCE(MAX(sd.timestamp), rm.start_date)
+                           WHEN rm.status = 'Not-Start' THEN 
+                               COALESCE(MAX(sd.timestamp), rm.start_date)
                            ELSE rm.end_date
                        END as actual_end_date
                 FROM record_metadata rm

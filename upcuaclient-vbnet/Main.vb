@@ -14,7 +14,7 @@ Namespace upcuaclient_vbnet
         <STAThread()>
         Sub Main()
             ' Soft error handling - suppress all UI errors
-            'DisableConsole()
+            DisableConsole()
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException)
             AddHandler Application.ThreadException, Sub(s, e)
                                                         ' Ignore UI errors silently
@@ -28,7 +28,7 @@ Namespace upcuaclient_vbnet
             bgWorker.Start()
 
             ' Alokasi console untuk debugging
-            AllocConsole()
+            'AllocConsole()
             Console.WriteLine("🚀 Starting OPC UA Client...")
 
             Try

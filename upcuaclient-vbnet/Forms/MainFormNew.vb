@@ -1,7 +1,5 @@
 Imports System.IO
-Imports System.Windows.Media.Media3D
 Imports Newtonsoft.Json
-Imports Org.BouncyCastle.Math.EC.ECCurve
 Imports upcuaclient_vbnet.upcuaclient_vbnet
 
 Public Class MainFormNew
@@ -16,7 +14,7 @@ Public Class MainFormNew
     Sub InitializeTimers()
         ' Use My.Settings instead of config file
         SettingsManager.InitializeDefaults()
-        refreshTimerTabPageRecording.Interval = My.Settings.intervalRefreshMain
+        refreshTimerTabPageRecording.Interval = My.Settings.intervalTime
         refreshTimerTabPageSensor.Interval = My.Settings.intervalRefreshMain
 
 
@@ -115,8 +113,16 @@ Public Class MainFormNew
     End Sub
 
     Private Sub RefreshDataTabPageSensor(sender As Object, e As EventArgs)
+        Dim currentFirstDisplayedScrollingRowIndex = -1
         Try
             If DataGridView1 Is Nothing Then Return
+
+            ' Save current scroll position
+            If DataGridView1.FirstDisplayedScrollingRowIndex >= 0 Then
+                currentFirstDisplayedScrollingRowIndex = DataGridView1.FirstDisplayedScrollingRowIndex
+            End If
+
+            DataGridView1.SuspendLayout()
             DataGridView1.Rows.Clear()
             Dim count As Integer = 1
 
@@ -130,7 +136,7 @@ Public Class MainFormNew
                 Dim tireSensors = selectedNodeSensor("PressureTire")
                 For Each sensor In tireSensors
                     If sensor.ContainsKey("NodeActive") AndAlso sensor("NodeActive").ToLower() = "true" Then
-                        Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "idle")
+                        Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "ready")
                         Try
                             Dim idx = DataGridView1.Rows.Add(count.ToString(), "PressureTire." + sensor("NodeText"), status)
                             If idx >= 0 AndAlso idx < DataGridView1.Rows.Count Then
@@ -140,10 +146,8 @@ Public Class MainFormNew
                                     Select Case status.ToLower()
                                         Case "running"
                                             statusCell.Style.BackColor = Color.LightGreen
-                                        Case "idle"
+                                        Case "ready"
                                             statusCell.Style.BackColor = Color.LightYellow
-                                        Case "offline"
-                                            statusCell.Style.BackColor = Color.LightGray
                                     End Select
                                 End If
                             End If
@@ -160,7 +164,7 @@ Public Class MainFormNew
                 Dim gaugeSensors = selectedNodeSensor("PressureGauge")
                 For Each sensor In gaugeSensors
                     If sensor.ContainsKey("NodeActive") AndAlso sensor("NodeActive").ToLower() = "true" Then
-                        Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "idle")
+                        Dim status = If(sensor.ContainsKey("NodeStatus"), sensor("NodeStatus"), "ready")
                         Try
                             Dim idx = DataGridView1.Rows.Add(count.ToString(), "PressureGauge." + sensor("NodeText"), status)
                             If idx >= 0 AndAlso idx < DataGridView1.Rows.Count Then
@@ -170,10 +174,8 @@ Public Class MainFormNew
                                     Select Case status.ToLower()
                                         Case "running"
                                             statusCell.Style.BackColor = Color.LightGreen
-                                        Case "idle"
+                                        Case "ready"
                                             statusCell.Style.BackColor = Color.LightYellow
-                                        Case "offline"
-                                            statusCell.Style.BackColor = Color.LightGray
                                     End Select
                                 End If
                             End If
@@ -188,10 +190,24 @@ Public Class MainFormNew
             'Console.WriteLine($"✅ Displayed {count - 1} active sensors")
         Catch ex As Exception
             Console.WriteLine($"Gagal refresh data: {ex.Message}")
+        Finally
+            Try
+                If DataGridView1 IsNot Nothing AndAlso Not DataGridView1.IsDisposed Then
+                    DataGridView1.ResumeLayout()
+
+                    ' Restore scroll position
+                    If currentFirstDisplayedScrollingRowIndex >= 0 AndAlso currentFirstDisplayedScrollingRowIndex < DataGridView1.Rows.Count Then
+                        DataGridView1.FirstDisplayedScrollingRowIndex = currentFirstDisplayedScrollingRowIndex
+                    End If
+                End If
+            Catch
+                ' Ignore layout errors
+            End Try
         End Try
     End Sub
 
     Private Sub RefreshDataTabPageRecording(sender As Object, e As EventArgs)
+        Dim currentFirstDisplayedScrollingRowIndex = -1
         Try
             If isDialogOpen OrElse isDeleting Then Return
             If DGVRecording Is Nothing OrElse DGVRecording.IsDisposed Then Return
@@ -199,6 +215,11 @@ Public Class MainFormNew
             If DGVRecording.InvokeRequired Then
                 DGVRecording.Invoke(Sub() RefreshDataTabPageRecording(sender, e))
                 Return
+            End If
+
+            ' Save current scroll position
+            If DGVRecording.FirstDisplayedScrollingRowIndex >= 0 Then
+                currentFirstDisplayedScrollingRowIndex = DGVRecording.FirstDisplayedScrollingRowIndex
             End If
 
             DGVRecording.SuspendLayout()
@@ -241,10 +262,8 @@ Public Class MainFormNew
                 Select Case record.Status.ToLower()
                     Case "recording"
                         statusCell.Style.BackColor = Color.LightGreen
-                    Case "idle"
+                    Case "ready"
                         statusCell.Style.BackColor = Color.LightYellow
-                    Case "offline"
-                        statusCell.Style.BackColor = Color.LightGray
                 End Select
 
                 ' Show Delete button only for Finished status
@@ -266,6 +285,11 @@ Public Class MainFormNew
             Try
                 If DGVRecording IsNot Nothing AndAlso Not DGVRecording.IsDisposed Then
                     DGVRecording.ResumeLayout()
+
+                    ' Restore scroll position
+                    If currentFirstDisplayedScrollingRowIndex >= 0 AndAlso currentFirstDisplayedScrollingRowIndex < DGVRecording.Rows.Count Then
+                        DGVRecording.FirstDisplayedScrollingRowIndex = currentFirstDisplayedScrollingRowIndex
+                    End If
                 End If
             Catch
                 ' Ignore layout errors
@@ -773,6 +797,10 @@ Public Class MainFormNew
         Catch
             ' Ignore painting errors
         End Try
+    End Sub
+
+    Private Sub ButtonRefresh_Click(sender As Object, e As EventArgs) Handles ButtonRefresh.Click
+        RefreshDataTabPageRecording(Nothing, Nothing)
     End Sub
 
 End Class

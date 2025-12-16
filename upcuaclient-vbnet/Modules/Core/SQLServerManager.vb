@@ -105,7 +105,8 @@ Public Class SQLServerManager
     Private Function ExportSensorData(recordMetadata As InterfaceRecordMetadata) As Boolean
         Try
             Dim sqlite As New SQLiteManager()
-            Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={IO.Path.Combine(Application.StartupPath, "../../data/sensor.db")};Version=3;")
+            Dim dbPath = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "data", "sensor.db")
+            Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={dbPath};Version=3;")
                 sqliteConn.Open()
 
                 Dim query = "SELECT * FROM sensor_data WHERE node_id IN (@tire_id, @gauge_id)"
@@ -151,7 +152,8 @@ Public Class SQLServerManager
 
     Private Function ExportSensorAlerts(pressureTireId As String, pressureGaugeId As String) As Boolean
         Try
-            Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={IO.Path.Combine(Application.StartupPath, "../../data/sensor.db")};Version=3;")
+            Dim dbPath = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "data", "sensor.db")
+            Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={dbPath};Version=3;")
                 sqliteConn.Open()
 
                 Dim query = "SELECT * FROM sensor_alerts WHERE node_id IN (@tire_id, @gauge_id)"

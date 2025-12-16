@@ -532,8 +532,8 @@ Public Class DetailRecord
             ' 1. Update record_metadata status
             UpdateRecordMetadataStatus()
 
-            ' 2. Update sensor status to Idle
-            UpdateSensorStatusToIdle()
+            ' 2. Update sensor status to ready
+            UpdateSensorStatusToReady()
 
             ' 3. Export data to SQL Server
             ExportDataToSQLServer()
@@ -571,18 +571,18 @@ Public Class DetailRecord
     Private Sub UpdateRecordMetadataStatus()
         recordMetadata.Status = "Finished"
         recordMetadata.SyncStatus = "Finished"
-        recordMetadata.EndDate = DateTime.Now
+        recordMetadata.EndDate = DateTime.UtcNow
         sqlite.InsertOrUpdateRecordMetadata(recordMetadata)
     End Sub
 
-    Private Sub UpdateSensorStatusToIdle()
+    Private Sub UpdateSensorStatusToReady()
         Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
 
         ' Update PressureTire status
         If selectedNodeSensor.ContainsKey("PressureTire") Then
             For Each sensor In selectedNodeSensor("PressureTire")
                 If sensor("NodeId") = recordMetadata.PressureTireId Then
-                    sensor("NodeStatus") = "Idle"
+                    sensor("NodeStatus") = "ready"
                 End If
             Next
         End If
@@ -591,7 +591,7 @@ Public Class DetailRecord
         If selectedNodeSensor.ContainsKey("PressureGauge") Then
             For Each sensor In selectedNodeSensor("PressureGauge")
                 If sensor("NodeId") = recordMetadata.PressureGaugeId Then
-                    sensor("NodeStatus") = "Idle"
+                    sensor("NodeStatus") = "ready"
                 End If
             Next
         End If
@@ -604,10 +604,17 @@ Public Class DetailRecord
             Console.WriteLine($"🔄 Starting export to SQL Server for batch: {recordMetadata.BatchId}")
             Console.WriteLine($"🔍 SQL Server connection state: {My.Settings.stateConnectionDB}")
             Console.WriteLine($"🔍 Node IDs - Tire: {recordMetadata.PressureTireId}, Gauge: {recordMetadata.PressureGaugeId}")
+            Dim dbPath = IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpcUaClient", "data", "sensor.db")
+            Console.WriteLine($"🔍 Application StartupPath: {Application.StartupPath}")
+            Console.WriteLine($"🔍 SQLite DB Path: {dbPath}")
+            Console.WriteLine($"🔍 SQLite DB Exists: {IO.File.Exists(dbPath)}")
+            Console.WriteLine($"🔍 My.Settings.stateConnectionDB: {My.Settings.stateConnectionDB}")
+            Console.WriteLine($"🔍 My.Settings.hostDB: {My.Settings.hostDB}")
 
             ' Check SQL Server connection status from settings
             If Not My.Settings.stateConnectionDB Then
                 Console.WriteLine($"❌ SQL Server not connected - skipping export and cleanup")
+                MessageBox.Show("SQL Server not connected. Export skipped.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Return
             End If
 
@@ -628,10 +635,12 @@ Public Class DetailRecord
                 End If
             Else
                 Console.WriteLine($"⚠️ Export failed for {recordMetadata.BatchId} - keeping sensor_data")
+                MessageBox.Show($"Export failed for batch {recordMetadata.BatchId}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
         Catch ex As Exception
             Console.WriteLine($"❌ Export error: {ex.Message}")
             Console.WriteLine($"🔍 Export error details: {ex.ToString()}")
+            MessageBox.Show($"Export error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
@@ -855,10 +864,10 @@ Public Class DetailRecord
             Case "not-start"
                 BTNStart.Enabled = True
                 BTNStart.Text = "Start"
-                BTNEndRecording.Enabled = False
+                BTNEndRecording.Enabled = True
             Case "recording"
                 BTNStart.Enabled = True
-                BTNStart.Text = "Stop"
+                BTNStart.Text = "Pause"
                 BTNEndRecording.Enabled = True
             Case "finished"
                 BTNStart.Enabled = False
@@ -872,7 +881,7 @@ Public Class DetailRecord
 
         If recordMetadata.Status.ToLower() = "recording" Then
             ' Stop recording - update to Not-Start
-            Dim result = MessageBox.Show($"Stop recording for batch {recordMetadata.BatchId}?", "Confirm Stop Recording", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+            Dim result = MessageBox.Show($"Pause recording for batch {recordMetadata.BatchId}?", "Confirm Pause Recording", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
             If result = DialogResult.Yes Then
                 StopRecordingProcess()
             End If
@@ -953,10 +962,10 @@ Public Class DetailRecord
             ' 4. Stop timer
             refreshTimerWatch.Stop()
 
-            MessageBox.Show("Recording stopped successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            MessageBox.Show("Recording pause successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
         Catch ex As Exception
-            MessageBox.Show($"Error stopping recording: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            MessageBox.Show($"Error pause recording: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
