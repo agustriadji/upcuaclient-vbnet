@@ -93,11 +93,11 @@ Public Class DetailRecord
         Try
             ' Disable UI updates during initialization
             Me.SuspendLayout()
-            
+
             ' Quick setup without heavy operations
             SetupGraph()
             LoadSensorMetadata()
-            
+
             ' Set default ComboBox selection
             If CMBGroupingGraph?.Items.Count > 0 Then
                 CMBGroupingGraph.SelectedIndex = 0
@@ -106,24 +106,24 @@ Public Class DetailRecord
 
             ' Set default tab
             TabControlDetailRecord.SelectedTab = TabPageRecord
-            
+
             ' Load data asynchronously
             Task.Run(Sub()
-                RefreshRawData()
-                Me.Invoke(Sub()
-                    rawData = rawDataRaw
-                    gaugeDataProcessed = gaugeDataRaw
-                    InitializeTimers()
-                    
-                    ' Start timer only if batch is still running
-                    If recordMetadata?.Status.ToLower() <> "finished" Then
-                        TimeManager.StartTimerWithInitialFetch(refreshTimerWatch, Sub() LoadSensorPressureTable())
-                    Else
-                        LoadSensorPressureTable()
-                    End If
-                End Sub)
-            End Sub)
-            
+                         RefreshRawData()
+                         Me.Invoke(Sub()
+                                       rawData = rawDataRaw
+                                       gaugeDataProcessed = gaugeDataRaw
+                                       InitializeTimers()
+
+                                       ' Start timer only if batch is still running
+                                       If recordMetadata?.Status.ToLower() <> "finished" Then
+                                           TimeManager.StartTimerWithInitialFetch(refreshTimerWatch, Sub() LoadSensorPressureTable())
+                                       Else
+                                           LoadSensorPressureTable()
+                                       End If
+                                   End Sub)
+                     End Sub)
+
         Catch ex As Exception
             MessageBox.Show($"Error loading detail record: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning)
         Finally
@@ -250,7 +250,7 @@ Public Class DetailRecord
         Try
             If rawData Is Nothing OrElse rawData.Count = 0 Then Return
             If DGVWatch?.IsDisposed <> False Then Return
-            
+
             If DGVWatch.InvokeRequired Then
                 DGVWatch.Invoke(Sub() LoadSensorPressureTable())
                 Return
@@ -276,7 +276,7 @@ Public Class DetailRecord
                 Dim leakPressure = If(matchingGauge?.Pressure, 0).ToString("F2")
                 DGVWatch.Rows.Add(startPressure, currentPressure, leakPressure, DL.Timestamp)
             Next
-            
+
         Catch ex As Exception
             AppLogger.LogError($"LoadSensorPressureTable Error: {ex.Message}", "DetailRecord")
         Finally
@@ -312,7 +312,7 @@ Public Class DetailRecord
             Else
                 UpdateRunningDaysAndStartPressure()
             End If
-            
+
         Catch ex As Exception
             AppLogger.LogError($"RefreshRawData Error: {ex.Message}", "DetailRecord")
         End Try
@@ -359,7 +359,7 @@ Public Class DetailRecord
 
             Using conn As New System.Data.SqlClient.SqlConnection(connectionString)
                 conn.Open()
-                
+
                 Dim query = "SELECT node_id, sensor_type, value, timestamp FROM sensor_data WHERE node_id = @node_id AND batch_id = @batch_id ORDER BY timestamp"
                 Using cmd As New System.Data.SqlClient.SqlCommand(query, conn)
                     cmd.Parameters.AddWithValue("@node_id", nodeId)
