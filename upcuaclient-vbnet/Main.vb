@@ -31,7 +31,7 @@ Namespace upcuaclient_vbnet
             bgWorker.Start()
 
             ' Alokasi console untuk debugging
-            ' AllocConsole()
+            'AllocConsole()
 
             Try
                 Dim context As New TrayAppContext()

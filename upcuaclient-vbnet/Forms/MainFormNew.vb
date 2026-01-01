@@ -520,7 +520,8 @@ Public Class MainFormNew
 
                             Dim timestamp = DateTime.Parse(reader("timestamp").ToString()).ToString("HH:mm:ss")
                             Dim severityIcon = GetSeverityIcon(reader("severity").ToString())
-                            Dim alertEntry = $"[{timestamp}] {severityIcon} [{reader("batch_id")}] {reader("node_text")} - {reader("message")} (Value: {reader("current_value")})"
+                            Dim currentValue = Math.Round(Convert.ToDouble(reader("current_value")), 3)
+                            Dim alertEntry = $"[{timestamp}] {severityIcon} [{reader("batch_id")}] {reader("node_text")} - {reader("message")} (Value: {currentValue.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)})"
 
                             newAlerts.Add(alertEntry)
                         End While
@@ -755,7 +756,7 @@ Public Class MainFormNew
 
     Private Sub AboutAirLMToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles AboutAirLMToolStripMenuItem.Click
         Try
-            Process.Start(New ProcessStartInfo("https://github.com/agustriadji/upcuaclient-vbnet/wiki") With {.UseShellExecute = True})
+            Process.Start(New ProcessStartInfo("https://kelola.co.id") With {.UseShellExecute = True})
         Catch ex As Exception
             MessageBox.Show($"Failed to open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
@@ -763,7 +764,7 @@ Public Class MainFormNew
 
     Private Sub FeedbackToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles FeedbackToolStripMenuItem1.Click
         Try
-            Process.Start(New ProcessStartInfo("mailto:agus.triadji@gmail.com") With {.UseShellExecute = True})
+            Process.Start(New ProcessStartInfo("mailto:info@kelola.co.id") With {.UseShellExecute = True})
         Catch ex As Exception
             MessageBox.Show($"Failed to open email client: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try

@@ -1,4 +1,4 @@
-﻿Imports System
+Imports System
 Imports Opc.Ua
 Imports upcuaclient_vbnet.upcuaclient_vbnet
 
@@ -72,9 +72,9 @@ Public Class AnalyticsManager2
                 .NodeId = nodeId,
                 .NodeText = nodeText,
                 .SensorType = sensorType,
-                .Message = $"LEAKING DETECTED: Pressure spike {value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} PSI (threshold: {alertThreshold.ToString(System.Globalization.CultureInfo.InvariantCulture)})",
+                .Message = $"LEAKING DETECTED: Pressure spike {value.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)} PSI (threshold: {alertThreshold.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)})",
                 .Threshold = alertThreshold,
-                .CurrentValue = value,
+                .CurrentValue = value.ToString("F3", System.Globalization.CultureInfo.InvariantCulture),
                 .Severity = "CRITICAL",
                 .Timestamp = DateTime.UtcNow
             }
@@ -101,7 +101,7 @@ Public Class AnalyticsManager2
 
     Private Function GetSensorDisplayName(nodeId As String) As String
         Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
-        
+
         For Each kvp In selectedNodeSensor
             If TypeOf kvp.Value Is List(Of Dictionary(Of String, String)) Then
                 Dim sensorList = DirectCast(kvp.Value, List(Of Dictionary(Of String, String)))
@@ -114,7 +114,7 @@ Public Class AnalyticsManager2
                 Next
             End If
         Next
-        
+
         ' Fallback to nodeId if display name not found
         Return nodeId
     End Function
@@ -122,7 +122,7 @@ Public Class AnalyticsManager2
     Private Function GetSensorType(nodeId As String) As String
         ' Check berdasarkan parent root object dari selectedNodeSensor
         Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
-        
+
         For Each kvp In selectedNodeSensor
             Dim parentKey = kvp.Key ' "PressureTire" atau "PressureGauge"
             If TypeOf kvp.Value Is List(Of Dictionary(Of String, String)) Then
@@ -145,23 +145,14 @@ Public Class AnalyticsManager2
         ElseIf nodeId.Contains("PressureGauge") OrElse nodeId.Contains("PressureGauge") OrElse nodeId.Contains("Gauge") OrElse nodeId.Contains("Gauge") Then
             Return "pressureGauge"
         End If
-        
+
         Return "unknown"
     End Function
-    
-    ' Convert raw sensor value to PSI
+
+    ' Convert raw sensor value to 3 decimal places
     Private Function ConvertToPSI(rawValue As Double) As Double
-        ' Assuming raw value is in some unit that needs conversion
-        ' Example: if raw value 376.875 should be ~25 PSI
-        ' Conversion factor: 376.875 / 25 = ~15.075
-        
-        ' Adjust this conversion factor based on your sensor specs
-        Dim conversionFactor As Double = 15.075
-        
-        Dim psiValue = rawValue / conversionFactor
-        
-        ' Round to 2 decimal places
-        Return Math.Round(psiValue, 2)
+        ' Simply round to 3 decimal places without unit conversion
+        Return Math.Round(rawValue, 3)
     End Function
 
     Public Function ComputeDailyStats(sensorId As String, dates As String) As Dictionary(Of String, Double)

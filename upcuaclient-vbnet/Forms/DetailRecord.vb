@@ -93,11 +93,11 @@ Public Class DetailRecord
         Try
             ' Disable UI updates during initialization
             Me.SuspendLayout()
-            
+
             ' Quick setup without heavy operations
             SetupGraph()
             LoadSensorMetadata()
-            
+
             ' Set default ComboBox selection
             If CMBGroupingGraph?.Items.Count > 0 Then
                 CMBGroupingGraph.SelectedIndex = 0
@@ -106,24 +106,24 @@ Public Class DetailRecord
 
             ' Set default tab
             TabControlDetailRecord.SelectedTab = TabPageRecord
-            
+
             ' Load data asynchronously
             Task.Run(Sub()
-                RefreshRawData()
-                Me.Invoke(Sub()
-                    rawData = rawDataRaw
-                    gaugeDataProcessed = gaugeDataRaw
-                    InitializeTimers()
-                    
-                    ' Start timer only if batch is still running
-                    If recordMetadata?.Status.ToLower() <> "finished" Then
-                        TimeManager.StartTimerWithInitialFetch(refreshTimerWatch, Sub() LoadSensorPressureTable())
-                    Else
-                        LoadSensorPressureTable()
-                    End If
-                End Sub)
-            End Sub)
-            
+                         RefreshRawData()
+                         Me.Invoke(Sub()
+                                       rawData = rawDataRaw
+                                       gaugeDataProcessed = gaugeDataRaw
+                                       InitializeTimers()
+
+                                       ' Start timer only if batch is still running
+                                       If recordMetadata?.Status.ToLower() <> "finished" Then
+                                           TimeManager.StartTimerWithInitialFetch(refreshTimerWatch, Sub() LoadSensorPressureTable())
+                                       Else
+                                           LoadSensorPressureTable()
+                                       End If
+                                   End Sub)
+                     End Sub)
+
         Catch ex As Exception
             MessageBox.Show($"Error loading detail record: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning)
         Finally
@@ -179,7 +179,7 @@ Public Class DetailRecord
     Private Sub UpdateRunningDaysAndStartPressure()
         If recordMetadata Is Nothing OrElse rawDataRaw Is Nothing OrElse rawDataRaw.Count = 0 Then
             TextBoxRunningDay.Text = "0"
-            TextBoxStartPressure.Text = "0.00"
+            TextBoxStartPressure.Text = "0.000"
             Return
         End If
 
@@ -194,13 +194,13 @@ Public Class DetailRecord
             ' Calculate running days using TotalDays and ceiling for accurate count
             Dim runningDays = Math.Ceiling((lastTimestamp - recordMetadata.StartDate).TotalDays)
             TextBoxRunningDay.Text = runningDays.ToString()
-            TextBoxStartPressure.Text = firstPressure.ToString("F2")
+            TextBoxStartPressure.Text = firstPressure.ToString("F3")
 
             ' Console.WriteLine($"✅ Running days calculated: {runningDays} days")
             ' Console.WriteLine($"✅ Start pressure: {firstPressure}, Last timestamp: {lastTimestamp}")
         Catch ex As Exception
             TextBoxRunningDay.Text = "0"
-            TextBoxStartPressure.Text = "0.00"
+            TextBoxStartPressure.Text = "0.000"
             ' Console.WriteLine($"❌ Error calculating running days: {ex.Message}")
         End Try
     End Sub
@@ -250,7 +250,7 @@ Public Class DetailRecord
         Try
             If rawData Is Nothing OrElse rawData.Count = 0 Then Return
             If DGVWatch?.IsDisposed <> False Then Return
-            
+
             If DGVWatch.InvokeRequired Then
                 DGVWatch.Invoke(Sub() LoadSensorPressureTable())
                 Return
@@ -271,12 +271,12 @@ Public Class DetailRecord
                                                            End Function).Take(100).ToList() ' Limit to 100 rows for performance
 
             For Each DL In sortedTireData
-                Dim currentPressure = DL.Pressure.ToString("F2")
+                Dim currentPressure = DL.Pressure.ToString("F3")
                 Dim matchingGauge = gaugeDataProcessed?.FirstOrDefault(Function(g) g.Timestamp = DL.Timestamp)
-                Dim leakPressure = If(matchingGauge?.Pressure, 0).ToString("F2")
+                Dim leakPressure = If(matchingGauge?.Pressure, 0).ToString("F3")
                 DGVWatch.Rows.Add(startPressure, currentPressure, leakPressure, DL.Timestamp)
             Next
-            
+
         Catch ex As Exception
             AppLogger.LogError($"LoadSensorPressureTable Error: {ex.Message}", "DetailRecord")
         Finally
@@ -312,7 +312,7 @@ Public Class DetailRecord
             Else
                 UpdateRunningDaysAndStartPressure()
             End If
-            
+
         Catch ex As Exception
             AppLogger.LogError($"RefreshRawData Error: {ex.Message}", "DetailRecord")
         End Try
@@ -359,7 +359,7 @@ Public Class DetailRecord
 
             Using conn As New System.Data.SqlClient.SqlConnection(connectionString)
                 conn.Open()
-                
+
                 Dim query = "SELECT node_id, sensor_type, value, timestamp FROM sensor_data WHERE node_id = @node_id AND batch_id = @batch_id ORDER BY timestamp"
                 Using cmd As New System.Data.SqlClient.SqlCommand(query, conn)
                     cmd.Parameters.AddWithValue("@node_id", nodeId)
@@ -732,13 +732,13 @@ Public Class DetailRecord
 
             ' Get CurrentPressure (last data from pressureTire)
             Dim sortedTireDataAsc = rawData.OrderBy(Function(d) DateTime.Parse(d.Timestamp)).ToList()
-            Dim currentPressure = If(sortedTireDataAsc.Count > 0, sortedTireDataAsc.Last().Pressure.ToString("F2"), "0.00")
+            Dim currentPressure = If(sortedTireDataAsc.Count > 0, sortedTireDataAsc.Last().Pressure.ToString("F3"), "0.000")
 
             ' Get LeakPressure (last data from pressureGauge)
             Dim sortedGaugeDataAsc = If(gaugeDataProcessed IsNot Nothing AndAlso gaugeDataProcessed.Count > 0,
                                        gaugeDataProcessed.OrderBy(Function(g) DateTime.Parse(g.Timestamp)).ToList(),
                                        New List(Of InterfacePressureRecords)())
-            Dim leakPressure = If(sortedGaugeDataAsc.Count > 0, sortedGaugeDataAsc.Last().Pressure.ToString("F2"), "0.00")
+            Dim leakPressure = If(sortedGaugeDataAsc.Count > 0, sortedGaugeDataAsc.Last().Pressure.ToString("F3"), "0.000")
 
             Dim sortedTireData = rawData.OrderByDescending(Function(d) DateTime.Parse(d.Timestamp)).ToList()
 
@@ -781,11 +781,11 @@ Public Class DetailRecord
             Dim row = 2
 
             For Each DL In sortedTireData
-                Dim currentPressure = DL.Pressure.ToString("F2")
+                Dim currentPressure = DL.Pressure.ToString("F3")
                 Dim currentTimestamp = DateTime.Parse(DL.Timestamp).ToString("yyyy-MM-dd HH:mm")
 
                 Dim matchingGauge = gaugeDataProcessed?.FirstOrDefault(Function(g) Math.Abs((DateTime.Parse(DL.Timestamp) - DateTime.Parse(g.Timestamp)).TotalMinutes) < 1)
-                Dim currentLeakPressure = If(matchingGauge?.Pressure, 0).ToString("F2")
+                Dim currentLeakPressure = If(matchingGauge?.Pressure, 0).ToString("F3")
 
                 xlWorksheet.Cells(row, 1) = recordMetadata.BatchId
                 xlWorksheet.Cells(row, 2) = startPressure

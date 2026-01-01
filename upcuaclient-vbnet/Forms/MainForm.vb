@@ -51,7 +51,7 @@ Public Class MainForm
                 Dim json = File.ReadAllText(jsonPath)
                 Dim result = JsonConvert.DeserializeObject(Of upcuaclient_vbnet.SensorResult)(json)
 
-                Dim idx = DataGridView1.Rows.Add(result.SensorId, $"{result.Pressure:F2}", result.Status)
+                Dim idx = DataGridView1.Rows.Add(result.SensorId, $"{result.Pressure:F3}", result.Status)
                 Dim row = DataGridView1.Rows(idx)
 
                 Select Case result.Status.ToLower()
