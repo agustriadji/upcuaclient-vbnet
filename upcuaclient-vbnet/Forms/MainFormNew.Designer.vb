@@ -183,7 +183,7 @@ Partial Class MainFormNew
         Me.TabPageRecording.Location = New System.Drawing.Point(4, 29)
         Me.TabPageRecording.Name = "TabPageRecording"
         Me.TabPageRecording.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageRecording.Size = New System.Drawing.Size(1166, 446)
+        Me.TabPageRecording.Size = New System.Drawing.Size(1166, 448)
         Me.TabPageRecording.TabIndex = 1
         Me.TabPageRecording.Text = "Recording"
         Me.TabPageRecording.UseVisualStyleBackColor = True
@@ -203,7 +203,7 @@ Partial Class MainFormNew
         'SplitContainer3.Panel2
         '
         Me.SplitContainer3.Panel2.Controls.Add(Me.DGVRecording)
-        Me.SplitContainer3.Size = New System.Drawing.Size(1160, 440)
+        Me.SplitContainer3.Size = New System.Drawing.Size(1160, 442)
         Me.SplitContainer3.SplitterDistance = 53
         Me.SplitContainer3.TabIndex = 2
         '
@@ -236,7 +236,7 @@ Partial Class MainFormNew
         Me.DGVRecording.RowHeadersVisible = False
         Me.DGVRecording.RowHeadersWidth = 51
         Me.DGVRecording.RowTemplate.Height = 24
-        Me.DGVRecording.Size = New System.Drawing.Size(1160, 383)
+        Me.DGVRecording.Size = New System.Drawing.Size(1160, 385)
         Me.DGVRecording.TabIndex = 0
         '
         'BatchId
@@ -497,7 +497,7 @@ Partial Class MainFormNew
         'FeedbackToolStripMenuItem1
         '
         Me.FeedbackToolStripMenuItem1.Name = "FeedbackToolStripMenuItem1"
-        Me.FeedbackToolStripMenuItem1.Size = New System.Drawing.Size(224, 26)
+        Me.FeedbackToolStripMenuItem1.Size = New System.Drawing.Size(176, 26)
         Me.FeedbackToolStripMenuItem1.Text = "Feedback"
         Me.FeedbackToolStripMenuItem1.Visible = False
         '
