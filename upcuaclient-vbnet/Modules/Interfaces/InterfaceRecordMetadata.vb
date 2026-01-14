@@ -2,7 +2,7 @@
     Property BatchId As String
     Property PressureTireId As String ' ID of the pressure tire sensor
     Property PressureGaugeId As String ' ID of the pressure gauge sensor
-    Property Size As Integer ' size of Tire
+    Property Size As String ' size of Tire
     Property CreatedBy As String ' e.g., "Operator"
     Property Status As String ' e.g., "Recording", "Idle", "Offline", "Error"
     Property SyncStatus As String ' e.g., "Synchronized", "NotSynchronized" status sinkronisasi data ke database

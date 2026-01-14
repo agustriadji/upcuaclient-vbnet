@@ -126,7 +126,7 @@ Public Class FormNewRecord
                 .BatchId = TextBoxBatch.Text,
                 .PressureTireId = selectedTire.NodeId,
                 .PressureGaugeId = selectedGuage.NodeId,
-                .Size = Convert.ToInt32(Val(TextBoxSizeTire.Text)),
+                .Size = TextBoxSizeTire.Text,
                 .CreatedBy = TextBoxOperator.Text,
                 .Status = "Not-Start",
                 .SyncStatus = "Pending",

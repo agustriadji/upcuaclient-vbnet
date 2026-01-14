@@ -136,6 +136,45 @@ Public Class SQLiteManager
                         Console.WriteLine($"✅ Added end_recording_date column to record_metadata table")
                     End Using
                 End If
+
+                ' Migration: Change size column from INTEGER to VARCHAR(100)
+                Dim sizeColumnType = ""
+                Using cmd As New SQLiteCommand("PRAGMA table_info(record_metadata)", conn)
+                    Using reader = cmd.ExecuteReader()
+                        While reader.Read()
+                            If reader("name").ToString() = "size" Then
+                                sizeColumnType = reader("type").ToString().ToUpper()
+                                Exit While
+                            End If
+                        End While
+                    End Using
+                End Using
+
+                If sizeColumnType = "INTEGER" Then
+                    Dim migrationQuery = "
+                        BEGIN TRANSACTION;
+                        CREATE TABLE record_metadata_new (
+                            batch_id TEXT PRIMARY KEY,
+                            pressure_tire_id TEXT NOT NULL,
+                            pressure_gauge_id TEXT NOT NULL,
+                            size TEXT NOT NULL,
+                            created_by TEXT NOT NULL,
+                            status TEXT NOT NULL,
+                            sync_status TEXT NOT NULL,
+                            start_date TEXT NOT NULL,
+                            end_date TEXT NOT NULL,
+                            end_recording_date TEXT
+                        );
+                        INSERT INTO record_metadata_new SELECT batch_id, pressure_tire_id, pressure_gauge_id, CAST(size AS TEXT), created_by, status, sync_status, start_date, end_date, end_recording_date FROM record_metadata;
+                        DROP TABLE record_metadata;
+                        ALTER TABLE record_metadata_new RENAME TO record_metadata;
+                        COMMIT;
+                    "
+                    Using cmd As New SQLiteCommand(migrationQuery, conn)
+                        cmd.ExecuteNonQuery()
+                        Console.WriteLine($"✅ Changed size column type from INTEGER to VARCHAR(100)")
+                    End Using
+                End If
             End Using
         Catch ex As Exception
             Console.WriteLine($"⚠️ Database migration error: {ex.Message}")
@@ -337,7 +376,7 @@ Public Class SQLiteManager
                             result.BatchId = reader("batch_id").ToString()
                             result.PressureTireId = reader("pressure_tire_id").ToString()
                             result.PressureGaugeId = reader("pressure_gauge_id").ToString()
-                            result.Size = Convert.ToInt32(reader("size"))
+                            result.Size = reader("size").ToString()
                             result.CreatedBy = reader("created_by").ToString()
                             result.Status = reader("status").ToString()
                             result.SyncStatus = reader("sync_status").ToString()
@@ -464,7 +503,7 @@ Public Class SQLiteManager
                                     .BatchId = If(reader("batch_id") IsNot DBNull.Value, reader("batch_id").ToString(), ""),
                                     .PressureTireId = If(reader("pressure_tire_id") IsNot DBNull.Value, reader("pressure_tire_id").ToString(), ""),
                                     .PressureGaugeId = If(reader("pressure_gauge_id") IsNot DBNull.Value, reader("pressure_gauge_id").ToString(), ""),
-                                    .Size = If(reader("size") IsNot DBNull.Value, Convert.ToInt32(reader("size")), 0),
+                                    .Size = If(reader("size") IsNot DBNull.Value, reader("size").ToString(), 0),
                                     .CreatedBy = If(reader("created_by") IsNot DBNull.Value, reader("created_by").ToString(), ""),
                                     .Status = If(reader("status") IsNot DBNull.Value, reader("status").ToString(), ""),
                                     .SyncStatus = If(reader("sync_status") IsNot DBNull.Value, reader("sync_status").ToString(), ""),

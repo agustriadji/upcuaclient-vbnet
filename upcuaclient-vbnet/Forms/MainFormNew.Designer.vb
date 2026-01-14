@@ -33,14 +33,6 @@ Partial Class MainFormNew
         Me.SplitContainer3 = New System.Windows.Forms.SplitContainer()
         Me.ButtonRefresh = New System.Windows.Forms.Button()
         Me.DGVRecording = New System.Windows.Forms.DataGridView()
-        Me.BatchId = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.SensorId = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.RunningDay = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.SizeTire = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.State = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.CreatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.UpdatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.Delete = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.SplitContainer2 = New System.Windows.Forms.SplitContainer()
         Me.ToolStrip1 = New System.Windows.Forms.ToolStrip()
         Me.ToolStripButton1 = New System.Windows.Forms.ToolStripButton()
@@ -67,6 +59,14 @@ Partial Class MainFormNew
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.ToolStripStatusLabelOPC = New System.Windows.Forms.ToolStripStatusLabel()
         Me.ToolStripStatusLabelDB = New System.Windows.Forms.ToolStripStatusLabel()
+        Me.BatchId = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.SensorId = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.RunningDay = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.SizeTire = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.State = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.CreatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.UpdatedAt = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.Delete = New System.Windows.Forms.DataGridViewTextBoxColumn()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainer1.Panel1.SuspendLayout()
         Me.SplitContainer1.Panel2.SuspendLayout()
@@ -238,65 +238,6 @@ Partial Class MainFormNew
         Me.DGVRecording.RowTemplate.Height = 24
         Me.DGVRecording.Size = New System.Drawing.Size(1160, 385)
         Me.DGVRecording.TabIndex = 0
-        '
-        'BatchId
-        '
-        Me.BatchId.HeaderText = "Batch"
-        Me.BatchId.MinimumWidth = 6
-        Me.BatchId.Name = "BatchId"
-        Me.BatchId.ReadOnly = True
-        '
-        'SensorId
-        '
-        Me.SensorId.HeaderText = "Sensor ID"
-        Me.SensorId.MinimumWidth = 6
-        Me.SensorId.Name = "SensorId"
-        Me.SensorId.ReadOnly = True
-        '
-        'RunningDay
-        '
-        Me.RunningDay.HeaderText = "Running Days"
-        Me.RunningDay.MinimumWidth = 6
-        Me.RunningDay.Name = "RunningDay"
-        Me.RunningDay.ReadOnly = True
-        '
-        'SizeTire
-        '
-        Me.SizeTire.HeaderText = "SizeTire"
-        Me.SizeTire.MinimumWidth = 6
-        Me.SizeTire.Name = "SizeTire"
-        Me.SizeTire.ReadOnly = True
-        '
-        'State
-        '
-        Me.State.HeaderText = "Status"
-        Me.State.MinimumWidth = 6
-        Me.State.Name = "State"
-        Me.State.ReadOnly = True
-        '
-        'CreatedAt
-        '
-        Me.CreatedAt.HeaderText = "Start date"
-        Me.CreatedAt.MinimumWidth = 6
-        Me.CreatedAt.Name = "CreatedAt"
-        Me.CreatedAt.ReadOnly = True
-        '
-        'UpdatedAt
-        '
-        Me.UpdatedAt.HeaderText = "Last updated"
-        Me.UpdatedAt.MinimumWidth = 6
-        Me.UpdatedAt.Name = "UpdatedAt"
-        Me.UpdatedAt.ReadOnly = True
-        '
-        'Delete
-        '
-        Me.Delete.HeaderText = "Action"
-        Me.Delete.MinimumWidth = 6
-        Me.Delete.Name = "Delete"
-        Me.Delete.ReadOnly = True
-        Me.Delete.Resizable = System.Windows.Forms.DataGridViewTriState.[False]
-        Me.Delete.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable
-        Me.Delete.ToolTipText = "Delete Record"
         '
         'SplitContainer2
         '
@@ -530,6 +471,65 @@ Partial Class MainFormNew
         Me.ToolStripStatusLabelDB.Size = New System.Drawing.Size(165, 20)
         Me.ToolStripStatusLabelDB.Text = "DB Not Connected"
         '
+        'BatchId
+        '
+        Me.BatchId.HeaderText = "Batch"
+        Me.BatchId.MinimumWidth = 6
+        Me.BatchId.Name = "BatchId"
+        Me.BatchId.ReadOnly = True
+        '
+        'SensorId
+        '
+        Me.SensorId.HeaderText = "Sensor ID"
+        Me.SensorId.MinimumWidth = 6
+        Me.SensorId.Name = "SensorId"
+        Me.SensorId.ReadOnly = True
+        '
+        'RunningDay
+        '
+        Me.RunningDay.HeaderText = "Running Days"
+        Me.RunningDay.MinimumWidth = 6
+        Me.RunningDay.Name = "RunningDay"
+        Me.RunningDay.ReadOnly = True
+        '
+        'SizeTire
+        '
+        Me.SizeTire.HeaderText = "Size Tire"
+        Me.SizeTire.MinimumWidth = 6
+        Me.SizeTire.Name = "SizeTire"
+        Me.SizeTire.ReadOnly = True
+        '
+        'State
+        '
+        Me.State.HeaderText = "Status"
+        Me.State.MinimumWidth = 6
+        Me.State.Name = "State"
+        Me.State.ReadOnly = True
+        '
+        'CreatedAt
+        '
+        Me.CreatedAt.HeaderText = "Start date"
+        Me.CreatedAt.MinimumWidth = 6
+        Me.CreatedAt.Name = "CreatedAt"
+        Me.CreatedAt.ReadOnly = True
+        '
+        'UpdatedAt
+        '
+        Me.UpdatedAt.HeaderText = "Last Updated"
+        Me.UpdatedAt.MinimumWidth = 6
+        Me.UpdatedAt.Name = "UpdatedAt"
+        Me.UpdatedAt.ReadOnly = True
+        '
+        'Delete
+        '
+        Me.Delete.HeaderText = "Action"
+        Me.Delete.MinimumWidth = 6
+        Me.Delete.Name = "Delete"
+        Me.Delete.ReadOnly = True
+        Me.Delete.Resizable = System.Windows.Forms.DataGridViewTriState.[False]
+        Me.Delete.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable
+        Me.Delete.ToolTipText = "Delete Record"
+        '
         'MainFormNew
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 20.0!)
@@ -612,6 +612,8 @@ Partial Class MainFormNew
     Friend WithEvents AboutAirLMToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents FeedbackToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents FeedbackToolStripMenuItem1 As ToolStripMenuItem
+    Friend WithEvents ButtonRefresh As Button
+    Friend WithEvents SplitContainer3 As SplitContainer
     Friend WithEvents BatchId As DataGridViewTextBoxColumn
     Friend WithEvents SensorId As DataGridViewTextBoxColumn
     Friend WithEvents RunningDay As DataGridViewTextBoxColumn
@@ -620,6 +622,4 @@ Partial Class MainFormNew
     Friend WithEvents CreatedAt As DataGridViewTextBoxColumn
     Friend WithEvents UpdatedAt As DataGridViewTextBoxColumn
     Friend WithEvents Delete As DataGridViewTextBoxColumn
-    Friend WithEvents ButtonRefresh As Button
-    Friend WithEvents SplitContainer3 As SplitContainer
 End Class

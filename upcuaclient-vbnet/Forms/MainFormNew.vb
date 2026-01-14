@@ -521,7 +521,7 @@ Public Class MainFormNew
                             Dim timestamp = DateTime.Parse(reader("timestamp").ToString()).ToString("HH:mm:ss")
                             Dim severityIcon = GetSeverityIcon(reader("severity").ToString())
                             Dim currentValue = Math.Round(Convert.ToDouble(reader("current_value")), 3)
-                            Dim alertEntry = $"[{timestamp}] {severityIcon} [{reader("batch_id")}] {reader("node_text")} - {reader("message")} (Value: {currentValue.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)})"
+                            Dim alertEntry = $"[{timestamp}] {severityIcon} [{reader("batch_id")}] {reader("node_text")} - {reader("message")}"
 
                             newAlerts.Add(alertEntry)
                         End While

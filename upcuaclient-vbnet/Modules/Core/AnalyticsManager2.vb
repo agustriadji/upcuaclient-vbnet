@@ -72,7 +72,7 @@ Public Class AnalyticsManager2
                 .NodeId = nodeId,
                 .NodeText = nodeText,
                 .SensorType = sensorType,
-                .Message = $"LEAKING DETECTED: Pressure spike {value.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)} PSI (threshold: {alertThreshold.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)})",
+                .Message = $"LEAKING DETECTED: Pressure {value.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)} PSI (threshold: {alertThreshold.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)})",
                 .Threshold = alertThreshold,
                 .CurrentValue = value.ToString("F3", System.Globalization.CultureInfo.InvariantCulture),
                 .Severity = "CRITICAL",
