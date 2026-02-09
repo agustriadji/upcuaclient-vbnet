@@ -20,7 +20,7 @@ Public Class SQLServerManager
 
         SqlServerConnection.SetConnectionString(server, database)
         connectionString = $"Server={server};Database={database};Integrated Security=true;TrustServerCertificate=true;"
-        
+
         ' Initialize database and schema
         InitializeDatabaseAndSchema(server, database)
     End Sub
@@ -109,10 +109,10 @@ Public Class SQLServerManager
             Using sqliteConn As New Data.SQLite.SQLiteConnection($"Data Source={dbPath};Version=3;")
                 sqliteConn.Open()
 
-                Dim query = "SELECT * FROM sensor_data WHERE node_id IN (@tire_id, @gauge_id)"
+                ' Query from sensor_data_history instead of sensor_data
+                Dim query = "SELECT * FROM sensor_data_history WHERE batch_id = @batch_id"
                 Using cmd As New Data.SQLite.SQLiteCommand(query, sqliteConn)
-                    cmd.Parameters.AddWithValue("@tire_id", recordMetadata.PressureTireId)
-                    cmd.Parameters.AddWithValue("@gauge_id", recordMetadata.PressureGaugeId)
+                    cmd.Parameters.AddWithValue("@batch_id", recordMetadata.BatchId)
 
                     Using reader = cmd.ExecuteReader()
                         Using sqlConn As New SqlConnection(connectionString)

@@ -47,6 +47,10 @@ Partial Class DetailRecord
         Me.TabControlDetailRecord = New System.Windows.Forms.TabControl()
         Me.TabPageRecord = New System.Windows.Forms.TabPage()
         Me.DGVWatch = New System.Windows.Forms.DataGridView()
+        Me.StartPressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.Pressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.LeakPressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.Timestamp = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.TabPageGraph = New System.Windows.Forms.TabPage()
         Me.CartesianChart2 = New LiveCharts.WinForms.CartesianChart()
         Me.PanelBottom = New System.Windows.Forms.Panel()
@@ -54,10 +58,6 @@ Partial Class DetailRecord
         Me.BTNExport = New System.Windows.Forms.Button()
         Me.BTNClose = New System.Windows.Forms.Button()
         Me.BTNEndRecording = New System.Windows.Forms.Button()
-        Me.StartPressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.Pressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.LeakPressure = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.Timestamp = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.GroupBox1.SuspendLayout()
         CType(Me.SplitContainerDetailRecord, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainerDetailRecord.Panel1.SuspendLayout()
@@ -361,6 +361,35 @@ Partial Class DetailRecord
         Me.DGVWatch.Size = New System.Drawing.Size(1061, 362)
         Me.DGVWatch.TabIndex = 0
         '
+        'StartPressure
+        '
+        Me.StartPressure.HeaderText = "Start Pressure (PSI)"
+        Me.StartPressure.MinimumWidth = 6
+        Me.StartPressure.Name = "StartPressure"
+        Me.StartPressure.ReadOnly = True
+        '
+        'Pressure
+        '
+        Me.Pressure.HeaderText = "Current Pressure (PSI)"
+        Me.Pressure.MinimumWidth = 6
+        Me.Pressure.Name = "Pressure"
+        Me.Pressure.ReadOnly = True
+        '
+        'LeakPressure
+        '
+        Me.LeakPressure.HeaderText = "Leak Pressure"
+        Me.LeakPressure.MinimumWidth = 6
+        Me.LeakPressure.Name = "LeakPressure"
+        Me.LeakPressure.ReadOnly = True
+        Me.LeakPressure.Visible = False
+        '
+        'Timestamp
+        '
+        Me.Timestamp.HeaderText = "Timestamp"
+        Me.Timestamp.MinimumWidth = 6
+        Me.Timestamp.Name = "Timestamp"
+        Me.Timestamp.ReadOnly = True
+        '
         'TabPageGraph
         '
         Me.TabPageGraph.Controls.Add(Me.CartesianChart2)
@@ -433,35 +462,6 @@ Partial Class DetailRecord
         Me.BTNEndRecording.TabIndex = 3
         Me.BTNEndRecording.Text = "End Record"
         Me.BTNEndRecording.UseVisualStyleBackColor = True
-        '
-        'StartPressure
-        '
-        Me.StartPressure.HeaderText = "Start Pressure (PSI)"
-        Me.StartPressure.MinimumWidth = 6
-        Me.StartPressure.Name = "StartPressure"
-        Me.StartPressure.ReadOnly = True
-        '
-        'Pressure
-        '
-        Me.Pressure.HeaderText = "Current Pressure (PSI)"
-        Me.Pressure.MinimumWidth = 6
-        Me.Pressure.Name = "Pressure"
-        Me.Pressure.ReadOnly = True
-        '
-        'LeakPressure
-        '
-        Me.LeakPressure.HeaderText = "Leak Pressure"
-        Me.LeakPressure.MinimumWidth = 6
-        Me.LeakPressure.Name = "LeakPressure"
-        Me.LeakPressure.ReadOnly = True
-        Me.LeakPressure.Visible = False
-        '
-        'Timestamp
-        '
-        Me.Timestamp.HeaderText = "Timestamp"
-        Me.Timestamp.MinimumWidth = 6
-        Me.Timestamp.Name = "Timestamp"
-        Me.Timestamp.ReadOnly = True
         '
         'DetailRecord
         '

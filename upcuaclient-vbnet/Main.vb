@@ -12,8 +12,19 @@ Namespace upcuaclient_vbnet
         Private trayIcon As NotifyIcon
         Private bgWorker As upcuaclient_vbnet.BackgroundWorkerManager
 
+        Private appMutex As Threading.Mutex
+
         <STAThread()>
         Sub Main()
+            ' Prevent multiple instances using Mutex
+            Dim createdNew As Boolean
+            appMutex = New Threading.Mutex(True, "OpcUaClientSingleInstance", createdNew)
+
+            If Not createdNew Then
+                MessageBox.Show("Application is already running!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Return
+            End If
+
             ' Soft error handling - suppress all UI errors
             AppLogger.LogInfo("Application started successfully")
             DisableConsole()
@@ -31,7 +42,7 @@ Namespace upcuaclient_vbnet
             bgWorker.Start()
 
             ' Alokasi console untuk debugging
-            'AllocConsole()
+            ' AllocConsole()
 
             Try
                 Dim context As New TrayAppContext()

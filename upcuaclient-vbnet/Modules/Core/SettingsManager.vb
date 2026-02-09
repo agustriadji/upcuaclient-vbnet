@@ -29,7 +29,7 @@ Public Class SettingsManager
         End If
 
         If My.Settings.intervalRefreshTimer = 0 Then
-            My.Settings.intervalRefreshTimer = 5000  ' 5 detik untuk UI dinamis
+            My.Settings.intervalRefreshTimer = 60000  ' 1 menit (60000 ms) untuk sensor data recording
         End If
 
         If String.IsNullOrEmpty(My.Settings.Units) Then
@@ -37,7 +37,7 @@ Public Class SettingsManager
         End If
 
         If String.IsNullOrEmpty(My.Settings.hostDB) Then
-            My.Settings.hostDB = "Server=localhost\SQLEXPRESS;Database=OpcUaClient"
+            My.Settings.hostDB = "Server=localhost\SQLEXPRESS;Database=OpcUaClient;Integrated Security=false;"
         End If
 
         If My.Settings.intervalCheckConnections = 0 Then

@@ -293,9 +293,13 @@ Public Class DetailRecord
                 My.Settings.Save()
             End If
 
-            ' Load data based on batch status
+            ' Load data based on batch status and sync_status
             If recordMetadata.Status.ToLower() = "finished" Then
-                LoadDataFromSQLServer()
+                If recordMetadata.SyncStatus.ToLower() = "synced" Then
+                    LoadDataFromSQLServer()
+                Else
+                    LoadDataFromHistory()
+                End If
             Else
                 LoadDataFromSQLite()
             End If
@@ -329,22 +333,26 @@ Public Class DetailRecord
         ConvertSensorDataToInterfaceRecords(tireSensorData, gaugeData)
     End Sub
 
-    Private Sub LoadDataFromSQLServer()
+    Private Sub LoadDataFromHistory()
         Try
-            ' Get data dari SQL Server berdasarkan NodeId
-            Dim tireSensorData = GetSensorDataFromSQLServer(recordMetadata.PressureTireId)
-            Dim gaugeSensorData = GetSensorDataFromSQLServer(recordMetadata.PressureGaugeId)
-
-            ' Convert ke format existing
+            Dim tireSensorData = sqlite.GetSensorDataHistoryByBatchId(recordMetadata.BatchId, recordMetadata.PressureTireId)
+            Dim gaugeSensorData = sqlite.GetSensorDataHistoryByBatchId(recordMetadata.BatchId, recordMetadata.PressureGaugeId)
             ConvertSensorDataToInterfaceRecords(tireSensorData, gaugeSensorData)
-
         Catch ex As Exception
-            AppLogger.LogError($"Error loading from SQL Server: {ex.Message}", "DetailRecord")
-            ' Fallback ke SQLite jika SQL Server gagal
-            LoadDataFromSQLite()
+            AppLogger.LogError($"Error loading from history: {ex.Message}", "DetailRecord")
         End Try
     End Sub
 
+    Private Sub LoadDataFromSQLServer()
+        Try
+            Dim tireSensorData = GetSensorDataFromSQLServer(recordMetadata.PressureTireId)
+            Dim gaugeSensorData = GetSensorDataFromSQLServer(recordMetadata.PressureGaugeId)
+            ConvertSensorDataToInterfaceRecords(tireSensorData, gaugeSensorData)
+        Catch ex As Exception
+            AppLogger.LogError($"Error loading from SQL Server: {ex.Message}", "DetailRecord")
+            LoadDataFromHistory()
+        End Try
+    End Sub
 
     Private Function GetSensorDataFromSQLServer(nodeId As String) As List(Of InterfaceSensorData)
         Dim sensorDataList As New List(Of InterfaceSensorData)
@@ -359,8 +367,7 @@ Public Class DetailRecord
 
             Using conn As New System.Data.SqlClient.SqlConnection(connectionString)
                 conn.Open()
-
-                Dim query = "SELECT node_id, sensor_type, value, timestamp FROM sensor_data WHERE node_id = @node_id AND batch_id = @batch_id ORDER BY timestamp"
+                Dim query = "SELECT node_id, node_text, sensor_type, value, timestamp FROM sensor_data WHERE node_id = @node_id AND batch_id = @batch_id ORDER BY timestamp"
                 Using cmd As New System.Data.SqlClient.SqlCommand(query, conn)
                     cmd.Parameters.AddWithValue("@node_id", nodeId)
                     cmd.Parameters.AddWithValue("@batch_id", recordMetadata.BatchId)
@@ -368,6 +375,7 @@ Public Class DetailRecord
                         While reader.Read()
                             sensorDataList.Add(New InterfaceSensorData With {
                                 .NodeId = reader("node_id").ToString(),
+                                .NodeText = reader("node_text").ToString(),
                                 .SensorType = reader("sensor_type").ToString(),
                                 .Value = Convert.ToDouble(reader("value")),
                                 .Timestamp = DateTime.Parse(reader("timestamp").ToString())
@@ -381,6 +389,7 @@ Public Class DetailRecord
         End Try
         Return sensorDataList
     End Function
+
 
     Private Sub ConvertSensorDataToInterfaceRecords(tireSensorData As List(Of InterfaceSensorData), gaugeSensorData As List(Of InterfaceSensorData))
         ' Clear existing data first
@@ -475,8 +484,12 @@ Public Class DetailRecord
 
             Dim key As DateTime
             Select Case interval
-                Case "2m" : key = New DateTime(ts.Year, ts.Month, ts.Day, ts.Hour, ts.Minute \ 2 * 2, 0)
-                Case "10m" : key = New DateTime(ts.Year, ts.Month, ts.Day, ts.Hour, ts.Minute \ 10 * 10, 0)
+                Case "2m"
+                    Dim roundedMinute2 = (ts.Minute \ 2) * 2
+                    key = New DateTime(ts.Year, ts.Month, ts.Day, ts.Hour, roundedMinute2, 0)
+                Case "10m"
+                    Dim roundedMinute = (ts.Minute \ 10) * 10
+                    key = New DateTime(ts.Year, ts.Month, ts.Day, ts.Hour, roundedMinute, 0)
                 Case "1h" : key = New DateTime(ts.Year, ts.Month, ts.Day, ts.Hour, 0, 0)
                 Case "1d" : key = New DateTime(ts.Year, ts.Month, ts.Day)
                 Case Else : key = ts
@@ -535,19 +548,23 @@ Public Class DetailRecord
 
     Private Sub EndRecordingProcess()
         Try
-            ' 0. Remove auto end recording if exists (manual end recording)
-            CleanupAutoEndRecording()
+            ' 1. Move sensor_data to sensor_data_history
+            Dim moveSuccess = sqlite.MoveSensorDataToHistory(recordMetadata.BatchId, recordMetadata.PressureTireId, recordMetadata.PressureGaugeId)
+            If Not moveSuccess Then
+                MessageBox.Show("Failed to move data to history. Recording not ended.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Return
+            End If
 
-            ' 1. Update record_metadata status
+            ' 2. Update record_metadata status
             UpdateRecordMetadataStatus()
 
-            ' 2. Update sensor status to ready
+            ' 3. Update sensor status to ready
             UpdateSensorStatusToReady()
 
-            ' 3. Export data to SQL Server
-            ExportDataToSQLServer()
+            ' 4. Remove auto end recording if exists (manual end recording)
+            CleanupAutoEndRecording()
 
-            ' 4. Update UI and stop timer
+            ' 5. Update UI and stop timer
             TextBoxState.Text = "Finished"
             UpdateButtonStates()
             refreshTimerWatch.Stop()
@@ -579,7 +596,7 @@ Public Class DetailRecord
 
     Private Sub UpdateRecordMetadataStatus()
         recordMetadata.Status = "Finished"
-        recordMetadata.SyncStatus = "Finished"
+        recordMetadata.SyncStatus = "Pending"
         recordMetadata.EndDate = DateTime.UtcNow
         sqlite.InsertOrUpdateRecordMetadata(recordMetadata)
     End Sub
@@ -606,43 +623,6 @@ Public Class DetailRecord
         End If
 
         SettingsManager.SetSelectedNodeSensor(selectedNodeSensor)
-    End Sub
-
-    Private Sub ExportDataToSQLServer()
-        Try
-
-            Dim dbPath = SQLiteManager.GetDatabasePath()
-
-            ' Check SQL Server connection status from settings
-            If Not My.Settings.stateConnectionDB Then
-                Console.WriteLine($"❌ SQL Server not connected - skipping export and cleanup")
-                MessageBox.Show("SQL Server not connected. Export skipped.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                Return
-            End If
-
-            Dim sqlServerManager As New SQLServerManager()
-            Dim success = sqlServerManager.ExportRecordData(recordMetadata.BatchId)
-            Console.WriteLine($"🔍 Export result: {success}")
-
-            If success Then
-                Console.WriteLine($"✅ Successfully exported batch: {recordMetadata.BatchId}")
-                ' Clean up sensor_data after successful export
-                If Not String.IsNullOrEmpty(recordMetadata.PressureTireId) AndAlso Not String.IsNullOrEmpty(recordMetadata.PressureGaugeId) Then
-                    Console.WriteLine($"🧹 Starting sensor_data cleanup...")
-                    Dim deleteSuccess = sqlite.DeleteSensorDataByNodeIds(recordMetadata.PressureTireId, recordMetadata.PressureGaugeId)
-                    Console.WriteLine($"🧹 Cleanup result: {deleteSuccess} for nodes: {recordMetadata.PressureTireId}, {recordMetadata.PressureGaugeId}")
-                Else
-                    Console.WriteLine($"⚠️ Invalid node IDs - skipping sensor_data cleanup")
-                End If
-            Else
-                Console.WriteLine($"⚠️ Export failed for {recordMetadata.BatchId} - keeping sensor_data")
-                MessageBox.Show($"Export failed for batch {recordMetadata.BatchId}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            End If
-        Catch ex As Exception
-            Console.WriteLine($"❌ Export error: {ex.Message}")
-            Console.WriteLine($"🔍 Export error details: {ex.ToString()}")
-            MessageBox.Show($"Export error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
     End Sub
 
     Private Sub BTNExport_Click(sender As Object, e As EventArgs) Handles BTNExport.Click

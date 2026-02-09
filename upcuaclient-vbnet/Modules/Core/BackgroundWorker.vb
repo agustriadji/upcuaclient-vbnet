@@ -19,6 +19,7 @@ Namespace upcuaclient_vbnet
         ' Removed config - using My.Settings directly
         Private lastHealthCheck As DateTime = DateTime.MinValue
         Private healthCheckInterval As TimeSpan = TimeSpan.FromMinutes(2)
+        Private isProcessing As Boolean = False
 
         Public Shared ReadOnly Property Instance As BackgroundWorkerManager
             Get
@@ -43,6 +44,12 @@ Namespace upcuaclient_vbnet
         End Sub
 
         Private Async Sub ProcessSensorData()
+            ' Prevent overlapping calls
+            If isProcessing Then
+                Return
+            End If
+            
+            isProcessing = True
             Try
                 ' 1. Get active recording batches
                 Dim sqlite As New SQLiteManager()
@@ -114,6 +121,8 @@ Namespace upcuaclient_vbnet
 
             Catch ex As Exception
                 LoggerDebug.LogError($"Process sensor data error: {ex.Message}")
+            Finally
+                isProcessing = False
             End Try
         End Sub
 

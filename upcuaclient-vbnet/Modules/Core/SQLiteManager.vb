@@ -175,6 +175,29 @@ Public Class SQLiteManager
                         Console.WriteLine($"✅ Changed size column type from INTEGER to VARCHAR(100)")
                     End Using
                 End If
+
+                ' create new table sensor_data_history
+                Dim migrationQuerySensorDataHistory = "
+                        BEGIN TRANSACTION;
+                        CREATE TABLE sensor_data_history (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            batch_id TEXT NOT NULL,
+                            node_id TEXT NOT NULL,
+                            node_text TEXT NOT NULL,
+                            sensor_type TEXT NOT NULL,
+                            value REAL NOT NULL,
+                            data_type TEXT NOT NULL,
+                            status TEXT NOT NULL,
+                            sync_status TEXT NOT NULL,
+                            timestamp TEXT NOT NULL
+                        );
+                        CREATE INDEX IF NOT EXISTS idx_sensor_data_node_time_history ON sensor_data_history (node_id, batch_id, timestamp);
+                        COMMIT;
+                    "
+                Using cmd As New SQLiteCommand(migrationQuerySensorDataHistory, conn)
+                    cmd.ExecuteNonQuery()
+                    Console.WriteLine($"✅ add new table sensor_data_sensor")
+                End Using
             End Using
         Catch ex As Exception
             Console.WriteLine($"⚠️ Database migration error: {ex.Message}")
@@ -714,6 +737,107 @@ Public Class SQLiteManager
             Return True
         Catch ex As Exception
             Console.WriteLine($"DeleteRecordMetadata Error: {ex.Message}")
+            Return False
+        End Try
+    End Function
+
+    Public Function MoveSensorDataToHistory(batchId As String, pressureTireId As String, pressureGaugeId As String) As Boolean
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+                Using transaction = conn.BeginTransaction()
+                    Try
+                        ' Insert sensor_data to sensor_data_history with batch_id
+                        Dim insertQuery = "
+                            INSERT INTO sensor_data_history (batch_id, node_id, node_text, sensor_type, value, data_type, status, sync_status, timestamp)
+                            SELECT @batch_id, node_id, node_text, sensor_type, value, data_type, status, sync_status, timestamp
+                            FROM sensor_data
+                            WHERE node_id IN (@tire_id, @gauge_id)
+                        "
+                        Using cmd As New SQLiteCommand(insertQuery, conn, transaction)
+                            cmd.Parameters.AddWithValue("@batch_id", batchId)
+                            cmd.Parameters.AddWithValue("@tire_id", pressureTireId)
+                            cmd.Parameters.AddWithValue("@gauge_id", pressureGaugeId)
+                            Dim insertedRows = cmd.ExecuteNonQuery()
+                            Console.WriteLine($"📦 Moved {insertedRows} rows to sensor_data_history")
+                        End Using
+
+                        ' Delete from sensor_data
+                        Dim deleteQuery = "DELETE FROM sensor_data WHERE node_id IN (@tire_id, @gauge_id)"
+                        Using cmd As New SQLiteCommand(deleteQuery, conn, transaction)
+                            cmd.Parameters.AddWithValue("@tire_id", pressureTireId)
+                            cmd.Parameters.AddWithValue("@gauge_id", pressureGaugeId)
+                            cmd.ExecuteNonQuery()
+                        End Using
+
+                        transaction.Commit()
+                        Console.WriteLine($"✅ Successfully moved sensor_data to history for batch: {batchId}")
+                        Return True
+                    Catch ex As Exception
+                        transaction.Rollback()
+                        Console.WriteLine($"❌ MoveSensorDataToHistory transaction failed: {ex.Message}")
+                        Return False
+                    End Try
+                End Using
+            End Using
+        Catch ex As Exception
+            Console.WriteLine($"❌ MoveSensorDataToHistory Error: {ex.Message}")
+            Return False
+        End Try
+    End Function
+
+    Public Function GetSensorDataHistoryByBatchId(batchId As String, nodeId As String) As List(Of InterfaceSensorData)
+        Dim results As New List(Of InterfaceSensorData)
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+                Dim query = "
+                    SELECT node_id, node_text, sensor_type, value, data_type, status, sync_status, timestamp
+                    FROM sensor_data_history
+                    WHERE batch_id = @batch_id AND node_id = @node_id
+                    ORDER BY timestamp ASC
+                "
+                Using cmd As New SQLiteCommand(query, conn)
+                    cmd.Parameters.AddWithValue("@batch_id", batchId)
+                    cmd.Parameters.AddWithValue("@node_id", nodeId)
+                    Using reader = cmd.ExecuteReader()
+                        While reader.Read()
+                            Dim timestampStr = reader("timestamp").ToString()
+                            Dim timestamp = DateTime.ParseExact(timestampStr, "yyyy-MM-ddTHH:mm:ss.fffZ", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal Or System.Globalization.DateTimeStyles.AdjustToUniversal)
+                            results.Add(New InterfaceSensorData With {
+                                .NodeId = reader("node_id").ToString(),
+                                .NodeText = reader("node_text").ToString(),
+                                .SensorType = reader("sensor_type").ToString(),
+                                .Value = Convert.ToDouble(reader("value")),
+                                .DataType = reader("data_type").ToString(),
+                                .Status = reader("status").ToString(),
+                                .SyncStatus = reader("sync_status").ToString(),
+                                .Timestamp = timestamp
+                            })
+                        End While
+                    End Using
+                End Using
+            End Using
+        Catch ex As Exception
+            Console.WriteLine($"GetSensorDataHistoryByBatchId Error: {ex.Message}")
+        End Try
+        Return results
+    End Function
+
+    Public Function DeleteSensorDataHistoryByBatchId(batchId As String) As Boolean
+        Try
+            Using conn As New SQLiteConnection($"Data Source={dbPath};Version=3;")
+                conn.Open()
+                Dim query = "DELETE FROM sensor_data_history WHERE batch_id = @batch_id"
+                Using cmd As New SQLiteCommand(query, conn)
+                    cmd.Parameters.AddWithValue("@batch_id", batchId)
+                    Dim deletedRows = cmd.ExecuteNonQuery()
+                    Console.WriteLine($"🗑️ Deleted {deletedRows} rows from sensor_data_history for batch: {batchId}")
+                End Using
+            End Using
+            Return True
+        Catch ex As Exception
+            Console.WriteLine($"DeleteSensorDataHistoryByBatchId Error: {ex.Message}")
             Return False
         End Try
     End Function

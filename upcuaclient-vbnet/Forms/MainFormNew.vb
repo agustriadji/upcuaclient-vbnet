@@ -10,6 +10,7 @@ Public Class MainFormNew
     Private isDialogOpen As Boolean = False
     Private lastClickTime As DateTime = DateTime.MinValue
     Private isDeleting As Boolean = False
+    Private isSync As Boolean = False
 
     Sub InitializeTimers()
         ' Use My.Settings instead of config file
@@ -72,9 +73,14 @@ Public Class MainFormNew
                 DGVRecording.Columns.Add("UpdatedAt", "Last Updated")
                 Dim deleteColumn As New DataGridViewTextBoxColumn()
                 deleteColumn.Name = "Delete"
-                deleteColumn.HeaderText = "Action"
+                deleteColumn.HeaderText = "Delete"
                 deleteColumn.ReadOnly = True
                 DGVRecording.Columns.Add(deleteColumn)
+                Dim syncColumn As New DataGridViewTextBoxColumn()
+                syncColumn.Name = "Sync"
+                syncColumn.HeaderText = "Sync"
+                syncColumn.ReadOnly = True
+                DGVRecording.Columns.Add(syncColumn)
                 If DGVRecording.Columns.Count > 0 Then
                     DGVRecording.Columns(0).AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
                 End If
@@ -265,15 +271,33 @@ Public Class MainFormNew
                         statusCell.Style.BackColor = Color.LightYellow
                 End Select
 
-                ' Show Delete button only for Finished status
+                ' Show Delete and Sync buttons for Finished status
                 If record.Status.ToLower() = "finished" Or record.Status.ToLower() = "force stop" Then
                     row.Cells("Delete").Value = "Delete"
                     row.Cells("Delete").Style.BackColor = Color.LightCoral
-                    row.Cells("Delete").Style.ForeColor = Color.DarkRed
+                    row.Cells("Delete").Style.ForeColor = Color.Black
                     row.Cells("Delete").Style.Alignment = DataGridViewContentAlignment.MiddleCenter
+
+                    ' Visual indicator based on sync_status
+                    If record.SyncStatus.ToLower() = "pending" Then
+                        row.Cells("Sync").Value = "Sync"
+                        row.Cells("Sync").Style.BackColor = Color.LightBlue
+                        row.Cells("Sync").Style.ForeColor = Color.Black
+                        row.Cells("Sync").Style.Alignment = DataGridViewContentAlignment.MiddleCenter
+                    ElseIf record.SyncStatus.ToLower() = "synced" Then
+                        row.Cells("Sync").Value = "Synced"
+                        row.Cells("Sync").Style.BackColor = Color.LightGreen
+                        row.Cells("Sync").Style.ForeColor = Color.Black
+                        row.Cells("Sync").Style.Alignment = DataGridViewContentAlignment.MiddleCenter
+                    Else
+                        row.Cells("Sync").Value = ""
+                        row.Cells("Sync").Style.BackColor = Color.LightGray
+                    End If
                 Else
                     row.Cells("Delete").Value = ""
                     row.Cells("Delete").Style.BackColor = Color.LightGray
+                    row.Cells("Sync").Value = ""
+                    row.Cells("Sync").Style.BackColor = Color.LightGray
                 End If
 
                 count += 1
@@ -613,6 +637,12 @@ Public Class MainFormNew
                 Return
             End If
 
+            ' Check if Sync button clicked
+            If e.ColumnIndex = DGVRecording.Columns("Sync").Index Then
+                HandleSyncClick(row)
+                Return
+            End If
+
             ' Handle detail view click with debounce
             Dim now = DateTime.Now
             If (now - lastClickTime).TotalMilliseconds < 1000 Then Return ' 1 second debounce
@@ -654,6 +684,68 @@ Public Class MainFormNew
         isDeleting = False
         RestoreTimers()
     End Sub
+
+    Private Sub HandleSyncClick(row As DataGridViewRow)
+        Dim syncValue = row.Cells("Sync").Value?.ToString()
+        If String.IsNullOrEmpty(syncValue) OrElse syncValue <> "Sync" Then Return
+
+        Dim batchId = row.Cells("BatchId").Value?.ToString()
+        If String.IsNullOrEmpty(batchId) Then Return
+
+        isSync = True
+        StopAllTimers()
+
+        Dim result = MessageBox.Show($"Sync record {batchId} to SQL Server?", "Confirm Sync", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        If result = DialogResult.Yes Then
+            Try
+                Dim success = ExportDataToSQLServer(batchId)
+                If success Then
+                    MessageBox.Show("Record synced successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Else
+                    MessageBox.Show("Sync failed. Please check SQL Server connection.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                End If
+                RefreshDataTabPageRecording(Nothing, Nothing)
+            Catch ex As Exception
+                MessageBox.Show($"Sync failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
+        End If
+
+        isSync = False
+        RestoreTimers()
+    End Sub
+
+    Private Function ExportDataToSQLServer(batchId As String) As Boolean
+        Try
+            If Not My.Settings.stateConnectionDB Then
+                Console.WriteLine($"❌ SQL Server not connected")
+                Return False
+            End If
+
+            Dim sqlite As New SQLiteManager()
+            Dim recordMetadata = sqlite.QueryRecordMetadata(batchId)
+            If recordMetadata Is Nothing Then
+                Console.WriteLine($"❌ Record metadata not found for batch: {batchId}")
+                Return False
+            End If
+
+            Dim sqlServerManager As New SQLServerManager()
+            Dim success = sqlServerManager.ExportRecordData(batchId)
+
+            If success Then
+                recordMetadata.SyncStatus = "Synced"
+                sqlite.InsertOrUpdateRecordMetadata(recordMetadata)
+                sqlite.DeleteSensorDataHistoryByBatchId(batchId)
+                Console.WriteLine($"✅ Successfully synced batch: {batchId}")
+                Return True
+            Else
+                Console.WriteLine($"⚠️ Export failed for {batchId}")
+                Return False
+            End If
+        Catch ex As Exception
+            Console.WriteLine($"❌ ExportDataToSQLServer Error: {ex.Message}")
+            Return False
+        End Try
+    End Function
 
     Private Sub OpenDetailRecord(batchId As String)
         isDialogOpen = True
