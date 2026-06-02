@@ -698,7 +698,7 @@ Public Class MainFormNew
         Dim result = MessageBox.Show($"Sync record {batchId} to SQL Server?", "Confirm Sync", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
         If result = DialogResult.Yes Then
             Try
-                Dim success = ExportDataToSQLServer(batchId)
+                Dim success = RunSyncWithLoading(Function() ExportDataToSQLServer(batchId), batchId)
                 If success Then
                     MessageBox.Show("Record synced successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 Else
@@ -713,6 +713,58 @@ Public Class MainFormNew
         isSync = False
         RestoreTimers()
     End Sub
+
+    Private Function CreateSyncLoadingForm(batchId As String) As Form
+        Dim loadingForm As New Form()
+        loadingForm.Text = "Sync"
+        loadingForm.FormBorderStyle = FormBorderStyle.FixedDialog
+        loadingForm.StartPosition = FormStartPosition.CenterParent
+        loadingForm.Size = New Size(400, 120)
+        loadingForm.MaximizeBox = False
+        loadingForm.MinimizeBox = False
+        loadingForm.ControlBox = False
+        loadingForm.ShowInTaskbar = False
+        loadingForm.TopMost = True
+
+        Dim lblLoading As New Label()
+        lblLoading.Text = $"Syncing {batchId} to SQL Server, please wait..."
+        lblLoading.AutoSize = False
+        lblLoading.TextAlign = ContentAlignment.MiddleCenter
+        lblLoading.Dock = DockStyle.Top
+        lblLoading.Height = 45
+
+        Dim progressBar As New ProgressBar()
+        progressBar.Style = ProgressBarStyle.Marquee
+        progressBar.MarqueeAnimationSpeed = 30
+        progressBar.Dock = DockStyle.Bottom
+        progressBar.Height = 25
+
+        loadingForm.Controls.Add(progressBar)
+        loadingForm.Controls.Add(lblLoading)
+
+        Return loadingForm
+    End Function
+
+    Private Function RunSyncWithLoading(syncAction As Func(Of Boolean), batchId As String) As Boolean
+        Dim loadingForm = CreateSyncLoadingForm(batchId)
+        DGVRecording.Enabled = False
+        Me.Cursor = Cursors.WaitCursor
+
+        Try
+            loadingForm.Show(Me)
+            loadingForm.Refresh()
+            Application.DoEvents()
+
+            Return syncAction.Invoke()
+        Finally
+            If loadingForm IsNot Nothing AndAlso Not loadingForm.IsDisposed Then
+                loadingForm.Close()
+                loadingForm.Dispose()
+            End If
+            Me.Cursor = Cursors.Default
+            DGVRecording.Enabled = True
+        End Try
+    End Function
 
     Private Function ExportDataToSQLServer(batchId As String) As Boolean
         Try

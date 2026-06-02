@@ -205,23 +205,33 @@ Namespace upcuaclient_vbnet
 
         Private Sub EndRecordingForBatch(batch As InterfaceRecordMetadata)
             Try
+                Dim sqlite As New SQLiteManager()
+
+                ' Keep auto-end flow aligned with manual end in DetailRecord.
+                ' Move sensor_data to sensor_data_history before setting status Finished.
+                Dim moveSuccess = sqlite.MoveSensorDataToHistory(batch.BatchId, batch.PressureTireId, batch.PressureGaugeId)
+                If Not moveSuccess Then
+                    LoggerDebug.LogError($"EndRecordingForBatch move-to-history failed for batch {batch.BatchId}")
+                    Return
+                End If
+
                 ' Update batch status to Finished
                 batch.Status = "Finished"
-                batch.SyncStatus = "Finished"
+                batch.SyncStatus = "Pending"
                 batch.EndDate = DateTime.UtcNow
 
-                Dim sqlite As New SQLiteManager()
                 sqlite.InsertOrUpdateRecordMetadata(batch)
 
                 ' Export to SQL Server if connected
-                If My.Settings.stateConnectionDB Then
-                    Try
-                        Dim sqlServerManager As New SQLServerManager()
-                        sqlServerManager.ExportRecordData(batch.BatchId)
-                    Catch
-                        ' Ignore SQL Server export errors
-                    End Try
-                End If
+                ' Disabled: keep auto-end flow aligned with manual end (user syncs manually via MainFormNew).
+                'If My.Settings.stateConnectionDB Then
+                '    Try
+                '        Dim sqlServerManager As New SQLServerManager()
+                '        sqlServerManager.ExportRecordData(batch.BatchId)
+                '    Catch
+                '        ' Ignore SQL Server export errors
+                '    End Try
+                'End If
 
             Catch ex As Exception
                 LoggerDebug.LogError($"EndRecordingForBatch Error: {ex.Message}")

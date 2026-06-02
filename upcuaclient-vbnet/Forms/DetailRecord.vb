@@ -163,9 +163,7 @@ Public Class DetailRecord
 
         TextBoxSize.Text = recordMetadata.Size.ToString()
         TextBoxOperator.Text = recordMetadata.CreatedBy
-        ' Convert UTC to local time for display
-        Dim localStartDate = If(recordMetadata.StartDate.Kind = DateTimeKind.Utc, recordMetadata.StartDate.ToLocalTime(), recordMetadata.StartDate)
-        TextBoxStartDate.Text = localStartDate.ToString("yyyy-MM-dd HH:mm")
+        TextBoxStartDate.Text = FormatStartDateForDisplay(recordMetadata.StartDate)
         TextBoxState.Text = recordMetadata.Status
 
         ' Update button states based on status
@@ -175,6 +173,20 @@ Public Class DetailRecord
         ' Console.WriteLine($"🔍 Metadata loaded for batch: {recordMetadata.BatchId}")
         ' Console.WriteLine($"🔍 Start date: {recordMetadata.StartDate}")
     End Sub
+
+    Private Function FormatStartDateForDisplay(startDate As DateTime) As String
+        Dim utcStartDate As DateTime
+        Select Case startDate.Kind
+            Case DateTimeKind.Utc
+                utcStartDate = startDate
+            Case DateTimeKind.Local
+                utcStartDate = startDate.ToUniversalTime()
+            Case Else
+                utcStartDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc)
+        End Select
+
+        Return utcStartDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+    End Function
 
     Private Sub UpdateRunningDaysAndStartPressure()
         If recordMetadata Is Nothing OrElse rawDataRaw Is Nothing OrElse rawDataRaw.Count = 0 Then
@@ -260,6 +272,14 @@ Public Class DetailRecord
             Dim newDataCount = rawData.Count
             If DGVWatch.Rows.Count = newDataCount Then Return
 
+            Dim savedFirstDisplayedRowIndex As Integer = -1
+            Dim savedHorizontalOffset As Integer = 0
+
+            If DGVWatch.Rows.Count > 0 Then
+                savedFirstDisplayedRowIndex = DGVWatch.FirstDisplayedScrollingRowIndex
+                savedHorizontalOffset = DGVWatch.HorizontalScrollingOffset
+            End If
+
             DGVWatch.SuspendLayout()
             DGVWatch.Rows.Clear()
             DGVWatch.RowHeadersVisible = False
@@ -276,6 +296,17 @@ Public Class DetailRecord
                 Dim leakPressure = If(matchingGauge?.Pressure, 0).ToString("F3")
                 DGVWatch.Rows.Add(startPressure, currentPressure, leakPressure, DL.Timestamp)
             Next
+
+            If DGVWatch.Rows.Count > 0 Then
+                Dim restoreRowIndex As Integer = savedFirstDisplayedRowIndex
+                If restoreRowIndex < 0 Then restoreRowIndex = 0
+                If restoreRowIndex > DGVWatch.Rows.Count - 1 Then
+                    restoreRowIndex = DGVWatch.Rows.Count - 1
+                End If
+
+                DGVWatch.FirstDisplayedScrollingRowIndex = restoreRowIndex
+                DGVWatch.HorizontalScrollingOffset = Math.Max(0, savedHorizontalOffset)
+            End If
 
         Catch ex As Exception
             AppLogger.LogError($"LoadSensorPressureTable Error: {ex.Message}", "DetailRecord")
@@ -681,12 +712,17 @@ Public Class DetailRecord
             saveDialog.FileName = $"PressureData_{recordMetadata.BatchId}_{DateTime.Now:yyyyMMdd_HHmmss}.{fileExtension}"
 
             If saveDialog.ShowDialog() = DialogResult.OK Then
+                Dim exportFormat = If(isExcel, "Excel", "CSV")
                 Try
-                    If isExcel Then
-                        ExportToExcel(saveDialog.FileName)
-                    Else
-                        ExportToCSV(saveDialog.FileName)
-                    End If
+                    RunExportWithLoading(
+                        Sub()
+                            If isExcel Then
+                                ExportToExcel(saveDialog.FileName)
+                            Else
+                                ExportToCSV(saveDialog.FileName)
+                            End If
+                        End Sub,
+                        exportFormat)
                     MessageBox.Show($"Data exported successfully to {saveDialog.FileName}", "Export Complete", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 Catch ex As Exception
                     MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -695,10 +731,62 @@ Public Class DetailRecord
         End Using
     End Sub
 
+    Private Function CreateExportLoadingForm(formatName As String) As Form
+        Dim loadingForm As New Form()
+        loadingForm.Text = "Export"
+        loadingForm.FormBorderStyle = FormBorderStyle.FixedDialog
+        loadingForm.StartPosition = FormStartPosition.CenterParent
+        loadingForm.Size = New Size(360, 120)
+        loadingForm.MaximizeBox = False
+        loadingForm.MinimizeBox = False
+        loadingForm.ControlBox = False
+        loadingForm.ShowInTaskbar = False
+        loadingForm.TopMost = True
+
+        Dim lblLoading As New Label()
+        lblLoading.Text = $"Exporting to {formatName}, please wait..."
+        lblLoading.AutoSize = False
+        lblLoading.TextAlign = ContentAlignment.MiddleCenter
+        lblLoading.Dock = DockStyle.Top
+        lblLoading.Height = 45
+
+        Dim progressBar As New ProgressBar()
+        progressBar.Style = ProgressBarStyle.Marquee
+        progressBar.MarqueeAnimationSpeed = 30
+        progressBar.Dock = DockStyle.Bottom
+        progressBar.Height = 25
+
+        loadingForm.Controls.Add(progressBar)
+        loadingForm.Controls.Add(lblLoading)
+
+        Return loadingForm
+    End Function
+
+    Private Sub RunExportWithLoading(exportAction As Action, formatName As String)
+        Dim loadingForm = CreateExportLoadingForm(formatName)
+        BTNExport.Enabled = False
+        Me.Cursor = Cursors.WaitCursor
+
+        Try
+            loadingForm.Show(Me)
+            loadingForm.Refresh()
+            Application.DoEvents()
+
+            exportAction.Invoke()
+        Finally
+            If loadingForm IsNot Nothing AndAlso Not loadingForm.IsDisposed Then
+                loadingForm.Close()
+                loadingForm.Dispose()
+            End If
+            Me.Cursor = Cursors.Default
+            BTNExport.Enabled = True
+        End Try
+    End Sub
+
     Private Sub ExportToCSV(filePath As String)
         Using writer As New IO.StreamWriter(filePath)
             ' Write header
-            writer.WriteLine("BatchId,StartPressure,CurrentPressure,LeakPressure,PressureTire,PressureGauge,Timestamp")
+            writer.WriteLine("BatchId,Size,StartPressure,CurrentPressure,LeakPressure,PressureTire,PressureGauge,Timestamp")
 
             ' Get sensor names in format [key_object].nodeText
             Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
@@ -724,7 +812,7 @@ Public Class DetailRecord
 
             For Each DL In sortedTireData
                 Dim currentTimestamp = DateTime.Parse(DL.Timestamp).ToString("yyyy-MM-dd HH:mm")
-                writer.WriteLine($"{recordMetadata.BatchId},{startPressure},{currentPressure},{leakPressure},{pressureTireName},{pressureGaugeName},{currentTimestamp}")
+                writer.WriteLine($"{recordMetadata.BatchId},{recordMetadata.Size},{startPressure},{currentPressure},{leakPressure},{pressureTireName},{pressureGaugeName},{currentTimestamp}")
             Next
         End Using
     End Sub
@@ -741,12 +829,13 @@ Public Class DetailRecord
 
             ' Set headers
             xlWorksheet.Cells(1, 1) = "BatchId"
-            xlWorksheet.Cells(1, 2) = "StartPressure"
-            xlWorksheet.Cells(1, 3) = "CurrentPressure"
+            xlWorksheet.Cells(1, 2) = "Size"
+            xlWorksheet.Cells(1, 3) = "StartPressure"
+            xlWorksheet.Cells(1, 4) = "CurrentPressure"
             'xlWorksheet.Cells(1, 4) = "LeakPressure"
-            xlWorksheet.Cells(1, 4) = "PressureTire"
-            xlWorksheet.Cells(1, 5) = "PressureGauge"
-            xlWorksheet.Cells(1, 6) = "Timestamp"
+            xlWorksheet.Cells(1, 5) = "PressureTire"
+            xlWorksheet.Cells(1, 6) = "PressureGauge"
+            xlWorksheet.Cells(1, 7) = "Timestamp"
 
             ' Get sensor names
             Dim selectedNodeSensor = SettingsManager.GetSelectedNodeSensor()
@@ -768,12 +857,13 @@ Public Class DetailRecord
                 Dim currentLeakPressure = If(matchingGauge?.Pressure, 0).ToString("F3")
 
                 xlWorksheet.Cells(row, 1) = recordMetadata.BatchId
-                xlWorksheet.Cells(row, 2) = startPressure
-                xlWorksheet.Cells(row, 3) = currentPressure
+                xlWorksheet.Cells(row, 2) = recordMetadata.Size
+                xlWorksheet.Cells(row, 3) = startPressure
+                xlWorksheet.Cells(row, 4) = currentPressure
                 'xlWorksheet.Cells(row, 4) = currentLeakPressure
-                xlWorksheet.Cells(row, 4) = pressureTireName
-                xlWorksheet.Cells(row, 5) = pressureGaugeName
-                xlWorksheet.Cells(row, 6) = currentTimestamp
+                xlWorksheet.Cells(row, 5) = pressureTireName
+                xlWorksheet.Cells(row, 6) = pressureGaugeName
+                xlWorksheet.Cells(row, 7) = currentTimestamp
                 row += 1
             Next
 
